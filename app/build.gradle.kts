@@ -41,4 +41,10 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    // Thư viện Retrofit để gọi API
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+// Thư viện chuyển đổi JSON sang Java Object (Gson)
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+// Thư viện OkHttp để ghi log (xem request/response trong Logcat)
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 }
