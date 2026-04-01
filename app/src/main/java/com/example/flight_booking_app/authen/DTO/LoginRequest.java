@@ -1,4 +1,4 @@
-package com.example.flight_booking_app.DTO;
+package com.example.flight_booking_app.authen.DTO;
 
 public class LoginRequest {
     private String email;
