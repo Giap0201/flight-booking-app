@@ -1,6 +1,7 @@
 package com.example.flight_booking_app.booking.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,11 +21,18 @@ public class TicketClassAdapter extends BaseAdapter {
     private Context context;
     private List<FlightClass> listTickets;
     private LayoutInflater inflater;
+    private String currentFlightId;
 
-    public TicketClassAdapter(Context context, List<FlightClass> listTickets) {
-        this.context = context;
+    // Khai báo thêm biến
+    private int adultCount, childCount, infantCount;
+    // Sửa lại Constructor để nhận thêm flightId
+    public TicketClassAdapter(Context context, List<FlightClass> listTickets, String currentFlightId, int adultCount, int childCount, int infantCount) {        this.context = context;
         this.listTickets = listTickets;
+        this.currentFlightId = currentFlightId; // Gán biến
         this.inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        this.adultCount = adultCount;
+        this.childCount = childCount;
+        this.infantCount = infantCount;
     }
 
     @Override
@@ -64,10 +72,23 @@ public class TicketClassAdapter extends BaseAdapter {
         tvOldPrice.setText("$" + (ticket.getBasePrice() + 20)); // Cộng thêm tí tiền để làm giá cũ
         tvOldPrice.setPaintFlags(tvOldPrice.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
 
+        // TÌM ĐẾN SỰ KIỆN NÚT SELECT VÀ SỬA LẠI THẾ NÀY:
+        // Ở chỗ nút btnSelectTicket.setOnClickListener:
         btnSelectTicket.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(context, "Bạn chọn vé: " + ticket.getClassType(), Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(context, com.example.flight_booking_app.booking.activity.BookingFormActivity.class);
+
+                intent.putExtra("flightId", currentFlightId);
+                intent.putExtra("flightClassId", ticket.getId());
+                intent.putExtra("ticketPrice", ticket.getBasePrice());
+
+                // TRUYỀN TIẾP SỐ LƯỢNG SANG MÀN HÌNH FORM CỦA BẠN
+                intent.putExtra("adultCount", adultCount);
+                intent.putExtra("childCount", childCount);
+                intent.putExtra("infantCount", infantCount);
+
+                context.startActivity(intent);
             }
         });
 

@@ -1,5 +1,6 @@
 package com.example.flight_booking_app.booking.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -42,6 +43,10 @@ public class FlightDetailActivity extends AppCompatActivity {
     private FlightViewModel viewModel;
 
     // Fix cứng ID chuyến bay tạm thời
+    // Thêm các biến này ở trên cùng
+    private int adultCount = 1; // Mặc định 1 người nếu chưa có
+    private int childCount = 0;
+    private int infantCount = 0;
     private String currentFlightId = "005d2fc3-fd73-4fdb-ad31-439e425ee8a9";
 
     @Override
@@ -54,6 +59,20 @@ public class FlightDetailActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        // HỨNG DỮ LIỆU TỪ DEV KIA TRUYỀN SANG
+        Intent intent = getIntent();
+        if (intent != null) {
+            // Mấy key "adultCount" này bạn bảo Dev kia truyền đúng tên nhé
+            adultCount = intent.getIntExtra("adultCount", 1);
+            childCount = intent.getIntExtra("childCount", 0);
+            infantCount = intent.getIntExtra("infantCount", 0);
+        }
+
+//        // Truyền cả 3 biến này vào Adapter để lát nữa bấm Select thì Adapter biết đường chuyển sang Form
+//        adapter = new TicketClassAdapter(this, listFlightClasses, currentFlightId, adultCount, childCount, infantCount);
+//        lvTickets.setAdapter(adapter);
+
 
         // 1. Ánh xạ toàn bộ View
         tvRoute = findViewById(R.id.tvRoute);
@@ -69,7 +88,7 @@ public class FlightDetailActivity extends AppCompatActivity {
 
         // 2. Cài đặt ListView và Adapter
         listFlightClasses = new ArrayList<>();
-        adapter = new TicketClassAdapter(this, listFlightClasses);
+        adapter = new TicketClassAdapter(this, listFlightClasses, currentFlightId, adultCount, childCount, infantCount);
         lvTickets.setAdapter(adapter);
 
         // 3. Khởi tạo ViewModel

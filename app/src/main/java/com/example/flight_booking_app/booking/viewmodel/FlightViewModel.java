@@ -3,6 +3,8 @@ package com.example.flight_booking_app.booking.viewmodel; // Đổi package cho 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.example.flight_booking_app.booking.model.BookingRequest;
+import com.example.flight_booking_app.booking.model.BookingResult;
 import com.example.flight_booking_app.booking.model.FlightDetail;
 import com.example.flight_booking_app.booking.repository.FlightRepository;
 
@@ -17,5 +19,10 @@ public class FlightViewModel extends ViewModel {
     // Activity sẽ gọi hàm này để "quan sát" dữ liệu
     public LiveData<FlightDetail> getFlightDetailLiveData(String flightId) {
         return repository.getFlightDetail(flightId);
+    }
+
+    // Thêm hàm này vào dưới hàm getFlightDetailLiveData
+    public LiveData<BookingResult> createBooking(BookingRequest request) {
+        return repository.createBooking(request);
     }
 }

@@ -3,6 +3,8 @@ package com.example.flight_booking_app.booking.repository; // Đổi package cho
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.flight_booking_app.booking.api.BookingApiService;
+import com.example.flight_booking_app.booking.model.BookingRequest;
+import com.example.flight_booking_app.booking.model.BookingResult;
 import com.example.flight_booking_app.booking.model.FlightDetail;
 import com.example.flight_booking_app.common.ApiResponse;
 import com.example.flight_booking_app.network.ApiClient;
@@ -52,43 +54,43 @@ public class FlightRepository {
     /**
      * Hàm này nhận vào một Thùng hàng (BookingRequest) và trả về một cái Hộp chứa Biên lai (LiveData)
      */
-//    public MutableLiveData<BookingResult> createBooking(BookingRequest request) {
-//
-//        // 1. Tạo một cái "Hộp rỗng" (LiveData) để chuẩn bị hứng kết quả.
-//        // Giao diện (Activity) lát nữa sẽ "ngồi canh" cái hộp này. Hễ có dữ liệu rớt vào là nó chộp lấy ngay.
-//        MutableLiveData<BookingResult> bookingData = new MutableLiveData<>();
-//
-//        // 2. Giao Thùng hàng cho Shipper (apiService) mang đi gửi lên đường dẫn POST /bookings
-//        // Lệnh .enqueue() nghĩa là "Cứ chạy ngầm đi nhé, đừng làm đơ màn hình của người dùng"
-//        apiService.createBooking(request).enqueue(new Callback<ApiResponse<BookingResult>>() {
-//
-//            // Hàm này tự động chạy khi Server NHẬN ĐƯỢC thư và TRẢ LỜI lại
-//            @Override
-//            public void onResponse(Call<ApiResponse<BookingResult>> call, Response<ApiResponse<BookingResult>> response) {
-//                if (response.isSuccessful() && response.body() != null) {
-//                    // Kiểm tra xem Server có chốt đơn thành công không (Code 1000)
-//                    if (response.body().getCode() == 1000) {
-//                        // THÀNH CÔNG! Lấy cái Biên lai (Result) bỏ vào Hộp LiveData
-//                        bookingData.setValue(response.body().getResult());
-//                    } else {
-//                        // Lỗi logic từ Backend (Ví dụ: Chuyến bay đã hết chỗ)
-//                        bookingData.setValue(null);
-//                    }
-//                } else {
-//                    // Lỗi Server (Ví dụ: Server sập, lỗi 500, lỗi 404...)
-//                    bookingData.setValue(null);
-//                }
-//            }
-//
-//            // Hàm này tự động chạy khi GỬI THẤT BẠI (Ví dụ: Người dùng bị rớt mạng 4G/Wifi)
-//            @Override
-//            public void onFailure(Call<ApiResponse<BookingResult>> call, Throwable t) {
-//                bookingData.setValue(null);
-//            }
-//        });
-//
-//        // 3. Trả cái Hộp (lúc này có thể vẫn đang rỗng vì mạng chưa chạy xong) về cho ViewModel.
-//        // Khi nào mạng chạy xong, đoạn code ở trên sẽ tự động nhét dữ liệu vào Hộp sau!
-//        return bookingData;
-//    }
+    public MutableLiveData<BookingResult> createBooking(BookingRequest request) {
+
+        // 1. Tạo một cái "Hộp rỗng" (LiveData) để chuẩn bị hứng kết quả.
+        // Giao diện (Activity) lát nữa sẽ "ngồi canh" cái hộp này. Hễ có dữ liệu rớt vào là nó chộp lấy ngay.
+        MutableLiveData<BookingResult> bookingData = new MutableLiveData<>();
+
+        // 2. Giao Thùng hàng cho Shipper (apiService) mang đi gửi lên đường dẫn POST /bookings
+        // Lệnh .enqueue() nghĩa là "Cứ chạy ngầm đi nhé, đừng làm đơ màn hình của người dùng"
+        apiService.createBooking(request).enqueue(new Callback<ApiResponse<BookingResult>>() {
+
+            // Hàm này tự động chạy khi Server NHẬN ĐƯỢC thư và TRẢ LỜI lại
+            @Override
+            public void onResponse(Call<ApiResponse<BookingResult>> call, Response<ApiResponse<BookingResult>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    // Kiểm tra xem Server có chốt đơn thành công không (Code 1000)
+                    if (response.body().getCode() == 1000) {
+                        // THÀNH CÔNG! Lấy cái Biên lai (Result) bỏ vào Hộp LiveData
+                        bookingData.setValue(response.body().getResult());
+                    } else {
+                        // Lỗi logic từ Backend (Ví dụ: Chuyến bay đã hết chỗ)
+                        bookingData.setValue(null);
+                    }
+                } else {
+                    // Lỗi Server (Ví dụ: Server sập, lỗi 500, lỗi 404...)
+                    bookingData.setValue(null);
+                }
+            }
+
+            // Hàm này tự động chạy khi GỬI THẤT BẠI (Ví dụ: Người dùng bị rớt mạng 4G/Wifi)
+            @Override
+            public void onFailure(Call<ApiResponse<BookingResult>> call, Throwable t) {
+                bookingData.setValue(null);
+            }
+        });
+
+        // 3. Trả cái Hộp (lúc này có thể vẫn đang rỗng vì mạng chưa chạy xong) về cho ViewModel.
+        // Khi nào mạng chạy xong, đoạn code ở trên sẽ tự động nhét dữ liệu vào Hộp sau!
+        return bookingData;
+    }
 }

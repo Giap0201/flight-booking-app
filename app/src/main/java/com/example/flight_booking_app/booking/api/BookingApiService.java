@@ -1,5 +1,7 @@
-package com.example.flight_booking_app.booking.api; // Kiểm tra lại tên package
+package com.example.flight_booking_app.booking.api;
 
+import com.example.flight_booking_app.booking.model.BookingRequest;
+import com.example.flight_booking_app.booking.model.BookingResult;
 import com.example.flight_booking_app.booking.model.FlightDetail;
 import com.example.flight_booking_app.common.ApiResponse;
 
@@ -10,30 +12,26 @@ import retrofit2.http.POST;
 import retrofit2.http.Path;
 
 /**
- * Interface này giống như một cái "Bản đồ" chứa các con đường nối từ App của bạn lên Server.
+ * Interface này chứa các đường dẫn API liên quan đến Đặt vé và Chuyến bay.
+ * Retrofit sẽ đọc các Annotation (@GET, @POST) ở đây để tự động tạo code gọi mạng.
  */
 public interface BookingApiService {
 
-    // --- CÁI NÀY LÀ CODE CŨ BẠN ĐÃ LÀM (Lấy thông tin chuyến bay) ---
+    // --- HÀM CŨ BẠN ĐÃ CÓ (Lấy thông tin chuyến bay) ---
     @GET("flights/{id}")
     Call<ApiResponse<FlightDetail>> getFlightDetail(@Path("id") String flightId);
 
-
-    // --- CODE MỚI: THÊM ĐOẠN NÀY VÀO ---
-
+    // --- HÀM MỚI THÊM VÀO CHO CHỨC NĂNG ĐẶT VÉ ---
     /**
-     * API tạo đơn đặt vé (Gửi dữ liệu lên Server)
-     * * 1. @POST("bookings"):
-     * Báo cho App biết đây là hành động GỬI dữ liệu đi (POST).
-     * Retrofit sẽ tự động nối chữ "bookings" vào sau cái BASE_URL của bạn (thành .../api/bookings).
-     * * 2. @Body BookingRequest request:
-     * Chữ @Body này cực kỳ quan trọng. Nó bảo Retrofit là: "Ê, lấy cái Thùng Container (BookingRequest) này,
-     * dịch nó sang tiếng JSON, rồi nhét nó vào trong Thân (Body) của bức thư gửi lên Server nhé".
-     * * 3. Call<ApiResponse<BookingResult>>:
-     * Đây là cái "Rổ" để hứng kết quả. Server sẽ trả về một gói ApiResponse (chứa code 1000),
-     * và phần lõi bên trong (result) chính là cái BookingResult chứa Mã PNR của chúng ta!
+     * @POST("bookings"): Báo cho Retrofit biết đây là phương thức POST,
+     * nối vào đuôi BASE_URL (http://10.0.2.2:8080/api/bookings)
+     * * @Body: Lệnh này cực kỳ quan trọng! Nó bảo Retrofit lấy cái hộp BookingRequest của mình,
+     * tự động dịch (parse) nó thành 1 chuỗi JSON chuẩn chỉ như bạn thiết kế trên Swagger,
+     * rồi nhét vào phần "Request Body" để gửi đi.
+     * * Call<ApiResponse<BookingResult>>: Cục hứng dữ liệu trả về.
+     * ApiResponse bọc bên ngoài (chứa code 1000), BookingResult nằm ở lõi (chứa mã PNR, tiền...).
      */
-//    @POST("bookings")
-//    Call<ApiResponse<BookingResult>> createBooking(@Body BookingRequest request);
+    @POST("bookings")
+    Call<ApiResponse<BookingResult>> createBooking(@Body BookingRequest request);
 
 }
