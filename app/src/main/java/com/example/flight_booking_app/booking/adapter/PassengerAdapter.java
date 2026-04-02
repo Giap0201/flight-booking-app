@@ -1,118 +1,61 @@
 package com.example.flight_booking_app.booking.adapter;
 
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.flight_booking_app.R;
 import com.example.flight_booking_app.booking.model.PassengerRequest;
+import com.google.android.material.textfield.TextInputEditText;
 
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
-public class PassengerAdapter extends BaseAdapter {
+public class PassengerAdapter extends RecyclerView.Adapter<PassengerAdapter.PassengerViewHolder> {
 
     private Context context;
     private List<PassengerRequest> listPassengers;
-    private LayoutInflater inflater;
 
     public PassengerAdapter(Context context, List<PassengerRequest> listPassengers) {
         this.context = context;
         this.listPassengers = listPassengers;
-        this.inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    }
+
+    @NonNull
+    @Override
+    public PassengerViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(context).inflate(R.layout.item_passenger_form, parent, false);
+        return new PassengerViewHolder(view);
     }
 
     @Override
-    public int getCount() {
-        return listPassengers.size();
-    }
-
-    @Override
-    public Object getItem(int position) {
-        return listPassengers.get(position);
-    }
-
-    @Override
-    public long getItemId(int position) {
-        return position;
-    }
-
-    @Override
-    public View getView(final int position, View convertView, ViewGroup parent) {
-        // Dùng ViewHolder pattern để tối ưu hiệu suất ListView
-        ViewHolder holder;
-
-        if (convertView == null) {
-            convertView = inflater.inflate(R.layout.item_passenger_form, parent, false);
-            holder = new ViewHolder();
-            holder.tvPassengerTitle = convertView.findViewById(R.id.tvPassengerTitle);
-            holder.edtFirstName = convertView.findViewById(R.id.edtFirstName);
-            holder.edtLastName = convertView.findViewById(R.id.edtLastName);
-            holder.edtDateOfBirth = convertView.findViewById(R.id.edtDateOfBirth);
-            holder.rgGender = convertView.findViewById(R.id.rgGender);
-
-            // Gắn TextWatcher cho First Name
-            holder.edtFirstName.addTextChangedListener(new TextWatcher() {
-                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-                @Override
-                public void afterTextChanged(Editable s) {
-                    // Khi người dùng gõ xong, lưu ngay vào Model ở vị trí tương ứng
-                    listPassengers.get(holder.refPosition).setFirstName(s.toString());
-                }
-            });
-
-            // Gắn TextWatcher cho Last Name
-            holder.edtLastName.addTextChangedListener(new TextWatcher() {
-                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-                @Override
-                public void afterTextChanged(Editable s) {
-                    listPassengers.get(holder.refPosition).setLastName(s.toString());
-                }
-            });
-
-            // Gắn TextWatcher cho Date Of Birth
-            holder.edtDateOfBirth.addTextChangedListener(new TextWatcher() {
-                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-                @Override
-                public void afterTextChanged(Editable s) {
-                    listPassengers.get(holder.refPosition).setDateOfBirth(s.toString());
-                }
-            });
-
-            // Gắn sự kiện chọn Giới tính
-            holder.rgGender.setOnCheckedChangeListener((group, checkedId) -> {
-                if (checkedId == R.id.rbMale) {
-                    listPassengers.get(holder.refPosition).setGender("MALE");
-                } else if (checkedId == R.id.rbFemale) {
-                    listPassengers.get(holder.refPosition).setGender("FEMALE");
-                }
-            });
-
-            convertView.setTag(holder);
-        } else {
-            holder = (ViewHolder) convertView.getTag();
-        }
-
-        // Cập nhật vị trí hiện tại cho các sự kiện ở trên biết đường mà lưu data
-        holder.refPosition = position;
-
-        // Lấy đối tượng hành khách hiện tại
+    public void onBindViewHolder(@NonNull PassengerViewHolder holder, int position) {
         PassengerRequest passenger = listPassengers.get(position);
 
-        // Hiển thị tiêu đề (Ví dụ: Passenger 1 (ADULT))
-        holder.tvPassengerTitle.setText("Passenger " + (position + 1) + " (" + passenger.getType() + ")");
+        // ==============================================================================
+        // 1. GỠ BỎ SỰ KIỆN LẮNG NGHE CŨ TRÁNH LỖI KHI CUỘN
+        // ==============================================================================
+        if (holder.firstNameWatcher != null) holder.edtFirstName.removeTextChangedListener(holder.firstNameWatcher);
+        if (holder.lastNameWatcher != null) holder.edtLastName.removeTextChangedListener(holder.lastNameWatcher);
+        holder.rgGender.setOnCheckedChangeListener(null);
 
-        // Đổ dữ liệu từ Model ngược lại View (để khi cuộn ListView không bị mất chữ)
-        // Lưu ý quan trọng: Phải gỡ TextWatcher ra trước khi setText nếu không nó sẽ bị loop, nhưng vì mình dùng refPosition nên có thể bỏ qua bước gỡ phức tạp.
+        // ==============================================================================
+        // 2. ĐỔ DỮ LIỆU TỪ MÔ HÌNH VÀO GIAO DIỆN
+        // ==============================================================================
+        String typeVN = passenger.getType().equals("ADULT") ? "Người lớn" :
+                (passenger.getType().equals("CHILD") ? "Trẻ em" : "Em bé");
+        holder.tvPassengerTitle.setText("Hành khách " + (position + 1) + " (" + typeVN + ")");
+
         holder.edtFirstName.setText(passenger.getFirstName() != null ? passenger.getFirstName() : "");
         holder.edtLastName.setText(passenger.getLastName() != null ? passenger.getLastName() : "");
         holder.edtDateOfBirth.setText(passenger.getDateOfBirth() != null ? passenger.getDateOfBirth() : "");
@@ -120,19 +63,94 @@ public class PassengerAdapter extends BaseAdapter {
         if ("FEMALE".equals(passenger.getGender())) {
             holder.rgGender.check(R.id.rbFemale);
         } else {
-            holder.rgGender.check(R.id.rbMale); // Mặc định là MALE
+            holder.rgGender.check(R.id.rbMale);
         }
 
-        return convertView;
+        // ==============================================================================
+        // 3. GẮN LẠI SỰ KIỆN LẮNG NGHE MỚI
+        // ==============================================================================
+
+        // Lắng nghe Tên
+        holder.firstNameWatcher = new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) {
+                passenger.setFirstName(s.toString().trim());
+            }
+        };
+        holder.edtFirstName.addTextChangedListener(holder.firstNameWatcher);
+
+        // Lắng nghe Họ
+        holder.lastNameWatcher = new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) {
+                passenger.setLastName(s.toString().trim());
+            }
+        };
+        holder.edtLastName.addTextChangedListener(holder.lastNameWatcher);
+
+        // Giới tính
+        holder.rgGender.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == R.id.rbMale) {
+                passenger.setGender("MALE");
+            } else if (checkedId == R.id.rbFemale) {
+                passenger.setGender("FEMALE");
+            }
+        });
+
+        // ==============================================================================
+        // TÍNH NĂNG MỚI: BẬT LỊCH KHI NHẤN VÀO Ô NGÀY SINH
+        // ==============================================================================
+        holder.edtDateOfBirth.setOnClickListener(v -> {
+            Calendar calendar = Calendar.getInstance();
+            int year = calendar.get(Calendar.YEAR);
+            int month = calendar.get(Calendar.MONTH);
+            int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+            DatePickerDialog datePickerDialog = new DatePickerDialog(
+                    context,
+                    (view, selectedYear, selectedMonth, selectedDay) -> {
+                        // Format ngày tháng năm thành chuẩn DD/MM/YYYY
+                        String formattedDate = String.format(Locale.getDefault(), "%02d/%02d/%04d", selectedDay, selectedMonth + 1, selectedYear);
+
+                        // Hiển thị lên EditText
+                        holder.edtDateOfBirth.setText(formattedDate);
+
+                        // Lưu thẳng vào Model luôn
+                        passenger.setDateOfBirth(formattedDate);
+                    },
+                    year, month, day);
+
+            // Chặn không cho chọn ngày sinh ở tương lai
+            datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
+            datePickerDialog.show();
+        });
     }
 
-    // Lớp nội bộ để giữ các View, giúp ListView lướt mượt hơn
-    private static class ViewHolder {
+    @Override
+    public int getItemCount() {
+        return listPassengers != null ? listPassengers.size() : 0;
+    }
+
+    public static class PassengerViewHolder extends RecyclerView.ViewHolder {
         TextView tvPassengerTitle;
-        EditText edtFirstName;
-        EditText edtLastName;
-        EditText edtDateOfBirth;
+        TextInputEditText edtFirstName;
+        TextInputEditText edtLastName;
+        TextInputEditText edtDateOfBirth;
         RadioGroup rgGender;
-        int refPosition; // Biến này lưu lại vị trí của dòng hiện tại để lưu data đúng người
+
+        TextWatcher firstNameWatcher;
+        TextWatcher lastNameWatcher;
+        // Đã xóa dobWatcher vì không cần thiết nữa
+
+        public PassengerViewHolder(@NonNull View itemView) {
+            super(itemView);
+            tvPassengerTitle = itemView.findViewById(R.id.tvPassengerTitle);
+            edtFirstName = itemView.findViewById(R.id.edtFirstName);
+            edtLastName = itemView.findViewById(R.id.edtLastName);
+            edtDateOfBirth = itemView.findViewById(R.id.edtDateOfBirth);
+            rgGender = itemView.findViewById(R.id.rgGender);
+        }
     }
 }

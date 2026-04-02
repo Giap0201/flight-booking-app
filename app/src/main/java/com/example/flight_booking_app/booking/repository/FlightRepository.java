@@ -3,11 +3,14 @@ package com.example.flight_booking_app.booking.repository; // Đổi package cho
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.flight_booking_app.booking.api.BookingApiService;
+import com.example.flight_booking_app.booking.model.AncillaryItem;
 import com.example.flight_booking_app.booking.model.BookingRequest;
 import com.example.flight_booking_app.booking.model.BookingResult;
 import com.example.flight_booking_app.booking.model.FlightDetail;
 import com.example.flight_booking_app.common.ApiResponse;
 import com.example.flight_booking_app.network.ApiClient;
+
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -92,5 +95,45 @@ public class FlightRepository {
         // 3. Trả cái Hộp (lúc này có thể vẫn đang rỗng vì mạng chưa chạy xong) về cho ViewModel.
         // Khi nào mạng chạy xong, đoạn code ở trên sẽ tự động nhét dữ liệu vào Hộp sau!
         return bookingData;
+    }
+
+    // --- THÊM HÀM LẤY DANH SÁCH DỊCH VỤ VÀO ĐÂY ---
+
+    /**
+     * Hàm này gọi API GET để lấy danh sách các dịch vụ bổ sung (Hành lý, Suất ăn, Chỗ ngồi)
+     */
+    public MutableLiveData<List<AncillaryItem>> getAncillaries() {
+
+        // 1. Tạo "Hộp rỗng" để chuẩn bị hứng danh sách Dịch vụ từ Server
+        MutableLiveData<List<AncillaryItem>> ancillaryData = new MutableLiveData<>();
+
+        // 2. Yêu cầu Shipper (apiService) chạy đi lấy danh sách dịch vụ
+        // ApiResponse<List<AncillaryItem>> nghĩa là gói hàng trả về chứa một danh sách các món đồ
+        apiService.getAncillaries().enqueue(new Callback<ApiResponse<List<AncillaryItem>>>() {
+
+            @Override
+            public void onResponse(Call<ApiResponse<List<AncillaryItem>>> call, Response<ApiResponse<List<AncillaryItem>>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    // Nếu code = 1000 (Thành công) theo chuẩn API của bạn
+                    if (response.body().getCode() == 1000) {
+                        // Nhét danh sách lấy được vào Hộp LiveData
+                        ancillaryData.setValue(response.body().getResult());
+                    } else {
+                        ancillaryData.setValue(null);
+                    }
+                } else {
+                    ancillaryData.setValue(null);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<AncillaryItem>>> call, Throwable t) {
+                // Lỗi mạng hoặc lỗi kết nối
+                ancillaryData.setValue(null);
+            }
+        });
+
+        // 3. Trả hộp về cho ViewModel "ngồi canh"
+        return ancillaryData;
     }
 }

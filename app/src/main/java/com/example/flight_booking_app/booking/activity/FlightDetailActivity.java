@@ -44,10 +44,10 @@ public class FlightDetailActivity extends AppCompatActivity {
 
     // Fix cứng ID chuyến bay tạm thời
     // Thêm các biến này ở trên cùng
-    private int adultCount = 1; // Mặc định 1 người nếu chưa có
-    private int childCount = 0;
-    private int infantCount = 0;
-    private String currentFlightId = "005d2fc3-fd73-4fdb-ad31-439e425ee8a9";
+    private int adultCount = 2;
+    private int childCount = 0; // Sửa số 0 thành 1
+    private int infantCount = 1; // Sửa số 0 thành 1
+    private String currentFlightId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,12 +61,21 @@ public class FlightDetailActivity extends AppCompatActivity {
         });
 
         // HỨNG DỮ LIỆU TỪ DEV KIA TRUYỀN SANG
+        // HỨNG DỮ LIỆU TỪ DEV KIA (MÀN HÌNH TÌM KIẾM) TRUYỀN SANG
         Intent intent = getIntent();
         if (intent != null) {
-            // Mấy key "adultCount" này bạn bảo Dev kia truyền đúng tên nhé
             adultCount = intent.getIntExtra("adultCount", 1);
             childCount = intent.getIntExtra("childCount", 0);
             infantCount = intent.getIntExtra("infantCount", 0);
+
+            // THÊM ĐOẠN NÀY VÀO: Hứng ID chuyến bay từ màn hình trước
+            if (intent.hasExtra("flightId")) {
+                currentFlightId = intent.getStringExtra("flightId");
+            } else {
+                // NẾU BẠN CHƯA LÀM MÀN HÌNH TÌM KIẾM MÀ CHỈ MUỐN TEST:
+                // Lấy đúng cái flightId thật trong Database bạn vừa gửi để Test
+                currentFlightId = "7efa3b09-5db4-4fd6-83fa-43482c2dd844";
+            }
         }
 
 //        // Truyền cả 3 biến này vào Adapter để lát nữa bấm Select thì Adapter biết đường chuyển sang Form

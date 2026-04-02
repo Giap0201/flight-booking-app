@@ -1,9 +1,12 @@
 package com.example.flight_booking_app.booking.api;
 
+import com.example.flight_booking_app.booking.model.AncillaryItem;
 import com.example.flight_booking_app.booking.model.BookingRequest;
 import com.example.flight_booking_app.booking.model.BookingResult;
 import com.example.flight_booking_app.booking.model.FlightDetail;
 import com.example.flight_booking_app.common.ApiResponse;
+
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -33,5 +36,13 @@ public interface BookingApiService {
      */
     @POST("bookings")
     Call<ApiResponse<BookingResult>> createBooking(@Body BookingRequest request);
+
+
+    // ==========================================================
+    // THÊM DÒNG NÀY: Gọi API lấy danh sách dịch vụ
+    // Giả sử đường dẫn của bạn là GET /ancillaries (Bạn chỉnh lại cho đúng nhé)
+    // ==========================================================
+    @GET("ancillary-catalogs")
+    Call<ApiResponse<List<AncillaryItem>>> getAncillaries();
 
 }
