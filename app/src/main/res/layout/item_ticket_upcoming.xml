@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.App.TicketCard"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="16dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="20dp">
+
+        <TextView
+            android:id="@+id/tvDepartureCode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/textColorPrimary"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="CGK" />
+
+        <TextView
+            android:id="@+id/tvDepartureTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/textColorSecondary"
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="@id/tvDepartureCode"
+            app:layout_constraintTop_toBottomOf="@id/tvDepartureCode"
+            tools:text="16:30" />
+
+        <TextView
+            android:id="@+id/tvArrivalCode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/textColorPrimary"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="SGP" />
+
+        <TextView
+            android:id="@+id/tvArrivalTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/textColorSecondary"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="@id/tvArrivalCode"
+            app:layout_constraintTop_toBottomOf="@id/tvArrivalCode"
+            tools:text="18:00" />
+
+        <ImageView
+            android:id="@+id/ivFlightArc"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_marginHorizontal="16dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_flight_arc"
+            app:layout_constraintBottom_toBottomOf="@id/tvDepartureTime"
+            app:layout_constraintEnd_toStartOf="@id/tvArrivalCode"
+            app:layout_constraintStart_toEndOf="@id/tvDepartureCode"
+            app:layout_constraintTop_toTopOf="@id/tvDepartureCode" />
+
+        <TextView
+            android:id="@+id/tvDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@id/ivFlightArc"
+            app:layout_constraintEnd_toEndOf="@id/ivFlightArc"
+            app:layout_constraintStart_toStartOf="@id/ivFlightArc"
+            tools:text="1h 50m" />
+
+        <View
+            android:id="@+id/divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="20dp"
+            android:background="@color/colorDivider"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/tvDepartureTime" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:baselineAligned="false"
+            android:orientation="horizontal"
+            android:weightSum="3"
+            app:layout_constraintTop_toBottomOf="@id/tvDepartureTime">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Date"
+                    android:textColor="@color/textColorSecondary"
+                    android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/tvDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="@color/textColorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    tools:text="Mon, Sep 10" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Class"
+                    android:textColor="@color/textColorSecondary"
+                    android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/tvClass"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="@color/textColorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    tools:text="Economy" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Passanger"
+                    android:textColor="@color/textColorSecondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvPassengerCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="@color/textColorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    tools:text="4 Persons" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

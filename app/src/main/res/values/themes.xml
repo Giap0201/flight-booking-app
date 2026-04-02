@@ -1,9 +1,18 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.Flightbookingapp" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+<resources>
+    <style name="Theme.Flightbookingapp" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryVariant">@color/colorPrimaryVariant</item>
+        <item name="colorOnPrimary">@color/colorCardSurface</item>
+        <item name="colorSecondary">@color/colorAccent</item>
+        <item name="android:windowBackground">@color/colorBackground</item>
+        <item name="android:statusBarColor">@color/colorBackground</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
-    <style name="Theme.Flightbookingapp" parent="Base.Theme.Flightbookingapp" />
+    <style name="Widget.App.TicketCard" parent="Widget.MaterialComponents.CardView">
+        <item name="cardElevation">2dp</item>
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardBackgroundColor">@color/colorCardSurface</item>
+        <item name="strokeWidth">0dp</item>
+    </style>
 </resources>

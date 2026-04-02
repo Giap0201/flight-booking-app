@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">flight-booking-app</string>
+    <string name="my_ticket_title">My Ticket</string>
+    <string name="my_ticket_subtitle">all airline tickets that are active and awaiting payment</string>
+    <string name="waiting_for_payment">Waiting for payment</string>
+    <string name="upcoming_flight">Upcoming Flight</string>
+    <string name="desc_icon">Icon</string>
 </resources>
