@@ -1,6 +1,7 @@
-package com.example.flight_booking_app.booking.adapter; // Đổi tên package cho khớp
+package com.example.flight_booking_app.booking.adapter;
 
 import android.content.Context;
+import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,12 +19,12 @@ public class TicketClassAdapter extends BaseAdapter {
 
     private Context context;
     private List<FlightClass> listTickets;
-    private String currentFlightId;
+    private LayoutInflater inflater;
 
-    public TicketClassAdapter(Context context, List<FlightClass> listTickets, String currentFlightId) {
+    public TicketClassAdapter(Context context, List<FlightClass> listTickets) {
         this.context = context;
         this.listTickets = listTickets;
-        this.currentFlightId = currentFlightId;
+        this.inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
     @Override
@@ -44,23 +45,30 @@ public class TicketClassAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         if (convertView == null) {
-            convertView = LayoutInflater.from(context).inflate(R.layout.item_ticket_class, parent, false);
+            convertView = inflater.inflate(R.layout.item_ticket_class, parent, false);
         }
 
         TextView tvClassName = convertView.findViewById(R.id.tvClassName);
-        TextView tvAvailableSeats = convertView.findViewById(R.id.tvAvailableSeats);
         TextView tvPrice = convertView.findViewById(R.id.tvPrice);
+        TextView tvOldPrice = convertView.findViewById(R.id.tvOldPrice);
         Button btnSelectTicket = convertView.findViewById(R.id.btnSelectTicket);
 
         FlightClass ticket = listTickets.get(position);
 
         tvClassName.setText(ticket.getClassType());
-        tvAvailableSeats.setText("Available: " + ticket.getAvailableSeats() + " seats");
+
+        // Cập nhật giá (Giả lập tiền)
         tvPrice.setText("$" + ticket.getBasePrice());
 
-        btnSelectTicket.setOnClickListener(v -> {
-            Toast.makeText(context, "Đã chọn vé: " + ticket.getClassType(), Toast.LENGTH_SHORT).show();
-            // Nơi này sau này sẽ là Intent gọi sang màn hình Nhập thông tin hành khách
+        // Làm hiệu ứng gạch ngang cho giá cũ
+        tvOldPrice.setText("$" + (ticket.getBasePrice() + 20)); // Cộng thêm tí tiền để làm giá cũ
+        tvOldPrice.setPaintFlags(tvOldPrice.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+
+        btnSelectTicket.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(context, "Bạn chọn vé: " + ticket.getClassType(), Toast.LENGTH_SHORT).show();
+            }
         });
 
         return convertView;
