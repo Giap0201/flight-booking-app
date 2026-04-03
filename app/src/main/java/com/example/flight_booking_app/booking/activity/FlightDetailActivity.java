@@ -86,7 +86,7 @@ public class FlightDetailActivity extends AppCompatActivity {
                 currentFlightId = intent.getStringExtra("flightId");
             } else {
                 // ID test mặc định nếu chạy trực tiếp màn hình này
-                currentFlightId = "7efa3b09-5db4-4fd6-83fa-43482c2dd844";
+                currentFlightId = "0209bae7-0e59-4e64-9664-1a52b99ed2ea";
             }
         }
     }

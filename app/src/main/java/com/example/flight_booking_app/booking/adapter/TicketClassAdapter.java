@@ -6,6 +6,7 @@ import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -14,7 +15,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.flight_booking_app.R;
 import com.example.flight_booking_app.booking.activity.BookingFormActivity;
 import com.example.flight_booking_app.booking.model.FlightClass;
-import com.google.android.material.button.MaterialButton;
 
 import java.util.List;
 
@@ -38,6 +38,7 @@ public class TicketClassAdapter extends RecyclerView.Adapter<TicketClassAdapter.
     @NonNull
     @Override
     public TicketViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        // Nạp layout item_ticket_class vào
         View view = LayoutInflater.from(context).inflate(R.layout.item_ticket_class, parent, false);
         return new TicketViewHolder(view);
     }
@@ -46,26 +47,24 @@ public class TicketClassAdapter extends RecyclerView.Adapter<TicketClassAdapter.
     public void onBindViewHolder(@NonNull TicketViewHolder holder, int position) {
         FlightClass ticket = listTickets.get(position);
 
+        // Đổ dữ liệu vào view thông qua Holder
         holder.tvClassName.setText(ticket.getClassType());
+        holder.tvPrice.setText(String.format("$%.2f", ticket.getBasePrice()));
 
-        // Đổi format tiền tệ thành VNĐ hoặc $ tùy Backend bạn trả về
-        holder.tvPrice.setText(String.format("%,.0f đ", ticket.getBasePrice()));
-
-        // Giá cũ (giả lập)
-        holder.tvOldPrice.setText(String.format("%,.0f đ", ticket.getBasePrice() + 500000));
+        // Giá cũ (giả lập khuyến mãi)
+        holder.tvOldPrice.setText(String.format("$%.2f", ticket.getBasePrice() + 20));
         holder.tvOldPrice.setPaintFlags(holder.tvOldPrice.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
 
         // Sự kiện click nút Select
         holder.btnSelectTicket.setOnClickListener(v -> {
             Intent intent = new Intent(context, BookingFormActivity.class);
 
+            // Truyền các ID quan trọng
             intent.putExtra("flightId", currentFlightId);
             intent.putExtra("flightClassId", ticket.getId());
             intent.putExtra("ticketPrice", ticket.getBasePrice());
 
-            // 🔥 BẠN QUÊN DÒNG NÀY: Truyền % thuế sang để màn Hóa Đơn còn tính tiền
-            intent.putExtra("taxPercentage", ticket.getTaxPercentage());
-
+            // Truyền số lượng khách từ màn hình tìm kiếm sang
             intent.putExtra("adultCount", adultCount);
             intent.putExtra("childCount", childCount);
             intent.putExtra("infantCount", infantCount);
@@ -79,9 +78,10 @@ public class TicketClassAdapter extends RecyclerView.Adapter<TicketClassAdapter.
         return listTickets != null ? listTickets.size() : 0;
     }
 
+    // Lớp ViewHolder để giữ các tham chiếu View, giúp tối ưu hiệu năng
     public static class TicketViewHolder extends RecyclerView.ViewHolder {
         TextView tvClassName, tvPrice, tvOldPrice;
-        MaterialButton btnSelectTicket; // Đã đổi sang MaterialButton theo XML
+        Button btnSelectTicket;
 
         public TicketViewHolder(@NonNull View itemView) {
             super(itemView);

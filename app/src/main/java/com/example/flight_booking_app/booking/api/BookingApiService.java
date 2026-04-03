@@ -13,6 +13,7 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 /**
  * Interface này chứa các đường dẫn API liên quan đến Đặt vé và Chuyến bay.
@@ -44,5 +45,10 @@ public interface BookingApiService {
     // ==========================================================
     @GET("ancillary-catalogs")
     Call<ApiResponse<List<AncillaryItem>>> getAncillaries();
+
+
+    // Trả về một chuỗi URL nằm trong trường "result"
+    @GET("payments/create-url") // Nhớ sửa lại tiền tố api/ cho đúng với backend của bạn
+    Call<ApiResponse<String>> createPaymentUrl(@Query("bookingId") String bookingId);
 
 }

@@ -136,4 +136,39 @@ public class FlightRepository {
         // 3. Trả hộp về cho ViewModel "ngồi canh"
         return ancillaryData;
     }
+
+    // THÊM HÀM NÀY VÀO TRONG REPOSITORY
+    public MutableLiveData<String> createPaymentUrl(String bookingId) {
+        MutableLiveData<String> paymentUrlLiveData = new MutableLiveData<>();
+
+        // apiService là biến Retrofit bạn đã khởi tạo sẵn trong Repository
+        apiService.createPaymentUrl(bookingId).enqueue(new Callback<ApiResponse<String>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
+                // Nếu kết nối thành công và backend trả về code HTTP 200
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse<String> apiResponse = response.body();
+
+                    // Kiểm tra xem code có bằng 0 (Thành công) như định dạng JSON của bạn không
+                    if (apiResponse.getCode() == 1000) {
+                        // Lấy URL từ trường "result" và truyền lên UI
+                        paymentUrlLiveData.setValue(apiResponse.getResult());
+                    } else {
+                        // Nếu có lỗi logic từ backend
+                        paymentUrlLiveData.setValue(null);
+                    }
+                } else {
+                    paymentUrlLiveData.setValue(null);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
+                // Nếu rớt mạng hoặc backend sập
+                paymentUrlLiveData.setValue(null);
+            }
+        });
+
+        return paymentUrlLiveData;
+    }
 }

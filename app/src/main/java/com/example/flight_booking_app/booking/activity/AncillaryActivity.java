@@ -124,7 +124,7 @@ public class AncillaryActivity extends AppCompatActivity {
 
                 // 2. TẠO REQUEST DỊCH VỤ DỰA THEO CẤU TRÚC JSON CỦA BẠN
                 // Truyền vào ID của gói, vị trí hành khách, và chặng bay (mặc định là 0 nếu bay 1 chiều)
-                AncillaryRequest ancillaryRequest = new AncillaryRequest(item.getId(), passengerIndex, 0);
+                AncillaryRequest ancillaryRequest = new AncillaryRequest(item.getId(), passengerIndex, 1);
 
                 // 3. Nhét vào danh sách `bookingAncillaries` trong Cục Data to
                 currentBookingRequest.getBookingAncillaries().add(ancillaryRequest);

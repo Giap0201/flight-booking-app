@@ -1,6 +1,7 @@
 package com.example.flight_booking_app.booking.activity;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -56,20 +57,48 @@ public class PaymentSummaryActivity extends AppCompatActivity {
         // 2. Tính toán tiền y hệt Spring Boot
         calculateAndDisplayPrice();
 
-        // 3. Nút Thanh toán -> Bây giờ mới gọi API tạo Booking
+        // Nhớ import Uri ở đầu file nhé: import android.net.Uri;
+
         btnPayNow.setOnClickListener(v -> {
+            // Khóa nút lại để tránh user bấm spam 2 lần
             btnPayNow.setEnabled(false);
-            btnPayNow.setText("Đang xử lý...");
+            btnPayNow.setText("Đang khởi tạo đơn hàng...");
 
-            viewModel.createBooking(currentBookingRequest).observe(this, result -> {
-                btnPayNow.setEnabled(true);
-                btnPayNow.setText("Thanh toán & Đặt vé");
+            // 1. GỌI API TẠO BOOKING TRƯỚC
+            viewModel.createBooking(currentBookingRequest).observe(this, bookingResult -> {
 
-                if (result != null) {
-                    Toast.makeText(this, "🎉 Chúc mừng! PNR của bạn là: " + result.getPnrCode(), Toast.LENGTH_LONG).show();
-                    // TODO: Chuyển hướng về màn hình Home hoặc màn hình vé của tôi
+                if (bookingResult != null && bookingResult.getId() != null) {
+
+                    String bookingId = bookingResult.getId();
+                    btnPayNow.setText("Đang lấy link thanh toán...");
+
+                    // 2. CÓ BOOKING ID RỒI -> GỌI API LẤY LINK THANH TOÁN
+                    viewModel.createPaymentUrl(bookingId).observe(this, paymentUrl -> {
+                        // Mở khóa nút
+                        btnPayNow.setEnabled(true);
+                        btnPayNow.setText("Thanh toán & Đặt vé");
+
+                        if (paymentUrl != null && !paymentUrl.isEmpty()) {
+
+                            // 3. MỞ TRÌNH DUYỆT ĐỂ KHÁCH THANH TOÁN
+                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(paymentUrl));
+                            startActivity(browserIntent);
+
+                            Toast.makeText(this, "Đang chuyển hướng sang cổng thanh toán...", Toast.LENGTH_SHORT).show();
+
+                            // (Optional) Bạn có thể gọi finish() ở đây nếu không muốn khách quay lại màn hình này
+                            // finish();
+
+                        } else {
+                            Toast.makeText(this, "Lỗi: Không lấy được link thanh toán!", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
                 } else {
-                    Toast.makeText(this, "❌ Có lỗi xảy ra, vui lòng thử lại!", Toast.LENGTH_SHORT).show();
+                    // Lỗi tạo vé
+                    btnPayNow.setEnabled(true);
+                    btnPayNow.setText("Thanh toán & Đặt vé");
+                    Toast.makeText(this, "❌ Đặt vé thất bại! Vui lòng thử lại.", Toast.LENGTH_SHORT).show();
                 }
             });
         });
