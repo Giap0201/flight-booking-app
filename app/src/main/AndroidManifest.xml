@@ -15,6 +15,9 @@
         android:theme="@style/Theme.Flightbookingapp"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".booking.activity.PaymentSummaryActivity"
+            android:exported="false" />
+        <activity
             android:name=".booking.activity.AncillaryActivity"
             android:exported="false" />
         <activity

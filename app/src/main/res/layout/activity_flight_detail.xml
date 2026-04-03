@@ -1,124 +1,169 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#FFFFFF"
-    android:padding="20dp">
+    android:background="#F5F7FA">
 
     <LinearLayout
+        android:id="@+id/layoutHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:elevation="4dp"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="16dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:contentDescription="Quay lại"
+            android:src="@android:drawable/ic_menu_revert" />
 
         <TextView
             android:id="@+id/tvRoute"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:text="Jakarta — Bali"
-            android:textColor="#000000"
-            android:textSize="20sp"
+            android:layout_marginStart="16dp"
+            android:text="Hà Nội — Hồ Chí Minh"
+            android:textColor="#1A1A1A"
+            android:textSize="18sp"
             android:textStyle="bold" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/tvFlightDate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="Depart Mon, May 7 • 1h 50m"
-        android:textColor="#7C00F6"
-        android:textSize="14sp"
-        android:textStyle="bold" />
-
-    <LinearLayout
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardFlightInfo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:orientation="horizontal">
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
-
-            <TextView
-                android:id="@+id/tvDepartureTimeTimeline"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="16:55"
-                android:textColor="#000000"
-                android:textSize="16sp" />
-
-            <View
-                android:layout_width="2dp"
-                android:layout_height="40dp"
-                android:background="#E0E0E0"
-                android:layout_marginVertical="4dp"/>
-
-            <TextView
-                android:id="@+id/tvArrivalTimeTimeline"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="20:30"
-                android:textColor="#000000"
-                android:textSize="16sp" />
-        </LinearLayout>
+        android:layout_margin="16dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp"
+        app:layout_constraintTop_toBottomOf="@id/layoutHeader">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="16dp">
 
             <TextView
-                android:id="@+id/tvOriginAirport"
+                android:id="@+id/tvFlightDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="CGK Jakarta Soekarno-Hatta\nInternational Airport"
-                android:textColor="#888888"
-                android:textSize="14sp" />
+                android:text="Khởi hành T3, 31 Thg 3 • 1h 50m"
+                android:textColor="#7C00F6"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/tvFlightInfo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:text="Indonesia Air Asia • Airbus A320"
-                android:textColor="#888888"
-                android:textSize="14sp" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginVertical="12dp"
+                android:background="#EEEEEE" />
 
-            <TextView
-                android:id="@+id/tvDestinationAirport"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="DPS Bali Ngurah Rai Airport"
-                android:textColor="#888888"
-                android:textSize="14sp" />
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/tvDepartureTimeTimeline"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="16:55"
+                    android:textColor="#1A1A1A"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <View
+                    android:id="@+id/viewTimeline"
+                    android:layout_width="2dp"
+                    android:layout_height="60dp"
+                    android:background="#7C00F6"
+                    app:layout_constraintBottom_toTopOf="@id/tvArrivalTimeTimeline"
+                    app:layout_constraintEnd_toEndOf="@id/tvDepartureTimeTimeline"
+                    app:layout_constraintStart_toStartOf="@id/tvDepartureTimeTimeline"
+                    app:layout_constraintTop_toBottomOf="@id/tvDepartureTimeTimeline" />
+
+                <TextView
+                    android:id="@+id/tvArrivalTimeTimeline"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="20:30"
+                    android:textColor="#1A1A1A"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <TextView
+                    android:id="@+id/tvOriginAirport"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="24dp"
+                    android:text="HAN Sân bay Quốc tế Nội Bài"
+                    android:textColor="#4A4A4A"
+                    android:textSize="14sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/tvDepartureTimeTimeline"
+                    app:layout_constraintTop_toTopOf="@id/tvDepartureTimeTimeline" />
+
+                <TextView
+                    android:id="@+id/tvFlightInfo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="8dp"
+                    android:text="Vietnam Airlines • Boeing 787"
+                    android:textColor="#888888"
+                    android:textSize="13sp"
+                    android:textStyle="italic"
+                    app:layout_constraintBottom_toTopOf="@id/tvDestinationAirport"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@id/tvOriginAirport"
+                    app:layout_constraintTop_toBottomOf="@id/tvOriginAirport" />
+
+                <TextView
+                    android:id="@+id/tvDestinationAirport"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="SGN Sân bay Quốc tế Tân Sơn Nhất"
+                    android:textColor="#4A4A4A"
+                    android:textSize="14sp"
+                    app:layout_constraintBottom_toBottomOf="@id/tvArrivalTimeTimeline"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@id/tvOriginAirport" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
         </LinearLayout>
-    </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
     <TextView
+        android:id="@+id/tvLabelChoose"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:layout_marginBottom="16dp"
-        android:text="Choose your ticket"
-        android:textColor="#000000"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:text="Chọn hạng vé"
+        android:textColor="#1A1A1A"
         android:textSize="18sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cardFlightInfo" />
 
-    <ListView
-        android:id="@+id/lvTickets"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvTickets"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:divider="@android:color/transparent"
-        android:dividerHeight="16dp"
-        android:scrollbars="none" />
-
-</LinearLayout>
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:clipToPadding="false"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvLabelChoose"
+        tools:listitem="@layout/item_ticket_class" /> </androidx.constraintlayout.widget.ConstraintLayout>

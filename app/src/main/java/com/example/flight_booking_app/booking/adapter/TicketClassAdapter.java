@@ -6,92 +6,89 @@ import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.flight_booking_app.R;
+import com.example.flight_booking_app.booking.activity.BookingFormActivity;
 import com.example.flight_booking_app.booking.model.FlightClass;
+import com.google.android.material.button.MaterialButton;
 
 import java.util.List;
 
-public class TicketClassAdapter extends BaseAdapter {
+public class TicketClassAdapter extends RecyclerView.Adapter<TicketClassAdapter.TicketViewHolder> {
 
     private Context context;
     private List<FlightClass> listTickets;
-    private LayoutInflater inflater;
     private String currentFlightId;
-
-    // Khai báo thêm biến
     private int adultCount, childCount, infantCount;
-    // Sửa lại Constructor để nhận thêm flightId
-    public TicketClassAdapter(Context context, List<FlightClass> listTickets, String currentFlightId, int adultCount, int childCount, int infantCount) {        this.context = context;
+
+    public TicketClassAdapter(Context context, List<FlightClass> listTickets, String currentFlightId,
+                              int adultCount, int childCount, int infantCount) {
+        this.context = context;
         this.listTickets = listTickets;
-        this.currentFlightId = currentFlightId; // Gán biến
-        this.inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        this.currentFlightId = currentFlightId;
         this.adultCount = adultCount;
         this.childCount = childCount;
         this.infantCount = infantCount;
     }
 
+    @NonNull
     @Override
-    public int getCount() {
-        return listTickets.size();
+    public TicketViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(context).inflate(R.layout.item_ticket_class, parent, false);
+        return new TicketViewHolder(view);
     }
 
     @Override
-    public Object getItem(int position) {
-        return listTickets.get(position);
-    }
-
-    @Override
-    public long getItemId(int position) {
-        return position;
-    }
-
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        if (convertView == null) {
-            convertView = inflater.inflate(R.layout.item_ticket_class, parent, false);
-        }
-
-        TextView tvClassName = convertView.findViewById(R.id.tvClassName);
-        TextView tvPrice = convertView.findViewById(R.id.tvPrice);
-        TextView tvOldPrice = convertView.findViewById(R.id.tvOldPrice);
-        Button btnSelectTicket = convertView.findViewById(R.id.btnSelectTicket);
-
+    public void onBindViewHolder(@NonNull TicketViewHolder holder, int position) {
         FlightClass ticket = listTickets.get(position);
 
-        tvClassName.setText(ticket.getClassType());
+        holder.tvClassName.setText(ticket.getClassType());
 
-        // Cập nhật giá (Giả lập tiền)
-        tvPrice.setText("$" + ticket.getBasePrice());
+        // Đổi format tiền tệ thành VNĐ hoặc $ tùy Backend bạn trả về
+        holder.tvPrice.setText(String.format("%,.0f đ", ticket.getBasePrice()));
 
-        // Làm hiệu ứng gạch ngang cho giá cũ
-        tvOldPrice.setText("$" + (ticket.getBasePrice() + 20)); // Cộng thêm tí tiền để làm giá cũ
-        tvOldPrice.setPaintFlags(tvOldPrice.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+        // Giá cũ (giả lập)
+        holder.tvOldPrice.setText(String.format("%,.0f đ", ticket.getBasePrice() + 500000));
+        holder.tvOldPrice.setPaintFlags(holder.tvOldPrice.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
 
-        // TÌM ĐẾN SỰ KIỆN NÚT SELECT VÀ SỬA LẠI THẾ NÀY:
-        // Ở chỗ nút btnSelectTicket.setOnClickListener:
-        btnSelectTicket.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(context, com.example.flight_booking_app.booking.activity.BookingFormActivity.class);
+        // Sự kiện click nút Select
+        holder.btnSelectTicket.setOnClickListener(v -> {
+            Intent intent = new Intent(context, BookingFormActivity.class);
 
-                intent.putExtra("flightId", currentFlightId);
-                intent.putExtra("flightClassId", ticket.getId());
-                intent.putExtra("ticketPrice", ticket.getBasePrice());
+            intent.putExtra("flightId", currentFlightId);
+            intent.putExtra("flightClassId", ticket.getId());
+            intent.putExtra("ticketPrice", ticket.getBasePrice());
 
-                // TRUYỀN TIẾP SỐ LƯỢNG SANG MÀN HÌNH FORM CỦA BẠN
-                intent.putExtra("adultCount", adultCount);
-                intent.putExtra("childCount", childCount);
-                intent.putExtra("infantCount", infantCount);
+            // 🔥 BẠN QUÊN DÒNG NÀY: Truyền % thuế sang để màn Hóa Đơn còn tính tiền
+            intent.putExtra("taxPercentage", ticket.getTaxPercentage());
 
-                context.startActivity(intent);
-            }
+            intent.putExtra("adultCount", adultCount);
+            intent.putExtra("childCount", childCount);
+            intent.putExtra("infantCount", infantCount);
+
+            context.startActivity(intent);
         });
+    }
 
-        return convertView;
+    @Override
+    public int getItemCount() {
+        return listTickets != null ? listTickets.size() : 0;
+    }
+
+    public static class TicketViewHolder extends RecyclerView.ViewHolder {
+        TextView tvClassName, tvPrice, tvOldPrice;
+        MaterialButton btnSelectTicket; // Đã đổi sang MaterialButton theo XML
+
+        public TicketViewHolder(@NonNull View itemView) {
+            super(itemView);
+            tvClassName = itemView.findViewById(R.id.tvClassName);
+            tvPrice = itemView.findViewById(R.id.tvPrice);
+            tvOldPrice = itemView.findViewById(R.id.tvOldPrice);
+            btnSelectTicket = itemView.findViewById(R.id.btnSelectTicket);
+        }
     }
 }

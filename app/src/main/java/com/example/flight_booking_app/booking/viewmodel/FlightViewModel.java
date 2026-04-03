@@ -35,4 +35,10 @@ public class FlightViewModel extends ViewModel {
     public LiveData<List<AncillaryItem>> getAncillaries() {
         return repository.getAncillaries();
     }
+
+    // Gọi API lấy Link thanh toán
+    // Bạn nhớ thay ResponseDTO bằng Class model trả về thực tế của bạn nhé
+//    public LiveData<String> createPaymentUrl(String bookingId) {
+//        return repository.createPaymentUrl(bookingId); // Hàm này tự bạn viết thêm trong Repository nhé
+//    }
 }

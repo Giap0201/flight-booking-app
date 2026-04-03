@@ -25,7 +25,7 @@ import java.util.Locale;
 
 public class AncillaryActivity extends AppCompatActivity {
 
-    // 1. Khai báo View (ĐÃ SỬA THÀNH RECYCLERVIEW)
+    // 1. Khai báo View
     private RecyclerView rvAncillaries;
     private TextView tvTotalAncillaryPrice;
     private Button btnConfirmAncillaries;
@@ -38,8 +38,11 @@ public class AncillaryActivity extends AppCompatActivity {
     // 3. Khai báo các biến hứng dữ liệu từ màn hình trước truyền sang
     private String[] dsTenHanhKhach;
     private BookingRequest currentBookingRequest; // Cục Data JSON chuẩn bị gửi API
-    private double basePrice = 0; // Giá vé gốc truyền sang
+    private double basePrice = 0; // Giá tổng cộng ban đầu truyền sang
     private double tongTienDichVu = 0; // Tiền dịch vụ mua thêm
+
+    // ĐÃ THÊM: Biến này dùng để hứng giá của 1 vé (để lát mang sang màn Hóa Đơn)
+    private double ticketPrice = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +69,10 @@ public class AncillaryActivity extends AppCompatActivity {
             currentBookingRequest = (BookingRequest) intent.getSerializableExtra("bookingRequest");
             basePrice = intent.getDoubleExtra("basePrice", 0.0);
 
-            // Hiện giá tiền gốc lên luôn
+            // ĐÃ THÊM: Hứng biến ticketPrice từ màn hình BookingFormActivity
+            ticketPrice = intent.getDoubleExtra("ticketPrice", 0.0);
+
+            // Hiện giá tiền tổng lên luôn
             capNhatTongTien();
         }
 
@@ -76,33 +82,22 @@ public class AncillaryActivity extends AppCompatActivity {
         layDuLieuTuApi();
 
         // ==============================================================================
-        // XỬ LÝ NÚT XÁC NHẬN - CHỐT ĐƠN HÀNG VÀ GỌI API ĐẶT VÉ
+        // XỬ LÝ NÚT XÁC NHẬN - CHUYỂN SANG MÀN HÌNH TÓM TẮT THANH TOÁN (BILL)
         // ==============================================================================
         btnConfirmAncillaries.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Khóa nút lại để tránh user bấm 2 lần liên tục sinh ra 2 mã vé
-                btnConfirmAncillaries.setEnabled(false);
-                btnConfirmAncillaries.setText("Đang xử lý...");
+                // Khởi tạo Intent chuyển sang màn PaymentSummaryActivity
+                Intent nextIntent = new Intent(AncillaryActivity.this, PaymentSummaryActivity.class);
 
-                // Gọi API Create Booking
-                viewModel.createBooking(currentBookingRequest).observe(AncillaryActivity.this, result -> {
-                    // Mở khóa lại nút
-                    btnConfirmAncillaries.setEnabled(true);
-                    btnConfirmAncillaries.setText("Xác nhận");
+                // Gói data gửi đi
+                nextIntent.putExtra("bookingRequest", currentBookingRequest);
+                nextIntent.putExtra("tongTienDichVu", tongTienDichVu);
 
-                    if (result != null) {
-                        Toast.makeText(AncillaryActivity.this,
-                                "🎉 Đặt vé thành công! PNR: " + result.getPnrCode(),
-                                Toast.LENGTH_LONG).show();
+                // Truyền giá của 1 vé sang màn Payment để tính toán (Người lớn, trẻ em, thuế...)
+                nextIntent.putExtra("ticketPrice", ticketPrice);
 
-                        // TODO: Chuyển sang màn hình Chi tiết vé / Hoàn tất thanh toán
-                    } else {
-                        Toast.makeText(AncillaryActivity.this,
-                                "❌ Đặt vé thất bại! Vui lòng thử lại.",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
+                startActivity(nextIntent);
             }
         });
     }

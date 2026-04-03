@@ -173,10 +173,13 @@ public class BookingFormActivity extends AppCompatActivity {
         // 2. Tạo Intent để chuyển trang
         Intent nextIntent = new Intent(BookingFormActivity.this, AncillaryActivity.class);
 
-        // 3. Gửi mảng tên hành khách, object Request và tổng tiền sang màn sau
+        // 3. Gói dữ liệu gửi đi
         nextIntent.putExtra("passengerNames", dsTenHanhKhach);
-        nextIntent.putExtra("bookingRequest", request); // Đảm bảo BookingRequest đã implements Serializable
-        nextIntent.putExtra("basePrice", totalPrice);   // Gửi tổng tiền gốc đi để màn sau cộng dồn
+        nextIntent.putExtra("bookingRequest", request);
+        nextIntent.putExtra("basePrice", totalPrice);   // Tiền tổng
+
+        // 🔥 THÊM DÒNG NÀY: Phải gửi giá của 1 vé đi thì màn cuối mới chia tiền được!
+        nextIntent.putExtra("ticketPrice", ticketPrice);
 
         // 4. Thực hiện chuyển trang
         startActivity(nextIntent);
