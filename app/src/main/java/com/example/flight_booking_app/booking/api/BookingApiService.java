@@ -47,8 +47,11 @@ public interface BookingApiService {
     Call<ApiResponse<List<AncillaryItem>>> getAncillaries();
 
 
-    // Trả về một chuỗi URL nằm trong trường "result"
-    @GET("payments/create-url") // Nhớ sửa lại tiền tố api/ cho đúng với backend của bạn
-    Call<ApiResponse<String>> createPaymentUrl(@Query("bookingId") String bookingId);
+    // Thêm @Query("platform") để báo cho Backend biết là Android đang gọi
+    @GET("payments/create-url")
+    Call<ApiResponse<String>> createPaymentUrl(
+            @Query("bookingId") String bookingId,
+            @Query("platform") String platform
+    );
 
 }

@@ -21,6 +21,7 @@ import java.util.Locale;
 
 public class PaymentSummaryActivity extends AppCompatActivity {
 
+    // Khai báo các view trên giao diện
     private TextView tvAdultCount, tvAdultPrice;
     private TextView tvChildCount, tvChildPrice;
     private TextView tvInfantCount, tvInfantPrice;
@@ -32,11 +33,9 @@ public class PaymentSummaryActivity extends AppCompatActivity {
     private BookingRequest currentBookingRequest;
 
     // Dữ liệu truyền từ các màn hình trước
-    private double ticketPrice;
-    private double tongTienDichVu;
-
-    // Giả sử thuế là 10% (0.1). Nếu API của bạn có trả về phần trăm thuế, bạn lấy gán vào đây
-    private final double TAX_RATE = 0.10;
+    private double ticketPrice = 0.0;     // Giá gốc của 1 vé
+    private double tongTienDichVu = 0.0;  // Tổng tiền hành lý, ăn uống
+    private double taxRateFromDB = 0.0;   // % Thuế lấy từ Database (Ví dụ: 0.1 là 10%)
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,103 +45,128 @@ public class PaymentSummaryActivity extends AppCompatActivity {
         initViews();
         viewModel = new ViewModelProvider(this).get(FlightViewModel.class);
 
-        // 1. Nhận dữ liệu
+        // =========================================================================
+        // BƯỚC 1: NHẬN DỮ LIỆU TỪ MÀN HÌNH TRƯỚC
+        // =========================================================================
         Intent intent = getIntent();
         if (intent != null) {
             currentBookingRequest = (BookingRequest) intent.getSerializableExtra("bookingRequest");
-            ticketPrice = intent.getDoubleExtra("ticketPrice", 0.0); // Giá gốc của 1 vé
-            tongTienDichVu = intent.getDoubleExtra("tongTienDichVu", 0.0); // Tổng tiền hành lý/ăn uống
+            ticketPrice = intent.getDoubleExtra("ticketPrice", 0.0);
+            tongTienDichVu = intent.getDoubleExtra("tongTienDichVu", 0.0);
+
+            // Lấy % thuế từ màn hình trước truyền sang (Nếu không có thì mặc định là 0.1 tức 10%)
+            taxRateFromDB = intent.getDoubleExtra("taxPercentage", 0.1);
         }
 
-        // 2. Tính toán tiền y hệt Spring Boot
+        // =========================================================================
+        // BƯỚC 2: TÍNH TOÁN VÀ HIỂN THỊ HÓA ĐƠN
+        // =========================================================================
         calculateAndDisplayPrice();
 
-        // Nhớ import Uri ở đầu file nhé: import android.net.Uri;
+        // =========================================================================
+        // BƯỚC 3: XỬ LÝ KHI BẤM NÚT THANH TOÁN
+        // =========================================================================
+        btnPayNow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Khóa nút lại để tránh user bấm liên tục sinh ra nhiều đơn hàng
+                btnPayNow.setEnabled(false);
+                btnPayNow.setText("Đang khởi tạo đơn hàng...");
 
-        btnPayNow.setOnClickListener(v -> {
-            // Khóa nút lại để tránh user bấm spam 2 lần
-            btnPayNow.setEnabled(false);
-            btnPayNow.setText("Đang khởi tạo đơn hàng...");
+                // HÀNH ĐỘNG 1: Gọi API lên Backend để lưu đơn hàng (Booking) vào Database
+                viewModel.createBooking(currentBookingRequest).observe(PaymentSummaryActivity.this, bookingResult -> {
 
-            // 1. GỌI API TẠO BOOKING TRƯỚC
-            viewModel.createBooking(currentBookingRequest).observe(this, bookingResult -> {
+                    // Nếu Backend trả về kết quả thành công và có ID đơn hàng
+                    if (bookingResult != null && bookingResult.getId() != null) {
 
-                if (bookingResult != null && bookingResult.getId() != null) {
+                        String bookingId = bookingResult.getId(); // Lấy ID đơn hàng vừa tạo
+                        btnPayNow.setText("Đang kết nối cổng thanh toán...");
 
-                    String bookingId = bookingResult.getId();
-                    btnPayNow.setText("Đang lấy link thanh toán...");
+                        // HÀNH ĐỘNG 2: Dùng ID đơn hàng đó, gọi API tiếp để lấy Link VNPay/MoMo
+                        // Lưu ý: Truyền chữ "android" để Backend biết đường đá về App
+                        viewModel.createPaymentUrl(bookingId, "android").observe(PaymentSummaryActivity.this, paymentUrl -> {
 
-                    // 2. CÓ BOOKING ID RỒI -> GỌI API LẤY LINK THANH TOÁN
-                    viewModel.createPaymentUrl(bookingId).observe(this, paymentUrl -> {
-                        // Mở khóa nút
+                            // Mở khóa nút lại
+                            btnPayNow.setEnabled(true);
+                            btnPayNow.setText("Thanh toán & Đặt vé");
+
+                            // Nếu Backend trả về link Web VNPay thành công
+                            if (paymentUrl != null && !paymentUrl.isEmpty()) {
+
+                                // HÀNH ĐỘNG 3: Bật trình duyệt web lên để khách quẹt thẻ
+                                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(paymentUrl));
+                                startActivity(browserIntent);
+
+                                // Đóng màn hình Hóa đơn này lại.
+                                // Vì lát nữa thanh toán xong, Deep Link sẽ bật thẳng màn hình "PaymentResultActivity"
+                                finish();
+
+                            } else {
+                                Toast.makeText(PaymentSummaryActivity.this, "Không lấy được link thanh toán!", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
+                    } else {
+                        // Nếu Backend lỗi, không tạo được vé
                         btnPayNow.setEnabled(true);
                         btnPayNow.setText("Thanh toán & Đặt vé");
-
-                        if (paymentUrl != null && !paymentUrl.isEmpty()) {
-
-                            // 3. MỞ TRÌNH DUYỆT ĐỂ KHÁCH THANH TOÁN
-                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(paymentUrl));
-                            startActivity(browserIntent);
-
-                            Toast.makeText(this, "Đang chuyển hướng sang cổng thanh toán...", Toast.LENGTH_SHORT).show();
-
-                            // (Optional) Bạn có thể gọi finish() ở đây nếu không muốn khách quay lại màn hình này
-                            // finish();
-
-                        } else {
-                            Toast.makeText(this, "Lỗi: Không lấy được link thanh toán!", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-
-                } else {
-                    // Lỗi tạo vé
-                    btnPayNow.setEnabled(true);
-                    btnPayNow.setText("Thanh toán & Đặt vé");
-                    Toast.makeText(this, "❌ Đặt vé thất bại! Vui lòng thử lại.", Toast.LENGTH_SHORT).show();
-                }
-            });
+                        Toast.makeText(PaymentSummaryActivity.this, "❌ Đặt vé thất bại! Vui lòng thử lại.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
         });
     }
 
+    // Hàm này tính toán tiền y hệt logic trong file Spring Boot của bạn
     private void calculateAndDisplayPrice() {
-        int adultCount = 0, childCount = 0, infantCount = 0;
+        int adultCount = 0;
+        int childCount = 0;
+        int infantCount = 0;
 
-        // Đếm số lượng từng loại hành khách từ Request
+        // 1. Phân loại và đếm số lượng hành khách
         if (currentBookingRequest != null && currentBookingRequest.getPassengers() != null) {
             for (PassengerRequest p : currentBookingRequest.getPassengers()) {
-                if ("ADULT".equals(p.getType())) adultCount++;
-                else if ("CHILD".equals(p.getType())) childCount++;
-                else if ("INFANT".equals(p.getType())) infantCount++;
+                if ("ADULT".equals(p.getType())) {
+                    adultCount++;
+                } else if ("CHILD".equals(p.getType())) {
+                    childCount++;
+                } else if ("INFANT".equals(p.getType())) {
+                    infantCount++;
+                }
             }
         }
 
-        // Logic giống y hệt backend Spring Boot
+        // 2. Tính giá tiền cho từng nhóm tuổi (Người lớn 100%, Trẻ em 75%, Em bé 10%)
         double adultTotalBase = adultCount * ticketPrice;
         double childTotalBase = childCount * (ticketPrice * 0.75);
         double infantTotalBase = infantCount * (ticketPrice * 0.10);
 
+        // 3. Cộng tổng tiền vé gốc
         double totalBaseFare = adultTotalBase + childTotalBase + infantTotalBase;
 
-        // Tính thuế
-        double taxAmount = totalBaseFare * TAX_RATE;
+        // 4. Tính tiền thuế (Dựa vào % thuế lấy từ Database)
+        double taxAmount = totalBaseFare * taxRateFromDB;
 
-        // Tổng tiền cuối cùng = Giá vé + Thuế + Dịch vụ thêm
+        // 5. Tính tổng tiền cuối cùng phải trả
         double finalTotal = totalBaseFare + taxAmount + tongTienDichVu;
 
-        // --- HIỂN THỊ LÊN GIAO DIỆN ---
+        // 6. Hiển thị lên giao diện (Format số tiền kiểu Việt Nam)
         NumberFormat formatter = NumberFormat.getInstance(new Locale("vi", "VN"));
 
+        // Vé người lớn (Luôn luôn hiện)
         tvAdultCount.setText("Vé người lớn (x" + adultCount + ")");
         tvAdultPrice.setText(formatter.format(adultTotalBase) + " đ");
 
+        // Vé trẻ em (Chỉ hiện nếu có trẻ em)
         if (childCount > 0) {
             tvChildCount.setText("Vé trẻ em (x" + childCount + ")");
             tvChildPrice.setText(formatter.format(childTotalBase) + " đ");
             layoutChild.setVisibility(View.VISIBLE);
         } else {
-            layoutChild.setVisibility(View.GONE); // Ẩn đi nếu không có trẻ em
+            layoutChild.setVisibility(View.GONE);
         }
 
+        // Vé em bé (Chỉ hiện nếu có em bé)
         if (infantCount > 0) {
             tvInfantCount.setText("Vé em bé (x" + infantCount + ")");
             tvInfantPrice.setText(formatter.format(infantTotalBase) + " đ");
@@ -151,11 +175,13 @@ public class PaymentSummaryActivity extends AppCompatActivity {
             layoutInfant.setVisibility(View.GONE);
         }
 
+        // Hiện Thuế, Dịch vụ và Tổng tiền
         tvTaxPrice.setText(formatter.format(taxAmount) + " đ");
         tvAncillaryPriceSummary.setText(formatter.format(tongTienDichVu) + " đ");
         tvFinalTotal.setText(formatter.format(finalTotal) + " đ");
     }
 
+    // Hàm này chỉ dùng để tìm các ID trên file XML
     private void initViews() {
         tvAdultCount = findViewById(R.id.tvAdultCount);
         tvAdultPrice = findViewById(R.id.tvAdultPrice);

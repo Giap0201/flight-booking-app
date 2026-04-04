@@ -138,11 +138,11 @@ public class FlightRepository {
     }
 
     // THÊM HÀM NÀY VÀO TRONG REPOSITORY
-    public MutableLiveData<String> createPaymentUrl(String bookingId) {
+    public MutableLiveData<String> createPaymentUrl(String bookingId, String platform) { // Thêm tham số platform
         MutableLiveData<String> paymentUrlLiveData = new MutableLiveData<>();
 
-        // apiService là biến Retrofit bạn đã khởi tạo sẵn trong Repository
-        apiService.createPaymentUrl(bookingId).enqueue(new Callback<ApiResponse<String>>() {
+        // Truyền cả 2 tham số vào hàm của ApiService
+        apiService.createPaymentUrl(bookingId, platform).enqueue(new Callback<ApiResponse<String>>() {
             @Override
             public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
                 // Nếu kết nối thành công và backend trả về code HTTP 200
