@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet"
+    android:padding="24dp">
+
+    <ImageButton
+        android:id="@+id/btnCloseSheet"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="#6B7280" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Passengers"
+        android:textColor="#111827"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@id/btnCloseSheet"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/btnCloseSheet" />
+
+    <LinearLayout
+        android:id="@+id/layoutAdults"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/btnCloseSheet">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Adult"
+            android:textColor="#111827"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/btnMinusAdult"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="#E5E7EB"
+            android:src="@android:drawable/ic_media_pause" />
+
+        <TextView
+            android:id="@+id/tvAdultCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:text="1"
+            android:textColor="#111827"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/btnPlusAdult"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="#7C3AED"
+            android:src="@android:drawable/ic_input_add"
+            app:tint="@android:color/white" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/line1"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginVertical="16dp"
+        android:background="#E5E7EB"
+        app:layout_constraintTop_toBottomOf="@id/layoutAdults" />
+
+    <LinearLayout
+        android:id="@+id/layoutChildren"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/line1">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Children"
+                android:textColor="#111827"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2-11 years at time of travel"
+                android:textColor="#9CA3AF"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnMinusChild"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="#E5E7EB"
+            android:src="@android:drawable/ic_media_pause" />
+
+        <TextView
+            android:id="@+id/tvChildCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:text="0"
+            android:textColor="#111827"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/btnPlusChild"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="#7C3AED"
+            android:src="@android:drawable/ic_input_add"
+            app:tint="@android:color/white" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/line2"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginVertical="16dp"
+        android:background="#E5E7EB"
+        app:layout_constraintTop_toBottomOf="@id/layoutChildren" />
+
+    <LinearLayout
+        android:id="@+id/layoutInfants"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/line2">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Infants (Lap)"
+                android:textColor="#111827"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Under 2 years at time of travel"
+                android:textColor="#9CA3AF"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnMinusInfant"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="#E5E7EB"
+            android:src="@android:drawable/ic_media_pause" />
+
+        <TextView
+            android:id="@+id/tvInfantCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:text="0"
+            android:textColor="#111827"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/btnPlusInfant"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="#7C3AED"
+            android:src="@android:drawable/ic_input_add"
+            app:tint="@android:color/white" />
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnConfirmPassengers"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginTop="32dp"
+        android:backgroundTint="#7C3AED"
+        android:text="Confirmation"
+        android:textAllCaps="false"
+        android:textSize="18sp"
+        app:cornerRadius="30dp"
+        app:layout_constraintTop_toBottomOf="@id/layoutInfants" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
