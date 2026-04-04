@@ -16,10 +16,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class FlightRepository {
+public class BookingRepository {
     private BookingApiService apiService;
 
-    public FlightRepository() {
+    public BookingRepository() {
 // CÁCH GỌI MỚI: Mượn ApiClient dùng chung để tạo ra Service riêng của Booking
         apiService = ApiClient.getClient().create(BookingApiService.class);
     }

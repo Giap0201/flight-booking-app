@@ -17,7 +17,7 @@ import com.example.flight_booking_app.booking.adapter.PassengerAdapter;
 import com.example.flight_booking_app.booking.model.BookingRequest;
 import com.example.flight_booking_app.booking.model.FlightRequest;
 import com.example.flight_booking_app.booking.model.PassengerRequest;
-import com.example.flight_booking_app.booking.viewmodel.FlightViewModel;
+import com.example.flight_booking_app.booking.viewmodel.BookingViewModel;
 import com.example.flight_booking_app.common.DateUtils;
 
 import java.util.ArrayList;
@@ -34,7 +34,7 @@ public class BookingFormActivity extends AppCompatActivity {
     private PassengerAdapter passengerAdapter;
     private List<PassengerRequest> listPassengers;
 
-    private FlightViewModel viewModel;
+    private BookingViewModel viewModel;
 
     private String currentFlightId;
     private String currentFlightClassId;
@@ -106,7 +106,7 @@ public class BookingFormActivity extends AppCompatActivity {
         rvPassengers.setAdapter(passengerAdapter);
 
         // 6. Khởi tạo ViewModel & Bắt sự kiện
-        viewModel = new ViewModelProvider(this).get(FlightViewModel.class);
+        viewModel = new ViewModelProvider(this).get(BookingViewModel.class);
         btnConfirmBooking.setOnClickListener(v -> submitBooking());
     }
 

@@ -18,7 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;      // QUAN TRỌNG: Cho Recy
 import com.example.flight_booking_app.R;
 import com.example.flight_booking_app.booking.adapter.TicketClassAdapter;
 import com.example.flight_booking_app.booking.model.FlightClass;
-import com.example.flight_booking_app.booking.viewmodel.FlightViewModel;
+import com.example.flight_booking_app.booking.viewmodel.BookingViewModel;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ public class FlightDetailActivity extends AppCompatActivity {
 
     private TicketClassAdapter adapter;
     private List<FlightClass> listFlightClasses;
-    private FlightViewModel viewModel;
+    private BookingViewModel viewModel;
 
     // Dữ liệu nhận từ Intent
     private int adultCount = 1;
@@ -68,7 +68,7 @@ public class FlightDetailActivity extends AppCompatActivity {
         setupRecyclerView();
 
         // 5. Khởi tạo ViewModel và Quan sát dữ liệu
-        viewModel = new ViewModelProvider(this).get(FlightViewModel.class);
+        viewModel = new ViewModelProvider(this).get(BookingViewModel.class);
         observeData();
 
         // Nút back quay lại màn hình trước

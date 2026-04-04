@@ -14,7 +14,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.flight_booking_app.R;
 import com.example.flight_booking_app.booking.model.BookingRequest;
 import com.example.flight_booking_app.booking.model.PassengerRequest;
-import com.example.flight_booking_app.booking.viewmodel.FlightViewModel;
+import com.example.flight_booking_app.booking.viewmodel.BookingViewModel;
 
 import java.text.NumberFormat;
 import java.util.Locale;
@@ -29,7 +29,7 @@ public class PaymentSummaryActivity extends AppCompatActivity {
     private Button btnPayNow;
     private View layoutChild, layoutInfant;
 
-    private FlightViewModel viewModel;
+    private BookingViewModel viewModel;
     private BookingRequest currentBookingRequest;
 
     // Dữ liệu truyền từ các màn hình trước
@@ -43,7 +43,7 @@ public class PaymentSummaryActivity extends AppCompatActivity {
         setContentView(R.layout.activity_payment_summary);
 
         initViews();
-        viewModel = new ViewModelProvider(this).get(FlightViewModel.class);
+        viewModel = new ViewModelProvider(this).get(BookingViewModel.class);
 
         // =========================================================================
         // BƯỚC 1: NHẬN DỮ LIỆU TỪ MÀN HÌNH TRƯỚC

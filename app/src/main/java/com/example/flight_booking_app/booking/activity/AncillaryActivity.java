@@ -17,7 +17,7 @@ import com.example.flight_booking_app.booking.adapter.AncillaryAdapter;
 import com.example.flight_booking_app.booking.model.AncillaryItem;
 import com.example.flight_booking_app.booking.model.AncillaryRequest;
 import com.example.flight_booking_app.booking.model.BookingRequest;
-import com.example.flight_booking_app.booking.viewmodel.FlightViewModel;
+import com.example.flight_booking_app.booking.viewmodel.BookingViewModel;
 
 import java.text.NumberFormat;
 import java.util.List;
@@ -33,7 +33,7 @@ public class AncillaryActivity extends AppCompatActivity {
     // 2. Khai báo dữ liệu và Adapter
     private List<AncillaryItem> dsAncillary;
     private AncillaryAdapter adapter;
-    private FlightViewModel viewModel;
+    private BookingViewModel viewModel;
 
     // 3. Khai báo các biến hứng dữ liệu từ màn hình trước truyền sang
     private String[] dsTenHanhKhach;
@@ -58,7 +58,7 @@ public class AncillaryActivity extends AppCompatActivity {
         rvAncillaries.setLayoutManager(new LinearLayoutManager(this));
 
         // Khởi tạo ViewModel
-        viewModel = new ViewModelProvider(this).get(FlightViewModel.class);
+        viewModel = new ViewModelProvider(this).get(BookingViewModel.class);
 
         // ==============================================================================
         // NHẬN DỮ LIỆU TỪ MÀN HÌNH NHẬP THÔNG TIN TRUYỀN SANG

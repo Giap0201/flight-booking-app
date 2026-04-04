@@ -7,16 +7,16 @@ import com.example.flight_booking_app.booking.model.AncillaryItem; // Nhớ impo
 import com.example.flight_booking_app.booking.model.BookingRequest;
 import com.example.flight_booking_app.booking.model.BookingResult;
 import com.example.flight_booking_app.booking.model.FlightDetail;
-import com.example.flight_booking_app.booking.repository.FlightRepository;
+import com.example.flight_booking_app.booking.repository.BookingRepository;
 
 import java.util.List;
 
-public class FlightViewModel extends ViewModel {
+public class BookingViewModel extends ViewModel {
 
-    private FlightRepository repository;
+    private BookingRepository repository;
 
-    public FlightViewModel() {
-        repository = new FlightRepository();
+    public BookingViewModel() {
+        repository = new BookingRepository();
     }
 
     // Activity sẽ gọi hàm này để "quan sát" dữ liệu chi tiết chuyến bay
