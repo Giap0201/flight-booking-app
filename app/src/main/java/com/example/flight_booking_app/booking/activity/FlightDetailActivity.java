@@ -35,7 +35,7 @@ public class FlightDetailActivity extends AppCompatActivity {
     private FlightViewModel viewModel;
 
     // Tạm thời fix cứng ID chuyến bay vì Dev kia chưa làm xong màn hình Search
-    private String currentFlightId = "005d2fc3-fd73-4fdb-ad31-439e425ee8a9";
+    private String currentFlightId = "00158e4d-47d1-488a-b849-19d16222cd1f";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

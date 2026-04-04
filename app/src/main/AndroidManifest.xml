@@ -14,18 +14,32 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Flightbookingapp">
-
         <activity
-            android:name=".booking.activity.FlightDetailActivity"
+            android:name=".home.activity.SearchLocationActivity"
+            android:exported="false" />
+        <activity
+            android:name=".home.activity.SearchResultActivity"
+            android:exported="false" />
+        <activity
+            android:name=".authen.activity.ForgotPasswordActivity"
+            android:exported="false" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".authen.activity.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
-            android:name=".MainActivity"
+            android:name=".booking.activity.FlightDetailActivity"
+            android:exported="false"/>
+        <activity
+            android:name=".home.activity.HomeActivity"
             android:exported="false" />
 
     </application>
