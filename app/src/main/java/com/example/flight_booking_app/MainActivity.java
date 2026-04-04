@@ -3,9 +3,10 @@ package com.example.flight_booking_app;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+
+import com.example.flight_booking_app.user.activity.fragment_profile;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-// Thay HomeFragment bằng đường dẫn chính xác của bạn nếu cần
 import com.example.flight_booking_app.home.activity.HomeFragment;
 
 public class MainActivity extends AppCompatActivity {
@@ -35,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_tickets) {
                 // selectedFragment = new BookingsFragment(); // Sẽ tạo sau
             } else if (itemId == R.id.nav_profile) {
-                // selectedFragment = new ProfileFragment(); // Sẽ tạo sau
+                selectedFragment = new fragment_profile(); // Sẽ tạo sau
             }
 
             if (selectedFragment != null) {
