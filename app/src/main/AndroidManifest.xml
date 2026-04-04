@@ -24,10 +24,11 @@
             android:name=".authen.activity.ForgotPasswordActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".authen.activity.LoginActivity"
             android:exported="false" />
         <activity
-            android:name=".authen.activity.LoginActivity"
+
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -38,10 +39,6 @@
         <activity
             android:name=".booking.activity.FlightDetailActivity"
             android:exported="false"/>
-        <activity
-            android:name=".home.activity.HomeActivity"
-            android:exported="false" />
-
     </application>
 
 </manifest>
