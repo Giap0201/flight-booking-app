@@ -166,9 +166,9 @@ public class HomeFragment extends Fragment {
                 adultCount = tempA[0]; childCount = tempC[0]; infantCount = tempI[0];
                 totalPassengers = adultCount + childCount + infantCount;
                 StringBuilder summary = new StringBuilder();
-                summary.append(adultCount).append(adultCount > 1 ? " Adults" : " Adult");
-                if (childCount > 0) summary.append(", ").append(childCount).append(childCount > 1 ? " Children" : " Child");
-                if (infantCount > 0) summary.append(", ").append(infantCount).append(infantCount > 1 ? " Infants" : " Infant");
+                summary.append(adultCount).append(adultCount > 1 ? " Người lớn" : " Người lớn");
+                if (childCount > 0) summary.append(", ").append(childCount).append(childCount > 1 ? " Trẻ em" : " Trẻ em");
+                if (infantCount > 0) summary.append(", ").append(infantCount).append(infantCount > 1 ? " Em bé" : " Em bé");
                 tvPassengers.setText(summary.toString());
                 dialog.dismiss();
             });
