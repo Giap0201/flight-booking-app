@@ -1,5 +1,6 @@
 package com.example.flight_booking_app.home.repository;
 
+import android.app.Application;
 import android.util.Log;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -17,9 +18,9 @@ import retrofit2.Response;
 public class FlightRepository {
     private HomeApiService apiService;
 
-    public FlightRepository() {
+    public FlightRepository(Application application) {
         // Khởi tạo Retrofit từ file ApiClient dùng chung của bạn
-        apiService = ApiClient.getClient().create(HomeApiService.class);
+        apiService = ApiClient.getClient(application).create(HomeApiService.class);
     }
 
     public LiveData<FlightPageResponse> searchFlights(SearchRequest request) {

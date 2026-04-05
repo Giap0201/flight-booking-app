@@ -3,4 +3,5 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="purple_primary">#8B00FF</color>
+    <color name="color_booking_purple">#7F00FF</color>
 </resources>
