@@ -1,5 +1,8 @@
 package com.example.flight_booking_app.booking.viewmodel;
 
+import android.app.Application;
+
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModel;
 
@@ -11,12 +14,13 @@ import com.example.flight_booking_app.booking.repository.BookingRepository;
 
 import java.util.List;
 
-public class BookingViewModel extends ViewModel {
+public class BookingViewModel extends AndroidViewModel {
 
     private BookingRepository repository;
 
-    public BookingViewModel() {
-        repository = new BookingRepository();
+    public BookingViewModel(Application application) {
+        super(application);
+        repository = new BookingRepository(application);
     }
 
     // Activity sẽ gọi hàm này để "quan sát" dữ liệu chi tiết chuyến bay
