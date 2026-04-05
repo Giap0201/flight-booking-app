@@ -1,5 +1,6 @@
 package com.example.flight_booking_app.home.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
@@ -11,6 +12,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.flight_booking_app.R;
+import com.example.flight_booking_app.booking.activity.BookingFormActivity;
+import com.example.flight_booking_app.booking.activity.FlightDetailActivity;
 import com.example.flight_booking_app.home.adapter.FlightAdapter;
 import com.example.flight_booking_app.home.viewmodel.HomeViewModel;
 
@@ -20,9 +23,7 @@ public class SearchResultActivity extends AppCompatActivity {
 
     private HomeViewModel viewModel;
     private FlightAdapter flightAdapter;
-
     private Button btnBack;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,27 +35,52 @@ public class SearchResultActivity extends AppCompatActivity {
         TextView tvHeaderDetails = findViewById(R.id.tvHeaderDetails);
         btnBack = findViewById(R.id.btnBack);
 
-        // 2. Lấy dữ liệu từ màn hình Home gửi sang
+        // =========================================================================
+        // 2. NHẬN DỮ LIỆU TỪ HOME ACTIVITY (ĐÃ CẬP NHẬT 3 BIẾN HÀNH KHÁCH)
+        // =========================================================================
         String origin = getIntent().getStringExtra("ORIGIN");
         String destination = getIntent().getStringExtra("DESTINATION");
         String date = getIntent().getStringExtra("DATE");
-        int passengers = getIntent().getIntExtra("PASSENGERS", 1);
+        int passengers = getIntent().getIntExtra("PASSENGERS", 1); // Tổng số người (Để hiển thị Header và gọi API)
+
+        // Nhận chi tiết từng loại hành khách
+        int adultCount = getIntent().getIntExtra("ADULT_COUNT", 1);
+        int childCount = getIntent().getIntExtra("CHILD_COUNT", 0);
+        int infantCount = getIntent().getIntExtra("INFANT_COUNT", 0);
 
         // Hiển thị lên Header cho đẹp
         tvHeaderRoute.setText(origin + "  →  " + destination);
         tvHeaderDetails.setText(date + "  •  " + passengers + " Hành khách");
 
-        // 3. Khởi tạo RecyclerView và Adapter (Y hệt như trang Home cũ)
+        // =========================================================================
+        // 3. KHỞI TẠO RECYCLERVIEW & BẮT SỰ KIỆN CLICK CHUYẾN BAY
+        // =========================================================================
         RecyclerView rvResultFlights = findViewById(R.id.rvResultFlights);
         rvResultFlights.setLayoutManager(new LinearLayoutManager(this));
-        flightAdapter = new FlightAdapter();
+
+        // Gắn sự kiện click cho Adapter
+        flightAdapter = new FlightAdapter(flight -> {
+
+            // Chuyển sang màn hình Chi tiết chuyến bay hoặc Điền Form (Tùy logic app của bạn)
+            Intent intent = new Intent(SearchResultActivity.this, FlightDetailActivity.class);
+// Ném nguyên cục dữ liệu chuyến bay (Giống cách truyền State của React)
+// Chỉ gửi Số hiệu chuyến bay (VD: "NS8118") để thay cho ID bị thiếu
+            intent.putExtra("FLIGHT_ID", flight.getId());
+            intent.putExtra("ADULT_COUNT", adultCount);
+            intent.putExtra("CHILD_COUNT", childCount);
+            intent.putExtra("INFANT_COUNT", infantCount);
+
+            startActivity(intent);
+        });
+
         rvResultFlights.setAdapter(flightAdapter);
 
-        // 4. Khởi tạo ViewModel
-        // Chú ý: Ở đây ta dùng lại HomeViewModel vì nó đã có sẵn hàm performSearch rất chuẩn rồi
+        // =========================================================================
+        // 4. KHỞI TẠO VIEWMODEL & GỌI API
+        // =========================================================================
         viewModel = new ViewModelProvider(this).get(HomeViewModel.class);
 
-        // 5. Lắng nghe kết quả từ API
+        // Lắng nghe kết quả từ API
         viewModel.getSearchResults().observe(this, flightPageResponse -> {
             if (flightPageResponse != null && flightPageResponse.getData() != null && !flightPageResponse.getData().isEmpty()) {
                 // Đổ dữ liệu thật vào Adapter
@@ -65,11 +91,12 @@ public class SearchResultActivity extends AppCompatActivity {
             }
         });
 
-        // 6. GỌI API NGAY KHI MỞ MÀN HÌNH NÀY LÊN
+        // GỌI API NGAY KHI MỞ MÀN HÌNH NÀY LÊN
         if (origin != null && destination != null && date != null) {
             viewModel.performSearch(origin, destination, date, passengers);
         }
 
+        // Nút Back
         btnBack.setOnClickListener(v -> finish());
     }
 }

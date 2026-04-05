@@ -130,8 +130,14 @@ public class HomeActivity extends AppCompatActivity {
             intent.putExtra("ORIGIN", departure);
             intent.putExtra("DESTINATION", arrival);
             intent.putExtra("DATE", date);
-            intent.putExtra("PASSENGERS", totalPassengers); // Gửi tổng số người đi
-            // Tạm thời chưa gửi isRoundTrip và returnDate vì API cũ chỉ nhận 4 tham số
+
+            // ⚡ THAY ĐỔI Ở ĐÂY: Gửi riêng biệt từng loại hành khách ⚡
+            intent.putExtra("ADULT_COUNT", adultCount);
+            intent.putExtra("CHILD_COUNT", childCount);
+            intent.putExtra("INFANT_COUNT", infantCount);
+
+            // (Bạn vẫn có thể gửi thêm biến PASSENGERS nếu API tìm kiếm chuyến bay cũ đang cần nó)
+            intent.putExtra("PASSENGERS", totalPassengers);
 
             startActivity(intent);
         });

@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -27,7 +28,22 @@
             android:name=".MainActivity"
             android:exported="false" />
         <activity
-            android:name=".authen.activity.LoginActivity"
+            android:name=".booking.activity.BookingFormActivity"
+            android:exported="false"/>
+        <activity
+            android:name=".booking.activity.PaymentSummaryActivity"
+            android:exported="false"/>
+        <activity
+            android:name=".booking.activity.PaymentResultActivity"
+            android:exported="false"/>
+        <activity
+            android:name=".booking.activity.AncillaryActivity"
+            android:exported="false"/>
+        <activity
+            android:name=".booking.activity.FlightDetailActivity"
+            android:exported="false"/>
+        <activity
+            android:name=".home.activity.HomeActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -36,11 +52,9 @@
             </intent-filter>
         </activity>
 
+
         <activity
-            android:name=".booking.activity.FlightDetailActivity"
-            android:exported="false"/>
-        <activity
-            android:name=".home.activity.HomeActivity"
+            android:name=".authen.activity.LoginActivity"
             android:exported="false" />
 
     </application>
