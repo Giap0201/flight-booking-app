@@ -1,6 +1,6 @@
 package com.example.flight_booking_app.booking.adapter;
 
-import android.content.Intent; // ĐÃ THÊM IMPORT
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
@@ -11,7 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.flight_booking_app.R;
-import com.example.flight_booking_app.booking.activity.FlightDetailActivity; // ĐÃ THÊM IMPORT
+import com.example.flight_booking_app.booking.activity.FlightDetailActivity;
 import com.example.flight_booking_app.booking.model.BookingSummary;
 
 import java.text.ParseException;
@@ -43,7 +43,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         BookingSummary ticket = tickets.get(position);
 
-        // 1. Xử lý gom nhóm theo Ngày (Hiển thị Header)
+        // 1. Header Ngày tháng
         String currentDateStr = getFormattedDateHeader(ticket.getDepartureTime());
         String previousDateStr = position > 0 ? getFormattedDateHeader(tickets.get(position - 1).getDepartureTime()) : "";
 
@@ -54,26 +54,21 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
             holder.tvDateHeader.setVisibility(View.GONE);
         }
 
-        // 2. Map dữ liệu cơ bản
+        // 2. Dữ liệu cơ bản
         holder.tvOrderId.setText(ticket.getPnrCode());
         holder.tvOrigin.setText(ticket.getOrigin() + " Airport");
         holder.tvDest.setText(ticket.getDestination() + " Airport");
 
-        String niceClass = ticket.getFlightClass() != null ? ticket.getFlightClass().replace("_", " ") : "Economy";
-        holder.tvFlightInfo.setText("✈ " + (ticket.getFlightNumber() != null ? ticket.getFlightNumber() : "Flight") + " • " + niceClass);
-
+        String rawClass = ticket.getFlightClass() != null ? ticket.getFlightClass().replace("_", " ") : "Economy";
+        holder.tvFlightInfo.setText("✈ " + (ticket.getFlightNumber() != null ? ticket.getFlightNumber() : "Chuyến bay") + " • " + rawClass);
         holder.tvDuration.setText(ticket.getDuration() != null ? ticket.getDuration() : "--h --m");
-
-        // Format Giờ đi/đến
         holder.tvDepTime.setText(extractTime(ticket.getDepartureTime()));
         holder.tvArrTime.setText(extractTime(ticket.getArrivalTime()));
 
-        // 3. Xử lý Badge Status (Màu sắc theo trạng thái)
+        // 3. HIỂN THỊ TRẠNG THÁI TIẾNG VIỆT
         setupStatusBadge(holder.tvStatusBadge, ticket.getStatus());
 
-        // =======================================================
-        // 4. SỰ KIỆN CLICK: CHUYỂN SANG TRANG CHI TIẾT VÉ
-        // =======================================================
+        // 4. Sự kiện Click chuyển trang
         holder.itemView.setOnClickListener(v -> {
             if (ticket.getId() != null) {
                 Intent intent = new Intent(v.getContext(), FlightDetailActivity.class);
@@ -83,6 +78,9 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
         });
     }
 
+    // ========================================================
+    // HÀM VIỆT HÓA TRẠNG THÁI (STATUS)
+    // ========================================================
     private void setupStatusBadge(TextView tvBadge, String status) {
         GradientDrawable shape = new GradientDrawable();
         shape.setCornerRadius(16f);
@@ -91,40 +89,49 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
 
         switch (status) {
             case "PAID":
-            case "CONFIRMED":
-                shape.setColor(Color.parseColor("#E8F5E9")); // Xanh nhạt
-                tvBadge.setTextColor(Color.parseColor("#2E7D32")); // Xanh đậm
-                tvBadge.setText("Paid off");
+                shape.setColor(Color.parseColor("#E8F5E9")); // Xanh lá nhạt
+                tvBadge.setTextColor(Color.parseColor("#2E7D32"));
+                tvBadge.setText("Đã thanh toán");
                 break;
-            case "CANCELLED":
-            case "REFUNDED":
-                shape.setColor(Color.parseColor("#FFEBEE")); // Đỏ nhạt
-                tvBadge.setTextColor(Color.parseColor("#C62828")); // Đỏ đậm
-                tvBadge.setText(status.equals("REFUNDED") ? "Refunded" : "Cancel");
+            case "CONFIRMED":
+                shape.setColor(Color.parseColor("#E8F5E9"));
+                tvBadge.setTextColor(Color.parseColor("#2E7D32"));
+                tvBadge.setText("Xác nhận");
                 break;
             case "AWAITING_PAYMENT":
                 shape.setColor(Color.parseColor("#FFF3E0")); // Cam nhạt
-                tvBadge.setTextColor(Color.parseColor("#EF6C00")); // Cam đậm
-                tvBadge.setText("Awaiting Pay");
+                tvBadge.setTextColor(Color.parseColor("#EF6C00"));
+                tvBadge.setText("Chờ thanh toán");
                 break;
-            default: // PENDING
+            case "CANCELLED":
+                shape.setColor(Color.parseColor("#FFEBEE")); // Đỏ nhạt
+                tvBadge.setTextColor(Color.parseColor("#C62828"));
+                tvBadge.setText("Đã huỷ");
+                break;
+            case "REFUNDED":
+                shape.setColor(Color.parseColor("#FFEBEE"));
+                tvBadge.setTextColor(Color.parseColor("#C62828"));
+                tvBadge.setText("Hoàn tiền");
+                break;
+            case "PENDING":
+            default:
                 shape.setColor(Color.parseColor("#E3F2FD")); // Xanh dương nhạt
                 tvBadge.setTextColor(Color.parseColor("#1565C0"));
-                tvBadge.setText("Pending");
+                tvBadge.setText("Chờ xử lý");
                 break;
         }
         tvBadge.setBackground(shape);
     }
 
     private String getFormattedDateHeader(String rawDate) {
-        if (rawDate == null || rawDate.isEmpty()) return "Unknown Date";
+        if (rawDate == null || rawDate.isEmpty()) return "Ngày không xác định";
         try {
             SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
             Date date = inputFormat.parse(rawDate);
-            SimpleDateFormat outputFormat = new SimpleDateFormat("MMMM dd, yyyy", Locale.US);
+            SimpleDateFormat outputFormat = new SimpleDateFormat("dd MMMM, yyyy", new Locale("vi", "VN"));
             return outputFormat.format(date);
         } catch (ParseException e) {
-            return rawDate.substring(0, 10);
+            return rawDate.length() >= 10 ? rawDate.substring(0, 10) : rawDate;
         }
     }
 
@@ -146,7 +153,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvDateHeader, tvOrderLabel, tvOrderId, tvStatusBadge;
+        TextView tvDateHeader, tvOrderId, tvStatusBadge;
         TextView tvDepTime, tvArrTime, tvDuration, tvOrigin, tvDest, tvFlightInfo;
 
         public ViewHolder(@NonNull View itemView) {

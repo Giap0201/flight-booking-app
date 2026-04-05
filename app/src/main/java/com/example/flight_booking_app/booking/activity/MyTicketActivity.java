@@ -33,8 +33,8 @@ public class MyTicketActivity extends AppCompatActivity {
     private RecyclerView rvUpcomingTickets;
     private ImageView btnHistory;
 
-    // ĐÃ KHAI BÁO BIẾN CHO KHU VỰC TIÊU ĐỀ
     private View layoutUpcomingHeader;
+    private View layoutWaitingHeader;
 
     private PendingTicketAdapter pendingAdapter;
     private UpcomingTicketAdapter upcomingAdapter;
@@ -47,28 +47,31 @@ public class MyTicketActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_ticket);
 
+        // Ánh xạ View
         rvPendingTickets = findViewById(R.id.rvPendingTickets);
         rvUpcomingTickets = findViewById(R.id.rvUpcomingTickets);
         btnHistory = findViewById(R.id.btnHistory);
-
-        // 1. ÁNH XẠ HEADER "UPCOMING FLIGHT"
         layoutUpcomingHeader = findViewById(R.id.layoutUpcomingHeader);
+        layoutWaitingHeader = findViewById(R.id.layoutWaitingHeader);
 
-        // =======================================================
-        // ĐÃ SỬA: Gắn Intent cho nút History để bay sang màn Past Ticket
-        // =======================================================
+        // Nút Lịch sử
         btnHistory.setOnClickListener(v -> {
             Intent intent = new Intent(MyTicketActivity.this, HistoryActivity.class);
             startActivity(intent);
         });
 
-        // =======================================================
-        // 2. GẮN SỰ KIỆN CLICK ĐỂ CHUYỂN TRANG UPCOMING
-        // =======================================================
+        // Click tiêu đề Upcoming -> Sang trang danh sách Upcoming
         if (layoutUpcomingHeader != null) {
             layoutUpcomingHeader.setOnClickListener(v -> {
-                // Tạo Intent để bay từ MyTicket sang UpcomingFlights
                 Intent intent = new Intent(MyTicketActivity.this, UpcomingFlightsActivity.class);
+                startActivity(intent);
+            });
+        }
+
+        // Click tiêu đề Waiting -> Sang trang danh sách Waiting
+        if (layoutWaitingHeader != null) {
+            layoutWaitingHeader.setOnClickListener(v -> {
+                Intent intent = new Intent(MyTicketActivity.this, WaitingForPaymentActivity.class);
                 startActivity(intent);
             });
         }
@@ -89,58 +92,54 @@ public class MyTicketActivity extends AppCompatActivity {
 
     private void fetchMyTickets() {
         BookingApiService apiService = ApiClient.getClient().create(BookingApiService.class);
-
-        // LƯU Ý: Token cứng (Nhớ thay bằng SharedPreferences sau)
         String myToken = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJ1dGMuY29tIiwic3ViIjoiNmYzNmIzOTItZjI4YS00ODg4LTgzM2MtY2ZjNmMxMDkyMDM0IiwiZXhwIjoxNzc1NDU2MTY1LCJpYXQiOjE3NzUzNjk3NjUsImp0aSI6IjI3NWRiOTk5LWFiNzMtNGQ0Mi04ZDIwLTEzODBjODY2NmQxOCIsInNjb3BlIjoiUk9MRV9VU0VSIn0.OZJaU3JAZouY6F2JJlsqUm4z5pwyeKVyIVxENb-xfexcP4bXYzVBeUmZctnjVwCNCqwEySaU549LyZoTVmUo0g";
 
-        apiService.getMyBookings(myToken,1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
+        // 1. LẤY 2 VÉ CHỜ THANH TOÁN (Sử dụng filter PENDING)
+        apiService.getMyBookingsWithFilter(myToken, "PENDING", 1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
             @Override
             public void onResponse(Call<ApiResponse<PageResult<BookingSummary>>> call, Response<ApiResponse<PageResult<BookingSummary>>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<PageResult<BookingSummary>> apiResponse = response.body();
-
-                    if (apiResponse.getCode() == 1000 && apiResponse.getResult() != null) {
-                        List<BookingSummary> allTickets = apiResponse.getResult().getData();
-
-                        if (allTickets == null || allTickets.isEmpty()) {
-                            allTickets = new ArrayList<>();
-                            BookingSummary fakePending = new BookingSummary();
-                            fakePending.setPnrCode("TBW7FWZ"); fakePending.setStatus("PENDING"); fakePending.setOrigin("CGK"); fakePending.setDestination("DPS"); fakePending.setDepartureTime("2024-05-07T16:55:00"); fakePending.setCreatedAt(new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date()));
-                            allTickets.add(fakePending);
-
-                            BookingSummary fakeUpcoming = new BookingSummary();
-                            fakeUpcoming.setPnrCode("UPC999"); fakeUpcoming.setStatus("CONFIRMED"); fakeUpcoming.setOrigin("HAN"); fakeUpcoming.setDestination("SGN"); fakeUpcoming.setDepartureTime("2024-09-10T07:30:00");
-                            allTickets.add(fakeUpcoming);
+                if (response.isSuccessful() && response.body() != null && response.body().getCode() == 1000) {
+                    List<BookingSummary> data = response.body().getResult().getData();
+                    pendingList.clear();
+                    if (data != null) {
+                        // Chỉ lấy 2 vé đầu tiên từ kết quả trả về
+                        for (int i = 0; i < Math.min(data.size(), 2); i++) {
+                            pendingList.add(data.get(i));
                         }
-                        filterTickets(allTickets);
-                    } else {
-                        Toast.makeText(MyTicketActivity.this, "Lỗi: " + apiResponse.getMessage(), Toast.LENGTH_SHORT).show();
                     }
-                } else {
-                    Toast.makeText(MyTicketActivity.this, "Lỗi server: " + response.code(), Toast.LENGTH_SHORT).show();
+                    pendingAdapter.setTicketList(pendingList);
                 }
             }
+
             @Override
             public void onFailure(Call<ApiResponse<PageResult<BookingSummary>>> call, Throwable t) {
-                Log.e("MyTicketActivity", "API Call Failed: " + t.getMessage());
-                Toast.makeText(MyTicketActivity.this, "Không thể kết nối mạng", Toast.LENGTH_SHORT).show();
+                Log.e("MyTicket", "Lỗi Pending: " + t.getMessage());
+            }
+        });
+
+        // 2. LẤY 2 VÉ SẮP BAY (Sử dụng filter CONFIRMED)
+        apiService.getMyBookingsWithFilter(myToken, "CONFIRMED", 1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<PageResult<BookingSummary>>> call, Response<ApiResponse<PageResult<BookingSummary>>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getCode() == 1000) {
+                    List<BookingSummary> data = response.body().getResult().getData();
+                    upcomingList.clear();
+                    if (data != null) {
+                        // Chỉ lấy 2 vé đầu tiên từ kết quả trả về
+                        for (int i = 0; i < Math.min(data.size(), 2); i++) {
+                            upcomingList.add(data.get(i));
+                        }
+                    }
+                    upcomingAdapter.setTicketList(upcomingList);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<PageResult<BookingSummary>>> call, Throwable t) {
+                Log.e("MyTicket", "Lỗi Upcoming: " + t.getMessage());
             }
         });
     }
 
-    private void filterTickets(List<BookingSummary> allTickets) {
-        pendingList.clear();
-        upcomingList.clear();
-        for (BookingSummary ticket : allTickets) {
-            if (ticket.getStatus() != null) {
-                if ("PENDING".equalsIgnoreCase(ticket.getStatus()) || "AWAITING_PAYMENT".equalsIgnoreCase(ticket.getStatus())) {
-                    pendingList.add(ticket);
-                } else if ("CONFIRMED".equalsIgnoreCase(ticket.getStatus()) || "ISSUED".equalsIgnoreCase(ticket.getStatus()) || "PAID".equalsIgnoreCase(ticket.getStatus())) {
-                    upcomingList.add(ticket);
-                }
-            }
-        }
-        pendingAdapter.setTicketList(pendingList);
-        upcomingAdapter.setTicketList(upcomingList);
-    }
+    // Đã loại bỏ hàm filterTickets vì Backend đã thực hiện việc lọc này thông qua Query Filter
 }

@@ -30,6 +30,9 @@
         <activity
             android:name=".booking.activity.HistoryActivity"
             android:exported="false" />
+        <activity
+            android:name=".booking.activity.WaitingForPaymentActivity"
+            android:exported="false" />
 
         <activity
             android:name=".booking.activity.MyTicketActivity"
