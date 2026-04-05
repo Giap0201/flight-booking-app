@@ -8,6 +8,7 @@ import com.example.flight_booking_app.authen.api.AuthApiService;
 import com.example.flight_booking_app.authen.model.DTO.SessionManager;
 import com.example.flight_booking_app.authen.model.DTO.request.ForgotPasswordRequest;
 import com.example.flight_booking_app.authen.model.DTO.request.LoginRequest;
+import com.example.flight_booking_app.authen.model.DTO.request.LogoutRequest;
 import com.example.flight_booking_app.authen.model.DTO.response.LoginResponse;
 import com.example.flight_booking_app.common.ApiResponse;
 import com.example.flight_booking_app.network.ApiClient;
@@ -20,7 +21,7 @@ public class AuthRepository {
     private SessionManager sessionManager;
 
     public AuthRepository(Application application) {
-        apiService = ApiClient.getClient().create(AuthApiService.class);
+        apiService = ApiClient.getClient(application).create(AuthApiService.class);
         sessionManager = new SessionManager(application);
     }
     public void loginUser(String email, String password, MutableLiveData<String> loginResult) {
@@ -79,5 +80,28 @@ public class AuthRepository {
                 resultLiveData.postValue("Lỗi kết nối mạng: " + t.getMessage());
             }
         });
+    }
+    // Hàm gọi API Logout
+    public void logoutUser(String token, MutableLiveData<Boolean> logoutEvent) {
+        LogoutRequest request = new LogoutRequest(token);
+
+        apiService.logout(request).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                // Dù server báo lỗi hay thành công thì cũng cho phép đăng xuất local
+                logoutEvent.setValue(true);
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                // Lỗi mạng, vẫn cho phép đăng xuất local
+                logoutEvent.setValue(true);
+            }
+        });
+    }
+
+    // Hàm xóa token có thể viết ở đây để gom chung logic xử lý dữ liệu
+    public void clearLocalSession() {
+        sessionManager.clearAuthToken();
     }
 }
