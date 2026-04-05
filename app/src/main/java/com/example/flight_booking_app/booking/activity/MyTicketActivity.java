@@ -1,7 +1,9 @@
 package com.example.flight_booking_app.booking.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -31,6 +33,9 @@ public class MyTicketActivity extends AppCompatActivity {
     private RecyclerView rvUpcomingTickets;
     private ImageView btnHistory;
 
+    // ĐÃ KHAI BÁO BIẾN CHO KHU VỰC TIÊU ĐỀ
+    private View layoutUpcomingHeader;
+
     private PendingTicketAdapter pendingAdapter;
     private UpcomingTicketAdapter upcomingAdapter;
 
@@ -46,9 +51,27 @@ public class MyTicketActivity extends AppCompatActivity {
         rvUpcomingTickets = findViewById(R.id.rvUpcomingTickets);
         btnHistory = findViewById(R.id.btnHistory);
 
+        // 1. ÁNH XẠ HEADER "UPCOMING FLIGHT"
+        layoutUpcomingHeader = findViewById(R.id.layoutUpcomingHeader);
+
+        // =======================================================
+        // ĐÃ SỬA: Gắn Intent cho nút History để bay sang màn Past Ticket
+        // =======================================================
         btnHistory.setOnClickListener(v -> {
-            Toast.makeText(MyTicketActivity.this, "Mở màn hình Lịch sử vé", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(MyTicketActivity.this, HistoryActivity.class);
+            startActivity(intent);
         });
+
+        // =======================================================
+        // 2. GẮN SỰ KIỆN CLICK ĐỂ CHUYỂN TRANG UPCOMING
+        // =======================================================
+        if (layoutUpcomingHeader != null) {
+            layoutUpcomingHeader.setOnClickListener(v -> {
+                // Tạo Intent để bay từ MyTicket sang UpcomingFlights
+                Intent intent = new Intent(MyTicketActivity.this, UpcomingFlightsActivity.class);
+                startActivity(intent);
+            });
+        }
 
         setupRecyclerViews();
         fetchMyTickets();
@@ -67,45 +90,28 @@ public class MyTicketActivity extends AppCompatActivity {
     private void fetchMyTickets() {
         BookingApiService apiService = ApiClient.getClient().create(BookingApiService.class);
 
-        // TODO: BẠN HÃY DÁN TOKEN THẬT TỪ POSTMAN VÀO ĐÂY ĐỂ TEST NHÉ
-        // Nhớ giữ nguyên chữ "Bearer " (có 1 dấu cách) ở đằng trước.
-        String myToken = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJ1dGMuY29tIiwic3ViIjoiMDhhOWVlNjUtN2Q1MC00ODVhLThiYmEtZGNhZDcyODdiYzk0IiwiZXhwIjoxNzc1MTUxMDA0LCJpYXQiOjE3NzUwNjQ2MDQsImp0aSI6ImY3MmQ1NzMxLThlMzktNDlkZS04YTg1LTkwOTIwMjcwYzg4OSIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.F1AQEx6FrWSQGYWvZraHA_99QmeR71eL3szG6TGofxbJtvLF9x-vgpyT3zyIQttZHecQJ8gtvw6wIA6wDSCpEA";
+        // LƯU Ý: Token cứng (Nhớ thay bằng SharedPreferences sau)
+        String myToken = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJ1dGMuY29tIiwic3ViIjoiNmYzNmIzOTItZjI4YS00ODg4LTgzM2MtY2ZjNmMxMDkyMDM0IiwiZXhwIjoxNzc1NDU2MTY1LCJpYXQiOjE3NzUzNjk3NjUsImp0aSI6IjI3NWRiOTk5LWFiNzMtNGQ0Mi04ZDIwLTEzODBjODY2NmQxOCIsInNjb3BlIjoiUk9MRV9VU0VSIn0.OZJaU3JAZouY6F2JJlsqUm4z5pwyeKVyIVxENb-xfexcP4bXYzVBeUmZctnjVwCNCqwEySaU549LyZoTVmUo0g";
 
-        // Truyền biến myToken vào hàm getMyBookings
-        apiService.getMyBookings(myToken).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
+        apiService.getMyBookings(myToken,1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
             @Override
             public void onResponse(Call<ApiResponse<PageResult<BookingSummary>>> call, Response<ApiResponse<PageResult<BookingSummary>>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<PageResult<BookingSummary>> apiResponse = response.body();
 
-                    // Đã sửa code thành 1000 cho khớp với Backend
                     if (apiResponse.getCode() == 1000 && apiResponse.getResult() != null) {
                         List<BookingSummary> allTickets = apiResponse.getResult().getData();
 
-                        // --- ĐOẠN CODE "ĂN GIAN" TẠO DỮ LIỆU GIẢ ĐỂ TEST UI ---
-                        if (allTickets.isEmpty()) {
-                            // Tạo 1 vé đang chờ thanh toán
+                        if (allTickets == null || allTickets.isEmpty()) {
+                            allTickets = new ArrayList<>();
                             BookingSummary fakePending = new BookingSummary();
-                            fakePending.setPnrCode("TBW7FWZ");
-                            fakePending.setStatus("PENDING");
-                            fakePending.setOrigin("CGK");
-                            fakePending.setDestination("DPS");
-                            fakePending.setDepartureTime("2024-05-07T16:55:00");
-                            // Set thời gian tạo vé là ngay lúc này để đồng hồ đếm ngược 30 phút bắt đầu chạy
-                            fakePending.setCreatedAt(new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date()));
+                            fakePending.setPnrCode("TBW7FWZ"); fakePending.setStatus("PENDING"); fakePending.setOrigin("CGK"); fakePending.setDestination("DPS"); fakePending.setDepartureTime("2024-05-07T16:55:00"); fakePending.setCreatedAt(new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date()));
                             allTickets.add(fakePending);
 
-                            // Tạo 1 vé sắp bay
                             BookingSummary fakeUpcoming = new BookingSummary();
-                            fakeUpcoming.setPnrCode("UPC999");
-                            fakeUpcoming.setStatus("CONFIRMED"); // Hoặc UPCOMING tùy Backend
-                            fakeUpcoming.setOrigin("HAN");
-                            fakeUpcoming.setDestination("SGN");
-                            fakeUpcoming.setDepartureTime("2024-09-10T07:30:00");
+                            fakeUpcoming.setPnrCode("UPC999"); fakeUpcoming.setStatus("CONFIRMED"); fakeUpcoming.setOrigin("HAN"); fakeUpcoming.setDestination("SGN"); fakeUpcoming.setDepartureTime("2024-09-10T07:30:00");
                             allTickets.add(fakeUpcoming);
                         }
-
-                        // Phân loại vé và đưa lên UI
                         filterTickets(allTickets);
                     } else {
                         Toast.makeText(MyTicketActivity.this, "Lỗi: " + apiResponse.getMessage(), Toast.LENGTH_SHORT).show();
@@ -114,7 +120,6 @@ public class MyTicketActivity extends AppCompatActivity {
                     Toast.makeText(MyTicketActivity.this, "Lỗi server: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
             }
-
             @Override
             public void onFailure(Call<ApiResponse<PageResult<BookingSummary>>> call, Throwable t) {
                 Log.e("MyTicketActivity", "API Call Failed: " + t.getMessage());
@@ -126,17 +131,15 @@ public class MyTicketActivity extends AppCompatActivity {
     private void filterTickets(List<BookingSummary> allTickets) {
         pendingList.clear();
         upcomingList.clear();
-
         for (BookingSummary ticket : allTickets) {
             if (ticket.getStatus() != null) {
-                if ("PENDING".equalsIgnoreCase(ticket.getStatus())) {
+                if ("PENDING".equalsIgnoreCase(ticket.getStatus()) || "AWAITING_PAYMENT".equalsIgnoreCase(ticket.getStatus())) {
                     pendingList.add(ticket);
-                } else if ("CONFIRMED".equalsIgnoreCase(ticket.getStatus()) || "UPCOMING".equalsIgnoreCase(ticket.getStatus())) {
+                } else if ("CONFIRMED".equalsIgnoreCase(ticket.getStatus()) || "ISSUED".equalsIgnoreCase(ticket.getStatus()) || "PAID".equalsIgnoreCase(ticket.getStatus())) {
                     upcomingList.add(ticket);
                 }
             }
         }
-
         pendingAdapter.setTicketList(pendingList);
         upcomingAdapter.setTicketList(upcomingList);
     }

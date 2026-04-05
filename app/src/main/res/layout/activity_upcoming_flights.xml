@@ -42,7 +42,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginEnd="8dp"
+            android:layout_marginEnd="6dp"
             android:orientation="vertical">
 
             <TextView
@@ -52,21 +52,21 @@
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="#757575"
-                android:layout_marginBottom="4dp"
                 android:layout_marginStart="4dp"/>
 
             <Spinner
                 android:id="@+id/spinnerMonth"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:background="#E0E0E0" />
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                style="?android:attr/spinnerStyle" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginEnd="8dp"
+            android:layout_marginEnd="6dp"
             android:orientation="vertical">
 
             <TextView
@@ -76,14 +76,14 @@
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="#757575"
-                android:layout_marginBottom="4dp"
                 android:layout_marginStart="4dp"/>
 
             <Spinner
                 android:id="@+id/spinnerDay"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:background="#E0E0E0" />
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                style="?android:attr/spinnerStyle" />
         </LinearLayout>
 
         <LinearLayout
@@ -99,15 +99,16 @@
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="#757575"
-                android:layout_marginBottom="4dp"
                 android:layout_marginStart="4dp"/>
 
             <Spinner
                 android:id="@+id/spinnerClass"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:background="#E0E0E0" />
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                style="?android:attr/spinnerStyle" />
         </LinearLayout>
+
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView

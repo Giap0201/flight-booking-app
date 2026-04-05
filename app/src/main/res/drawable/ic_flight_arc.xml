@@ -1,32 +1,24 @@
-<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="120dp"
     android:height="40dp"
     android:viewportWidth="120"
     android:viewportHeight="40">
-
     <path
-        android:pathData="M 10,30 Q 60,-10 110,30"
-        android:strokeColor="#9D4EDD"
-        android:strokeWidth="1.5"
-        android:fillColor="#00000000" />
-
+        android:pathData="M 5,35 Q 60,-15 115,35"
+        android:strokeWidth="2"
+        android:strokeColor="#A064FF"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"/>
     <path
-        android:pathData="M 10,30 m -3,0 a 3,3 0 1,1 6,0 a 3,3 0 1,1 -6,0"
-        android:fillColor="#9D4EDD"/>
-
+        android:pathData="M 5,35 m -4,0 a 4,4 0 1,1 8,0 a 4,4 0 1,1 -8,0"
+        android:fillColor="#A064FF"/>
     <path
-        android:pathData="M 110,30 m -3,0 a 3,3 0 1,1 6,0 a 3,3 0 1,1 -6,0"
-        android:fillColor="#9D4EDD"/>
-
-    <group
-        android:translateX="48"
-        android:translateY="4"
+        android:pathData="M 115,35 m -4,0 a 4,4 0 1,1 8,0 a 4,4 0 1,1 -8,0"
+        android:fillColor="#A064FF"/>
+    <path
+        android:pathData="M 66.5,12.5 l -4.5,-4.5 l -1.5,0.5 l 1.5,5.5 l -5.5,2 l -2,-3 l -1.5,0.5 l 1,4 l -1,4 l 1.5,0.5 l 2,-3 l 5.5,2 l -1.5,5.5 l 1.5,0.5 l 4.5,-4.5 l 4,-1 l 2,1 c 1,0.5 2,0 2.5,-1 c 0.5,-1 0,-2 -1,-2.5 l -2,1 l -4,-1 z"
+        android:fillColor="#6200EE"
         android:rotation="45"
-        android:pivotX="12"
-        android:pivotY="12">
-        <path
-            android:fillColor="#7A1FA0"
-            android:pathData="M21,16v-2l-8-5V3.5c0-0.83-0.67-1.5-1.5-1.5S10,2.67,10,3.5V9l-8,5v2l8-2.5V19l-2,1.5V22l3.5-1l3.5,1v-1.5L13,19v-5.5L21,16z"/>
-    </group>
+        android:pivotX="60"
+        android:pivotY="15"/>
 </vector>

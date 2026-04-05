@@ -22,12 +22,17 @@
         <activity
             android:name=".MainActivity"
             android:exported="false" />
-        <activity
-            android:name=".booking.activity.MyTicketActivity"
-            android:exported="false"/>
 
         <activity
             android:name=".booking.activity.UpcomingFlightsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".booking.activity.HistoryActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".booking.activity.MyTicketActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

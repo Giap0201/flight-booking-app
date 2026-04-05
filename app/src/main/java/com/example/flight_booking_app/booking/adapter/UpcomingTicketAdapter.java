@@ -42,39 +42,67 @@ public class UpcomingTicketAdapter extends RecyclerView.Adapter<UpcomingTicketAd
     public void onBindViewHolder(@NonNull TicketViewHolder holder, int position) {
         BookingSummary ticket = ticketList.get(position);
 
-        // Gán mã sân bay đi và đến
-        holder.tvDepartureCode.setText(ticket.getOrigin());
-        holder.tvArrivalCode.setText(ticket.getDestination());
+        // 1. Sân bay đi và đến
+        holder.tvOriginCode.setText(ticket.getOrigin());
+        holder.tvDestCode.setText(ticket.getDestination());
 
-        // Format thời gian bay từ chuỗi ISO (VD: 2026-04-01T16:22:27.241Z)
+        // 2. Format Giờ Đi và Ngày Đi
         if (ticket.getDepartureTime() != null) {
             try {
                 SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
                 Date date = inputFormat.parse(ticket.getDepartureTime());
 
-                // Lấy giờ phút (VD: 16:22)
                 SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                holder.tvDepartureTime.setText(timeFormat.format(date));
+                holder.tvOriginTime.setText(timeFormat.format(date));
 
-                // Lấy ngày tháng (VD: Mon, Apr 01)
                 SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd", Locale.getDefault());
                 holder.tvDate.setText(dateFormat.format(date));
 
             } catch (ParseException e) {
                 e.printStackTrace();
-                holder.tvDepartureTime.setText(ticket.getDepartureTime());
+                holder.tvOriginTime.setText(ticket.getDepartureTime());
             }
         }
 
-        // --- LƯU Ý DÀNH CHO BẠN ---
-        // UI Figma có yêu cầu hiển thị: Giờ đến (ArrivalTime), Thời gian bay (Duration), Hạng ghế (Class), Số người (Passenger Count).
-        // Tuy nhiên, API List 'my-bookings' hiện tại Backend chưa trả về các trường này.
-        // Tạm thời tôi set dữ liệu giả (Placeholder) để UI không bị trống.
-        // Sau này bạn có thể yêu cầu Backend bổ sung vào BookingSummary, hoặc chúng ta tính toán sau.
-        holder.tvArrivalTime.setText("18:00"); // Tạm thời hardcode
-        holder.tvDuration.setText("1h 30m");  // Tạm thời hardcode
-        holder.tvClass.setText("Economy");    // Tạm thời hardcode
-        holder.tvPassengerCount.setText("1 Person"); // Tạm thời hardcode
+        // 3. Format Giờ Đến (DỮ LIỆU THẬT TỪ BE)
+        if (ticket.getArrivalTime() != null) {
+            try {
+                SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+                Date dateArrival = inputFormat.parse(ticket.getArrivalTime());
+
+                SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+                holder.tvDestTime.setText(timeFormat.format(dateArrival));
+            } catch (ParseException e) {
+                e.printStackTrace();
+                holder.tvDestTime.setText(ticket.getArrivalTime());
+            }
+        } else {
+            holder.tvDestTime.setText("--:--");
+        }
+
+        // 4. Thời lượng bay (DỮ LIỆU THẬT TỪ BE)
+        if (ticket.getDuration() != null && !ticket.getDuration().isEmpty()) {
+            holder.tvDuration.setText(ticket.getDuration());
+        } else {
+            holder.tvDuration.setText("--h --m");
+        }
+
+        // 5. Số lượng hành khách (DỮ LIỆU THẬT TỪ BE kèm logic số ít/số nhiều)
+        int pCount = ticket.getPassengerCount();
+        if (pCount > 0) {
+            String suffix = (pCount > 1) ? " Persons" : " Person";
+            holder.tvPassengerCount.setText(pCount + suffix);
+        } else {
+            holder.tvPassengerCount.setText("1 Person"); // Fallback an toàn
+        }
+
+        // 6. Hạng vé
+        if (ticket.getFlightClass() != null && !ticket.getFlightClass().isEmpty()) {
+            String niceClass = ticket.getFlightClass().replace("_", " ");
+            holder.tvClass.setText(niceClass);
+        } else {
+            holder.tvClass.setText("Chưa xác định");
+        }
     }
 
     @Override
@@ -83,16 +111,16 @@ public class UpcomingTicketAdapter extends RecyclerView.Adapter<UpcomingTicketAd
     }
 
     static class TicketViewHolder extends RecyclerView.ViewHolder {
-        TextView tvDepartureCode, tvDepartureTime;
-        TextView tvArrivalCode, tvArrivalTime;
+        TextView tvOriginCode, tvOriginTime;
+        TextView tvDestCode, tvDestTime;
         TextView tvDuration, tvDate, tvClass, tvPassengerCount;
 
         public TicketViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvDepartureCode = itemView.findViewById(R.id.tvDepartureCode);
-            tvDepartureTime = itemView.findViewById(R.id.tvDepartureTime);
-            tvArrivalCode = itemView.findViewById(R.id.tvArrivalCode);
-            tvArrivalTime = itemView.findViewById(R.id.tvArrivalTime);
+            tvOriginCode = itemView.findViewById(R.id.tvOriginCode);
+            tvOriginTime = itemView.findViewById(R.id.tvOriginTime);
+            tvDestCode = itemView.findViewById(R.id.tvDestCode);
+            tvDestTime = itemView.findViewById(R.id.tvDestTime);
             tvDuration = itemView.findViewById(R.id.tvDuration);
             tvDate = itemView.findViewById(R.id.tvDate);
             tvClass = itemView.findViewById(R.id.tvClass);

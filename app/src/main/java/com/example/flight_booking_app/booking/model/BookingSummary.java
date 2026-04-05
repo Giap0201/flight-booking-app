@@ -61,7 +61,25 @@ public class BookingSummary {
 
     public String getDepartureTime() { return departureTime; }
     public void setDepartureTime(String departureTime) { this.departureTime = departureTime; }
+// THÊM 3 TRƯỜNG NÀY VÀO ĐỂ HỨNG DATA TỪ BACKEND
+    @SerializedName("arrivalTime")
+    private String arrivalTime;
 
+    @SerializedName("duration")
+    private String duration;
+
+    @SerializedName("passengerCount")
+    private int passengerCount; // Chú ý kiểu int
+
+    // THÊM GETTER & SETTER CHO 3 TRƯỜNG TRÊN
+    public String getArrivalTime() { return arrivalTime; }
+    public void setArrivalTime(String arrivalTime) { this.arrivalTime = arrivalTime; }
+
+    public String getDuration() { return duration; }
+    public void setDuration(String duration) { this.duration = duration; }
+
+    public int getPassengerCount() { return passengerCount; }
+    public void setPassengerCount(int passengerCount) { this.passengerCount = passengerCount; }
     // GETTER & SETTER CHO HẠNG VÉ
     public String getFlightClass() { return flightClass; }
     public void setFlightClass(String flightClass) { this.flightClass = flightClass; }
