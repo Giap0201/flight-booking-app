@@ -23,4 +23,10 @@ public class SessionManager {
     public String fetchAuthToken() {
         return prefs.getString(KEY_USER_TOKEN, null);
     }
+    // Thêm hàm này vào dưới hàm fetchAuthToken()
+    public void clearAuthToken() {
+        editor.remove(KEY_USER_TOKEN);
+        // Hoặc dùng editor.clear() nếu bạn muốn xóa TẤT CẢ dữ liệu trong file SharedPreferences này
+        editor.apply();
+    }
 }
