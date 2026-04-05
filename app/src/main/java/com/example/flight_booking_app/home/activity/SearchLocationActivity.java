@@ -95,7 +95,7 @@ public class SearchLocationActivity extends AppCompatActivity {
 
         Log.e("TEST_DATA", "Số lượng sân bay đọc từ JSON: " + translationMap.size());
 
-        HomeApiService apiService = ApiClient.getClient().create(HomeApiService.class);
+        HomeApiService apiService = ApiClient.getClient(this).create(HomeApiService.class);
 
         // Gọi API với kiểu dữ liệu mới
         apiService.getAirports(1000).enqueue(new Callback<ApiResponse<AirportPageData>>() {

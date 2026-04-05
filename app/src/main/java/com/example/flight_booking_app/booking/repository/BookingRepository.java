@@ -1,5 +1,7 @@
 package com.example.flight_booking_app.booking.repository; // Đổi package cho khớp
 
+import android.app.Application;
+
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.flight_booking_app.booking.api.BookingApiService;
@@ -19,9 +21,9 @@ import retrofit2.Response;
 public class BookingRepository {
     private BookingApiService apiService;
 
-    public BookingRepository() {
+    public BookingRepository(Application application) {
 // CÁCH GỌI MỚI: Mượn ApiClient dùng chung để tạo ra Service riêng của Booking
-        apiService = ApiClient.getClient().create(BookingApiService.class);
+        apiService = ApiClient.getClient(application).create(BookingApiService.class);
     }
 
     // Hàm này trả về một LiveData chứa FlightDetail
