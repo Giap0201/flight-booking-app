@@ -43,7 +43,17 @@
             android:exported="false"/>
         <activity
             android:name=".booking.activity.PaymentResultActivity"
-            android:exported="false"/>
+            android:exported="true"> <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+
+            <data
+                android:scheme="flightbooking"
+                android:host="payment-result" />
+        </intent-filter>
+
+        </activity>
         <activity
             android:name=".booking.activity.AncillaryActivity"
             android:exported="false"/>
