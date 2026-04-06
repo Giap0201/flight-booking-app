@@ -1,6 +1,6 @@
 package com.example.flight_booking_app.booking.adapter;
 
-import android.content.Intent; // ĐÃ THÊM IMPORT
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,9 +9,14 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.flight_booking_app.R;
-import com.example.flight_booking_app.booking.activity.FlightDetailActivity; // ĐÃ THÊM IMPORT
+import com.example.flight_booking_app.booking.activity.FlightDetailActivity;
 import com.example.flight_booking_app.booking.model.BookingSummary;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class UpcomingFlightAdapter extends RecyclerView.Adapter<UpcomingFlightAdapter.ViewHolder> {
     private List<BookingSummary> flights;
@@ -20,7 +25,9 @@ public class UpcomingFlightAdapter extends RecyclerView.Adapter<UpcomingFlightAd
         this.flights = flights;
     }
 
-    public void setFlights(List<BookingSummary> flights) {
+    // ĐÃ SỬA LỖI 1: Đổi tên hàm thành setTicketList để khớp với
+    // UpcomingFlightsActivity
+    public void setTicketList(List<BookingSummary> flights) {
         this.flights = flights;
         notifyDataSetChanged();
     }
@@ -28,7 +35,7 @@ public class UpcomingFlightAdapter extends RecyclerView.Adapter<UpcomingFlightAd
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_upcoming_flight_detail, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_ticket_upcoming, parent, false);
         return new ViewHolder(view);
     }
 
@@ -36,53 +43,147 @@ public class UpcomingFlightAdapter extends RecyclerView.Adapter<UpcomingFlightAd
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         BookingSummary flight = flights.get(position);
 
-        holder.tvOriginCode.setText(flight.getOrigin());
-        holder.tvDestCode.setText(flight.getDestination());
+        // ==========================================
+        // 1. LOGIC GOM NHÓM (BỘ LỌC) THEO NGÀY THÁNG
+        // ==========================================
+        String currentDateStr = getFormattedDateHeader(flight.getDepartureTime());
+        String previousDateStr = position > 0 ? getFormattedDateHeader(flights.get(position - 1).getDepartureTime())
+                : "";
 
-        // 1. FORMAT LẠI NGÀY BAY (Từ "2026-09-12T10..." -> "12-09-2026")
-        if (flight.getDepartureTime() != null && flight.getDepartureTime().length() >= 10) {
+        if (position == 0 || !currentDateStr.equals(previousDateStr)) {
+            holder.tvDateHeader.setVisibility(View.VISIBLE);
+            holder.tvDateHeader.setText(currentDateStr);
+        } else {
+            holder.tvDateHeader.setVisibility(View.GONE);
+        }
+
+        // 2. DỮ LIỆU CƠ BẢN TỪ BE
+        holder.tvOriginCode.setText(flight.getOrigin() != null ? flight.getOrigin() : "N/A");
+        holder.tvDestCode.setText(flight.getDestination() != null ? flight.getDestination() : "N/A");
+
+        if (flight.getDepartureTime() != null) {
             try {
-                // Cắt lấy phần yyyy-MM-dd
-                String datePart = flight.getDepartureTime().substring(0, 10);
-                String[] parts = datePart.split("-");
-                String niceDate = parts[2] + "-" + parts[1] + "-" + parts[0]; // dd-MM-yyyy
-                holder.tvDate.setText(niceDate);
-            } catch (Exception e) {
+                SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+                Date date = inputFormat.parse(flight.getDepartureTime());
+                if (date != null) {
+                    holder.tvDate.setText(new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(date));
+                }
+            } catch (ParseException e) {
                 holder.tvDate.setText(flight.getDepartureTime());
             }
         }
 
-        // 2. FORMAT LẠI HẠNG VÉ (Viết hoa chữ cái đầu mỗi từ: PREMIUM_ECONOMY -> Premium Economy)
-        if (flight.getFlightClass() != null && !flight.getFlightClass().isEmpty()) {
-            String rawClass = flight.getFlightClass().replace("_", " ").toLowerCase();
-            StringBuilder niceClass = new StringBuilder();
-
-            String[] words = rawClass.split(" ");
-            for (String word : words) {
-                if (!word.isEmpty()) {
-                    niceClass.append(Character.toUpperCase(word.charAt(0)))
-                            .append(word.substring(1))
-                            .append(" ");
-                }
-            }
-            holder.tvClass.setText(niceClass.toString().trim());
+        // 3. GÁN DỮ LIỆU TỪ MÔ HÌNH NẾU CÓ, HOẶC MẶC ĐỊNH CHO DỮ LIỆU THIẾU
+        if (flight.getClassType() != null) {
+            holder.tvClass.setText(formatClass(flight.getClassType()));
         } else {
-            holder.tvClass.setText("Chưa xác định");
+            holder.tvClass.setText("Economy");
         }
 
-        // Tạm thời hardcode số lượng hành khách do API chưa trả về field này trong danh sách ngắn
-        holder.tvPassengerCount.setText("1 Person");
+        if (flight.getPassengerCount() != null) {
+            holder.tvPassengerCount
+                    .setText(flight.getPassengerCount() + " Person" + (flight.getPassengerCount() > 1 ? "s" : ""));
+        } else {
+            holder.tvPassengerCount.setText("1 Person");
+        }
 
-        // =======================================================
-        // 3. SỰ KIỆN CLICK: CHUYỂN SANG TRANG CHI TIẾT VÉ
-        // =======================================================
+        if (flight.getArrivalTime() != null) {
+            try {
+                SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+                Date parsedDate = inputFormat.parse(flight.getArrivalTime());
+                if (parsedDate != null) {
+                    holder.tvDestTime.setText(new SimpleDateFormat("HH:mm", Locale.getDefault()).format(parsedDate));
+                } else {
+                    holder.tvDestTime.setText("--:--");
+                }
+            } catch (ParseException e) {
+                holder.tvDestTime.setText("--:--");
+            }
+        } else {
+            holder.tvDestTime.setText("--:--");
+        }
+
+        if (flight.getDepartureTime() != null && flight.getArrivalTime() != null) {
+            holder.tvDuration.setText(calculateDuration(flight.getDepartureTime(), flight.getArrivalTime()));
+        } else {
+            holder.tvDuration.setText("Chi tiết");
+        }
+
+        // 4. CHUYỂN SANG TRANG CHI TIẾT
         holder.itemView.setOnClickListener(v -> {
             if (flight.getId() != null) {
                 Intent intent = new Intent(v.getContext(), FlightDetailActivity.class);
-                intent.putExtra("BOOKING_ID", flight.getId().toString());
+                intent.putExtra("BOOKING_ID", String.valueOf(flight.getId()));
+
+                // === THÊM 3 DÒNG NÀY: GÓI DỮ LIỆU DỰ PHÒNG MANG THEO ===
+                intent.putExtra("ORIGIN", flight.getOrigin());
+                intent.putExtra("DEST", flight.getDestination());
+                intent.putExtra("DEP_TIME", flight.getDepartureTime());
+                // ========================================================
+
                 v.getContext().startActivity(intent);
             }
         });
+    }
+
+    private String getFormattedDateHeader(String rawDate) {
+        if (rawDate == null || rawDate.isEmpty())
+            return "Ngày không xác định";
+        try {
+            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+            Date date = inputFormat.parse(rawDate);
+            return new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(date);
+        } catch (ParseException e) {
+            return rawDate.split("T")[0];
+        }
+    }
+
+    private String calculateDuration(String departure, String arrival) {
+        if (departure == null || departure.trim().isEmpty() || arrival == null || arrival.trim().isEmpty())
+            return "Chi tiết";
+        try {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+            String safeDep = departure.length() > 19 ? departure.substring(0, 19) : departure;
+            String safeArr = arrival.length() > 19 ? arrival.substring(0, 19) : arrival;
+
+            Date depDate = format.parse(safeDep);
+            Date arrDate = format.parse(safeArr);
+
+            if (depDate != null && arrDate != null) {
+                long diffInMillis = arrDate.getTime() - depDate.getTime();
+                if (diffInMillis < 0)
+                    return "Chi tiết";
+                long hours = diffInMillis / (60 * 60 * 1000);
+                long minutes = (diffInMillis / (60 * 1000)) % 60;
+                if (minutes == 0)
+                    return hours + "h";
+                return hours + "h " + minutes + "m";
+            }
+        } catch (Exception e) {
+            return "Chi tiết";
+        }
+        return "Chi tiết";
+    }
+
+    public String formatClass(String rawClass) {
+        if (rawClass == null || rawClass.trim().isEmpty())
+            return "Economy";
+        try {
+            String[] words = rawClass.replace("_", " ").toLowerCase().split("\\s+");
+            StringBuilder sb = new StringBuilder();
+            for (String word : words) {
+                if (word != null && word.length() > 0) {
+                    sb.append(Character.toUpperCase(word.charAt(0)));
+                    if (word.length() > 1) {
+                        sb.append(word.substring(1));
+                    }
+                    sb.append(" ");
+                }
+            }
+            return sb.toString().trim();
+        } catch (Exception e) {
+            return rawClass;
+        }
     }
 
     @Override
@@ -91,14 +192,19 @@ public class UpcomingFlightAdapter extends RecyclerView.Adapter<UpcomingFlightAd
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvOriginCode, tvDestCode, tvDate, tvClass, tvPassengerCount;
+        // Khai báo thêm tvDateHeader
+        TextView tvDateHeader, tvOriginCode, tvDestCode, tvDate, tvClass, tvPassengerCount, tvDestTime, tvDuration;
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
+            tvDateHeader = itemView.findViewById(R.id.tvDateHeader);
             tvOriginCode = itemView.findViewById(R.id.tvOriginCode);
             tvDestCode = itemView.findViewById(R.id.tvDestCode);
             tvDate = itemView.findViewById(R.id.tvDate);
             tvClass = itemView.findViewById(R.id.tvClass);
             tvPassengerCount = itemView.findViewById(R.id.tvPassengerCount);
+            tvDestTime = itemView.findViewById(R.id.tvDestTime);
+            tvDuration = itemView.findViewById(R.id.tvDuration);
         }
     }
 }

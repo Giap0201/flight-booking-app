@@ -94,7 +94,7 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvPendingTickets"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:nestedScrollingEnabled="false"
                 tools:itemCount="1"
                 tools:listitem="@layout/item_ticket_pending" />
@@ -134,7 +134,7 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvUpcomingTickets"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:nestedScrollingEnabled="false"
                 tools:itemCount="2"
                 tools:listitem="@layout/item_ticket_upcoming" />

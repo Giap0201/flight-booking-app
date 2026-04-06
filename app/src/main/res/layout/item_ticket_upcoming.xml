@@ -1,190 +1,207 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="16dp"
-    android:layout_marginHorizontal="8dp"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="3dp">
+    android:orientation="vertical">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <TextView
+        android:id="@+id/tvDateHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="20dp">
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        tools:text="September 10, 2024" />
 
-        <TextView
-            android:id="@+id/tvOriginCode"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="2"
-            android:textColor="@android:color/black"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@+id/ivFlightArc"
-            app:layout_constraintHorizontal_weight="1"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="CGK" />
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:layout_marginHorizontal="8dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="@android:color/white">
 
-        <TextView
-            android:id="@+id/tvOriginTime"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textColor="#757575"
-            android:textSize="14sp"
-            app:layout_constraintStart_toStartOf="@+id/tvOriginCode"
-            app:layout_constraintTop_toBottomOf="@+id/tvOriginCode"
-            tools:text="07:30" />
-
-        <TextView
-            android:id="@+id/tvDestCode"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:gravity="end"
-            android:maxLines="2"
-            android:textColor="@android:color/black"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_weight="1"
-            app:layout_constraintStart_toEndOf="@+id/ivFlightArc"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="SGP" />
-
-        <TextView
-            android:id="@+id/tvDestTime"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textColor="#757575"
-            android:textSize="14sp"
-            app:layout_constraintEnd_toEndOf="@+id/tvDestCode"
-            app:layout_constraintTop_toBottomOf="@+id/tvDestCode"
-            tools:text="09:00" />
-
-        <ImageView
-            android:id="@+id/ivFlightArc"
-            android:layout_width="0dp"
-            android:layout_height="45dp"
-            android:layout_marginHorizontal="12dp"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_flight_arc"
-            app:layout_constraintBottom_toBottomOf="@+id/tvOriginCode"
-            app:layout_constraintEnd_toStartOf="@+id/tvDestCode"
-            app:layout_constraintHorizontal_weight="1.2"
-            app:layout_constraintStart_toEndOf="@+id/tvOriginCode"
-            app:layout_constraintTop_toTopOf="@+id/tvOriginCode" />
-
-        <TextView
-            android:id="@+id/tvDuration"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:textColor="#6200EE"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="@+id/ivFlightArc"
-            app:layout_constraintStart_toStartOf="@+id/ivFlightArc"
-            app:layout_constraintTop_toBottomOf="@+id/ivFlightArc"
-            tools:text="1h 50m" />
-
-        <View
-            android:id="@+id/divider"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="24dp"
-            android:background="#E0E0E0"
-            app:layout_constraintTop_toBottomOf="@+id/tvDuration" />
-
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:baselineAligned="false"
-            android:orientation="horizontal"
-            android:weightSum="10"
-            app:layout_constraintTop_toBottomOf="@+id/divider">
+            android:padding="20dp">
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/tvOriginCode"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="3"
-                android:orientation="vertical">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Date"
-                    android:textColor="#BDBDBD"
-                    android:textSize="12sp" />
-                <TextView
-                    android:id="@+id/tvDate"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:maxLines="1"
-                    android:ellipsize="end"
-                    android:textColor="@android:color/black"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    tools:text="Mon, Sep 10" />
-            </LinearLayout>
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textColor="@android:color/black"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toStartOf="@+id/ivFlightArc"
+                app:layout_constraintHorizontal_weight="1.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="Noi Bai" />
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/tvOriginTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="#757575"
+                android:textSize="14sp"
+                app:layout_constraintStart_toStartOf="@+id/tvOriginCode"
+                app:layout_constraintTop_toBottomOf="@+id/tvOriginCode"
+                tools:text="08:30" />
+
+            <ImageView
+                android:id="@+id/ivFlightArc"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_marginHorizontal="8dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_flight_arc"
+                app:layout_constraintBottom_toBottomOf="@+id/tvOriginCode"
+                app:layout_constraintEnd_toStartOf="@+id/tvDestCode"
+                app:layout_constraintHorizontal_weight="0.8"
+                app:layout_constraintStart_toEndOf="@+id/tvOriginCode"
+                app:layout_constraintTop_toTopOf="@+id/tvOriginCode" />
+
+            <TextView
+                android:id="@+id/tvDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textColor="#6200EE"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="@+id/ivFlightArc"
+                app:layout_constraintStart_toStartOf="@+id/ivFlightArc"
+                app:layout_constraintTop_toBottomOf="@+id/ivFlightArc"
+                tools:text="Chi tiết" />
+
+            <TextView
+                android:id="@+id/tvDestCode"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="4"
-                android:orientation="vertical">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Class"
-                    android:textColor="#BDBDBD"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/tvClass"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:maxLines="1"
-                    android:ellipsize="end"
-                    android:textColor="@android:color/black"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    tools:text="Premium Economy" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="3"
+                android:ellipsize="end"
                 android:gravity="end"
-                android:orientation="vertical">
-                <TextView
-                    android:layout_width="wrap_content"
+                android:maxLines="2"
+                android:textColor="@android:color/black"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_weight="1.5"
+                app:layout_constraintStart_toEndOf="@+id/ivFlightArc"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="Tan Son Nhat" />
+
+            <TextView
+                android:id="@+id/tvDestTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="#757575"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="@+id/tvDestCode"
+                app:layout_constraintTop_toBottomOf="@+id/tvDestCode"
+                tools:text="--:--" />
+
+            <View
+                android:id="@+id/divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="24dp"
+                android:background="#E0E0E0"
+                app:layout_constraintTop_toBottomOf="@+id/tvDuration" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:weightSum="10"
+                app:layout_constraintTop_toBottomOf="@+id/divider">
+
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Passenger"
-                    android:textColor="#BDBDBD"
-                    android:textSize="12sp" />
-                <TextView
-                    android:id="@+id/tvPassengerCount"
-                    android:layout_width="wrap_content"
+                    android:layout_weight="3.5"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Date"
+                        android:textColor="#BDBDBD"
+                        android:textSize="12sp" />
+                    <TextView
+                        android:id="@+id/tvDate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:textColor="@android:color/black"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        tools:text="Sat, Sep 05" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:maxLines="1"
-                    android:ellipsize="end"
-                    android:textColor="@android:color/black"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    tools:text="1 Person" />
+                    android:layout_weight="3.5"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Class"
+                        android:textColor="#BDBDBD"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tvClass"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:textColor="@android:color/black"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        tools:text="Economy" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:gravity="end"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Passenger"
+                        android:textColor="#BDBDBD"
+                        android:textSize="12sp" />
+                    <TextView
+                        android:id="@+id/tvPassengerCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:textColor="@android:color/black"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        tools:text="1 Person" />
+                </LinearLayout>
             </LinearLayout>
-
-        </LinearLayout>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</androidx.cardview.widget.CardView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
+</LinearLayout>

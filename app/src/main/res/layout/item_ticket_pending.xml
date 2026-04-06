@@ -74,6 +74,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:text="16:55   CGK Jakarta\n20:30   DPS Bali"
+                android:id="@+id/tvRouteAndTime"
                 android:textColor="@color/textColorPrimary"
                 android:lineSpacingExtra="8dp"
                 app:layout_constraintStart_toStartOf="parent"

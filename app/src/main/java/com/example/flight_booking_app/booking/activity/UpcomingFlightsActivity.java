@@ -3,26 +3,28 @@ package com.example.flight_booking_app.booking.activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.flight_booking_app.R;
-import com.example.flight_booking_app.booking.adapter.UpcomingFlightAdapter;
+import com.example.flight_booking_app.booking.adapter.UpcomingTicketAdapter;
 import com.example.flight_booking_app.booking.api.BookingApiService;
 import com.example.flight_booking_app.booking.model.BookingSummary;
 import com.example.flight_booking_app.booking.model.PageResult;
 import com.example.flight_booking_app.common.ApiResponse;
+import com.example.flight_booking_app.common.AppConfig;
 import com.example.flight_booking_app.network.ApiClient;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -32,286 +34,154 @@ import retrofit2.Response;
 
 public class UpcomingFlightsActivity extends AppCompatActivity {
 
-    private Spinner spinnerMonth, spinnerDay, spinnerClass;
-    private RecyclerView rvUpcomingFlights;
+    private RecyclerView rvUpcoming;
+    private UpcomingTicketAdapter adapter;
+    private ProgressBar progressBar;
 
-    private List<String> dynamicMonths = new ArrayList<>();
-    private List<String> dynamicDays = new ArrayList<>();
-    private List<String> dynamicClasses = new ArrayList<>();
+    // Giao diện Lọc
+    private Spinner spinnerOrigin, spinnerDest;
+    private Button btnSearch;
 
-    private ArrayAdapter<String> monthAdapter;
-    private ArrayAdapter<String> dayAdapter;
-    private ArrayAdapter<String> classAdapter;
+    // Danh sách dữ liệu
+    private List<BookingSummary> allFlightsList = new ArrayList<>(); // Chứa data gốc từ API
+    private List<BookingSummary> displayList = new ArrayList<>();    // Chứa data sau khi lọc để in ra màn hình
 
-    private UpcomingFlightAdapter adapter;
-    private List<BookingSummary> fullList = new ArrayList<>();
-    private List<BookingSummary> filteredList = new ArrayList<>();
-
-    private int currentPage = 1;
-    private boolean isLoading = false;
-    private boolean isLastPage = false;
-    private final int PAGE_SIZE = 10;
+//    private final String TOKEN = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJ1dGMuY29tIiwic3ViIjoiNmYzNmIzOTItZjI4YS00ODg4LTgzM2MtY2ZjNmMxMDkyMDM0IiwiZXhwIjoxNzc1NTU1MTI0LCJpYXQiOjE3NzU0Njg3MjQsImp0aSI6ImI1MjhjYmM3LWRmMTktNGY4OC1hODYzLTg5YmFiNDZlOWM1MyIsInNjb3BlIjoiUk9MRV9VU0VSIn0._h_1wlfj-JFL0LMbVjxhwdkc5Es15Py3WtVM_cayhGcoZOJHb36_YKgOSkEyuiAYwVfdEugKehj3weD0Dbt6KQ";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_upcoming_flights);
 
-        spinnerMonth = findViewById(R.id.spinnerMonth);
-        spinnerDay = findViewById(R.id.spinnerDay);
-        spinnerClass = findViewById(R.id.spinnerClass);
-        rvUpcomingFlights = findViewById(R.id.rvUpcomingFlights);
-
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
-        setupFilters();
-        setupRecyclerView();
+        // Ánh xạ UI
+        progressBar = findViewById(R.id.progressBar);
+        rvUpcoming = findViewById(R.id.rvUpcoming);
+        spinnerOrigin = findViewById(R.id.spinnerOrigin);
+        spinnerDest = findViewById(R.id.spinnerDest);
+        btnSearch = findViewById(R.id.btnSearch);
 
-        fetchApiData(1);
+        // Setup RecyclerView
+        rvUpcoming.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new UpcomingTicketAdapter(displayList);
+        rvUpcoming.setAdapter(adapter);
+
+        // Bắt sự kiện bấm nút TÌM KIẾM
+        btnSearch.setOnClickListener(v -> applyFilter());
+
+        fetchUpcomingBookings();
     }
 
-    private void setupRecyclerView() {
-        adapter = new UpcomingFlightAdapter(filteredList);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        rvUpcomingFlights.setLayoutManager(layoutManager);
-        rvUpcomingFlights.setAdapter(adapter);
-
-        rvUpcomingFlights.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                int visibleItemCount = layoutManager.getChildCount();
-                int totalItemCount = layoutManager.getItemCount();
-                int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
-
-                if (!isLoading && !isLastPage) {
-                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount && firstVisibleItemPosition >= 0) {
-                        isLoading = true;
-                        currentPage++;
-                        fetchApiData(currentPage);
-                    }
-                }
-            }
-        });
-    }
-
-    private void fetchApiData(int page) {
+    private void fetchUpcomingBookings() {
+        progressBar.setVisibility(View.VISIBLE);
         BookingApiService apiService = ApiClient.getClient().create(BookingApiService.class);
 
-        // LƯU Ý: Nhớ thay lại bằng SharedPreferences để lấy động, tránh lỗi 401 nhé!
-        String myToken = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJ1dGMuY29tIiwic3ViIjoiNmYzNmIzOTItZjI4YS00ODg4LTgzM2MtY2ZjNmMxMDkyMDM0IiwiZXhwIjoxNzc1NDU2MTY1LCJpYXQiOjE3NzUzNjk3NjUsImp0aSI6IjI3NWRiOTk5LWFiNzMtNGQ0Mi04ZDIwLTEzODBjODY2NmQxOCIsInNjb3BlIjoiUk9MRV9VU0VSIn0.OZJaU3JAZouY6F2JJlsqUm4z5pwyeKVyIVxENb-xfexcP4bXYzVBeUmZctnjVwCNCqwEySaU549LyZoTVmUo0g";
-
-        apiService.getMyBookings(myToken, page).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
+        apiService.getMyBookingsWithFilter(AppConfig.TOKEN, "UPCOMING", 1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
             @Override
             public void onResponse(Call<ApiResponse<PageResult<BookingSummary>>> call, Response<ApiResponse<PageResult<BookingSummary>>> response) {
-                isLoading = false;
+                progressBar.setVisibility(View.GONE);
                 if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<PageResult<BookingSummary>> apiResponse = response.body();
+                    List<BookingSummary> data = response.body().getResult().getData();
+                    allFlightsList.clear();
 
-                    if (apiResponse.getCode() == 1000 && apiResponse.getResult() != null) {
-                        List<BookingSummary> newData = apiResponse.getResult().getData();
-
-                        if (newData == null || newData.isEmpty()) {
-                            isLastPage = true;
-                            if (page == 1) {
-                                fullList.clear();
-                                adapter.notifyDataSetChanged();
-                                Toast.makeText(UpcomingFlightsActivity.this, "Bạn chưa có chuyến bay nào", Toast.LENGTH_SHORT).show();
-                            }
-                            return;
-                        }
-
-                        if (newData.size() < PAGE_SIZE) {
-                            isLastPage = true;
-                        }
-
-                        if (page == 1) {
-                            fullList.clear();
-                        }
-
-                        for (BookingSummary ticket : newData) {
-                            if (ticket.getStatus() != null &&
-                                    (ticket.getStatus().equalsIgnoreCase("CONFIRMED") || ticket.getStatus().equalsIgnoreCase("ISSUED"))) {
-                                fullList.add(ticket);
-                            }
-                        }
-
-                        updateSpinnersAndList();
+                    if (data != null && !data.isEmpty()) {
+                        allFlightsList.addAll(data);
+                        setupFilterSpinners(); // Nạp tên Sân bay vào 2 cái Spinner
+                        applyFilter();         // Chạy lọc lần đầu để in ra danh sách (Mặc định là "Tất cả")
+                    } else {
+                        Toast.makeText(UpcomingFlightsActivity.this, "Không có chuyến bay nào sắp tới", Toast.LENGTH_SHORT).show();
+                        adapter.setTicketList(new ArrayList<>());
                     }
-                } else {
-                    Toast.makeText(UpcomingFlightsActivity.this, "Lỗi HTTP: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<PageResult<BookingSummary>>> call, Throwable t) {
-                isLoading = false;
-                Log.e("API_ERROR", t.getMessage());
-                Toast.makeText(UpcomingFlightsActivity.this, "Không thể kết nối Server", Toast.LENGTH_SHORT).show();
+                progressBar.setVisibility(View.GONE);
+                Log.e("UPCOMING_PAGE", "Lỗi mạng: " + t.getMessage());
             }
         });
     }
 
-    private void updateSpinnersAndList() {
-        dynamicMonths.clear();
-        dynamicMonths.addAll(getAvailableMonths());
-        monthAdapter.notifyDataSetChanged();
+    // Nạp danh sách các sân bay duy nhất vào Spinner (Người dùng tha hồ chọn mà không bị giật list)
+// Nạp danh sách các sân bay duy nhất vào Spinner
+    private void setupFilterSpinners() {
+        Set<String> origins = new HashSet<>();
+        Set<String> dests = new HashSet<>();
 
-        updateClassSpinner();
-        triggerSearch();
+        // 1. Chỉ lọc lấy các sân bay thực tế từ Backend
+        for (BookingSummary flight : allFlightsList) {
+            if (flight.getOrigin() != null && !flight.getOrigin().isEmpty()) {
+                origins.add(flight.getOrigin());
+            }
+            if (flight.getDestination() != null && !flight.getDestination().isEmpty()) {
+                dests.add(flight.getDestination());
+            }
+        }
+
+        // 2. Chuyển sang List để sắp xếp
+        List<String> originList = new ArrayList<>(origins);
+        List<String> destList = new ArrayList<>(dests);
+
+        // 3. (Tùy chọn) Sắp xếp tên sân bay theo A-Z cho chuyên nghiệp
+        Collections.sort(originList);
+        Collections.sort(destList);
+
+        // 4. [QUAN TRỌNG NHẤT] Ép chữ "Tất cả" vào vị trí số 0 (Đầu tiên)
+        originList.add(0, "Tất cả");
+        destList.add(0, "Tất cả");
+
+        // 5. Đổ vào Spinner
+        ArrayAdapter<String> originAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, originList);
+        originAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerOrigin.setAdapter(originAdapter);
+
+        ArrayAdapter<String> destAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, destList);
+        destAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerDest.setAdapter(destAdapter);
+    }
+    // Hàm Lọc và Sắp xếp (Chỉ chạy khi bấm nút hoặc tải lần đầu)
+    private void applyFilter() {
+        if (spinnerOrigin.getSelectedItem() == null || spinnerDest.getSelectedItem() == null) return;
+
+        String selectedOrigin = spinnerOrigin.getSelectedItem().toString();
+        String selectedDest = spinnerDest.getSelectedItem().toString();
+
+        displayList.clear();
+
+        for (BookingSummary flight : allFlightsList) {
+            boolean matchOrigin = selectedOrigin.equals("Tất cả") || selectedOrigin.equals(flight.getOrigin());
+            boolean matchDest = selectedDest.equals("Tất cả") || selectedDest.equals(flight.getDestination());
+
+            if (matchOrigin && matchDest) {
+                displayList.add(flight);
+            }
+        }
+
+        // Bắt buộc Sort lại theo Ngày (Mới nhất lên đầu) để Header nhóm ngày chạy đúng
+        sortListByDepartureTimeAsc(displayList);
+
+        // Cập nhật lên UI
+        adapter.setTicketList(displayList);
+
+        if(displayList.isEmpty()) {
+            Toast.makeText(this, "Không tìm thấy chuyến bay phù hợp", Toast.LENGTH_SHORT).show();
+        }
     }
 
-    private void setupFilters() {
-        dynamicMonths.add("Tất cả");
-        dynamicDays.add("Tất cả");
-        dynamicClasses.add("Tất cả");
-
-        monthAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, dynamicMonths);
-        spinnerMonth.setAdapter(monthAdapter);
-
-        dayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, dynamicDays);
-        spinnerDay.setAdapter(dayAdapter);
-
-        classAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, dynamicClasses);
-        spinnerClass.setAdapter(classAdapter);
-
-        spinnerMonth.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (dynamicMonths.size() > position) {
-                    updateDaySpinner(dynamicMonths.get(position));
-                    triggerSearch();
-                }
+    // Hàm Sort (Sắp bay lên đầu) - Giữ nguyên logic cũ của bạn
+    private void sortListByDepartureTimeAsc(List<BookingSummary> list) {
+        java.text.SimpleDateFormat format = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault());
+        Collections.sort(list, (t1, t2) -> {
+            try {
+                java.util.Date d1 = format.parse(t1.getDepartureTime() != null ? t1.getDepartureTime() : "");
+                java.util.Date d2 = format.parse(t2.getDepartureTime() != null ? t2.getDepartureTime() : "");
+                if (d1 != null && d2 != null) return d1.compareTo(d2);
+                return 0;
+            } catch (java.text.ParseException e) {
+                return 0;
             }
-            @Override public void onNothingSelected(AdapterView<?> parent) {}
         });
-
-        spinnerDay.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                triggerSearch();
-            }
-            @Override public void onNothingSelected(AdapterView<?> parent) {}
-        });
-
-        spinnerClass.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                triggerSearch();
-            }
-            @Override public void onNothingSelected(AdapterView<?> parent) {}
-        });
-    }
-
-    private List<String> getAvailableMonths() {
-        Set<String> monthSet = new LinkedHashSet<>();
-        monthSet.add("Tất cả");
-        for (BookingSummary flight : fullList) {
-            String depTime = flight.getDepartureTime();
-            if (depTime != null && depTime.length() >= 7) {
-                try {
-                    String monthNum = depTime.substring(5, 7);
-                    monthSet.add("Tháng " + Integer.parseInt(monthNum));
-                } catch (Exception ignored) {}
-            }
-        }
-        return new ArrayList<>(monthSet);
-    }
-
-    private void updateDaySpinner(String selectedMonth) {
-        Set<String> daySet = new LinkedHashSet<>();
-        daySet.add("Tất cả");
-
-        if (!selectedMonth.equals("Tất cả")) {
-            spinnerDay.setEnabled(true);
-            String monthNum = getMonthNumStr(selectedMonth);
-            for (BookingSummary flight : fullList) {
-                String depTime = flight.getDepartureTime();
-                if (depTime != null && depTime.contains("-" + monthNum + "-")) {
-                    daySet.add(depTime.substring(8, 10));
-                }
-            }
-        } else {
-            spinnerDay.setEnabled(false);
-        }
-
-        dynamicDays.clear();
-        dynamicDays.addAll(daySet);
-        dayAdapter.notifyDataSetChanged();
-        spinnerDay.setSelection(0);
-    }
-
-    // ==========================================
-    // ĐÃ SỬA: Hàm này dùng chung chung logic format chữ cái đầu
-    // ==========================================
-    private String formatClassName(String rawClass) {
-        if (rawClass == null || rawClass.isEmpty()) return "";
-        String lowerCaseClass = rawClass.replace("_", " ").toLowerCase();
-        StringBuilder niceClass = new StringBuilder();
-        String[] words = lowerCaseClass.split(" ");
-        for (String word : words) {
-            if (!word.isEmpty()) {
-                niceClass.append(Character.toUpperCase(word.charAt(0)))
-                        .append(word.substring(1))
-                        .append(" ");
-            }
-        }
-        return niceClass.toString().trim();
-    }
-
-    private void updateClassSpinner() {
-        Set<String> classSet = new LinkedHashSet<>();
-        classSet.add("Tất cả");
-
-        // ĐÃ SỬA: Dùng hàm formatClassName để đẩy vào Spinner
-        for (BookingSummary flight : fullList) {
-            if (flight.getFlightClass() != null && !flight.getFlightClass().isEmpty()) {
-                classSet.add(formatClassName(flight.getFlightClass()));
-            }
-        }
-
-        dynamicClasses.clear();
-        dynamicClasses.addAll(classSet);
-        classAdapter.notifyDataSetChanged();
-    }
-
-    private void triggerSearch() {
-        if (spinnerMonth.getSelectedItem() == null) return;
-
-        String filterMonth = spinnerMonth.getSelectedItem().toString();
-        String filterDay = spinnerDay.getSelectedItem() != null ? spinnerDay.getSelectedItem().toString() : "Tất cả";
-        String filterClass = spinnerClass.getSelectedItem() != null ? spinnerClass.getSelectedItem().toString() : "Tất cả";
-
-        filteredList.clear();
-        for (BookingSummary flight : fullList) {
-
-            // 1. Check Tháng
-            String depTime = flight.getDepartureTime();
-            if (depTime == null) continue;
-            boolean matchMonth = filterMonth.equals("Tất cả") || depTime.contains("-" + getMonthNumStr(filterMonth) + "-");
-
-            // 2. Check Ngày
-            String formattedDay = filterDay.length() == 1 ? "0" + filterDay : filterDay;
-            boolean matchDay = filterDay.equals("Tất cả") || depTime.contains("-" + formattedDay + "T");
-
-            // 3. Check Hạng vé
-            boolean matchClass = filterClass.equals("Tất cả");
-            if (!matchClass && flight.getFlightClass() != null) {
-                // ĐÃ SỬA: Dùng hàm formatClassName để so khớp chính xác với chữ người dùng vừa chọn
-                String formattedFlightClass = formatClassName(flight.getFlightClass());
-                matchClass = formattedFlightClass.equals(filterClass);
-            }
-
-            // Gộp 3 điều kiện
-            if (matchMonth && matchDay && matchClass) {
-                filteredList.add(flight);
-            }
-        }
-        adapter.notifyDataSetChanged();
-    }
-
-    private String getMonthNumStr(String monthText) {
-        String num = monthText.replace("Tháng ", "").trim();
-        return num.length() == 1 ? "0" + num : num;
     }
 }

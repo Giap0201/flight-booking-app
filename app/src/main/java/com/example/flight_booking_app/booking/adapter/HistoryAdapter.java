@@ -11,7 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.flight_booking_app.R;
-import com.example.flight_booking_app.booking.activity.FlightDetailActivity;
+import com.example.flight_booking_app.booking.activity.BookingDetailActivity;
 import com.example.flight_booking_app.booking.model.BookingSummary;
 
 import java.text.ParseException;
@@ -29,7 +29,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
 
     public void setTickets(List<BookingSummary> tickets) {
         this.tickets = tickets;
-        notifyDataSetChanged();
+        notifyDataSetChanged(); // Reset lại view sau khi sort
     }
 
     @NonNull
@@ -43,7 +43,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         BookingSummary ticket = tickets.get(position);
 
-        // 1. Header Ngày tháng
+        // 1. HEADER NGÀY THÁNG (Nhờ Activity đã sort chuẩn nên cái này chạy rất mượt)
         String currentDateStr = getFormattedDateHeader(ticket.getDepartureTime());
         String previousDateStr = position > 0 ? getFormattedDateHeader(tickets.get(position - 1).getDepartureTime()) : "";
 
@@ -54,70 +54,63 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
             holder.tvDateHeader.setVisibility(View.GONE);
         }
 
-        // 2. Dữ liệu cơ bản
+        // 2. THÔNG TIN CƠ BẢN TỪ BE
         holder.tvOrderId.setText(ticket.getPnrCode());
-        holder.tvOrigin.setText(ticket.getOrigin() + " Airport");
-        holder.tvDest.setText(ticket.getDestination() + " Airport");
-
-        String rawClass = ticket.getFlightClass() != null ? ticket.getFlightClass().replace("_", " ") : "Economy";
-        holder.tvFlightInfo.setText("✈ " + (ticket.getFlightNumber() != null ? ticket.getFlightNumber() : "Chuyến bay") + " • " + rawClass);
-        holder.tvDuration.setText(ticket.getDuration() != null ? ticket.getDuration() : "--h --m");
+        holder.tvOrigin.setText(ticket.getOrigin() != null ? ticket.getOrigin() : "N/A");
+        holder.tvDest.setText(ticket.getDestination() != null ? ticket.getDestination() : "N/A");
         holder.tvDepTime.setText(extractTime(ticket.getDepartureTime()));
+
+        String flightNum = ticket.getFlightNumber() != null ? ticket.getFlightNumber() : "Flight";
+        holder.tvFlightInfo.setText("✈ " + flightNum + " • " + formatClass(ticket.getClassType()));
+
+        // 3. THÔNG TIN ĐÃ ĐƯỢC CẬP NHẬT
         holder.tvArrTime.setText(extractTime(ticket.getArrivalTime()));
 
-        // 3. HIỂN THỊ TRẠNG THÁI TIẾNG VIỆT
+        if (ticket.getDepartureTime() != null && ticket.getArrivalTime() != null) {
+            holder.tvDuration.setText(calculateDuration(ticket.getDepartureTime(), ticket.getArrivalTime()));
+        } else {
+            holder.tvDuration.setText("Chi tiết");
+        }
+
+        // 4. TRẠNG THÁI (Badge Việt Hóa)
         setupStatusBadge(holder.tvStatusBadge, ticket.getStatus());
 
-        // 4. Sự kiện Click chuyển trang
+        // 5. CLICK SANG MÀN DETAIL
         holder.itemView.setOnClickListener(v -> {
             if (ticket.getId() != null) {
-                Intent intent = new Intent(v.getContext(), FlightDetailActivity.class);
-                intent.putExtra("BOOKING_ID", ticket.getId().toString());
+                Intent intent = new Intent(v.getContext(), BookingDetailActivity.class);
+                intent.putExtra("BOOKING_ID", ticket.getId());
                 v.getContext().startActivity(intent);
             }
         });
     }
 
-    // ========================================================
-    // HÀM VIỆT HÓA TRẠNG THÁI (STATUS)
-    // ========================================================
     private void setupStatusBadge(TextView tvBadge, String status) {
         GradientDrawable shape = new GradientDrawable();
         shape.setCornerRadius(16f);
-
         if (status == null) status = "";
 
+        // Tự gán các status thành "Đã bay" nếu là History và ko bị huỷ
+        if (status.equals("PAID") || status.equals("CONFIRMED")) {
+            status = "COMPLETED";
+        }
+
         switch (status) {
-            case "PAID":
-                shape.setColor(Color.parseColor("#E8F5E9")); // Xanh lá nhạt
-                tvBadge.setTextColor(Color.parseColor("#2E7D32"));
-                tvBadge.setText("Đã thanh toán");
-                break;
-            case "CONFIRMED":
+            case "COMPLETED":
                 shape.setColor(Color.parseColor("#E8F5E9"));
                 tvBadge.setTextColor(Color.parseColor("#2E7D32"));
-                tvBadge.setText("Xác nhận");
-                break;
-            case "AWAITING_PAYMENT":
-                shape.setColor(Color.parseColor("#FFF3E0")); // Cam nhạt
-                tvBadge.setTextColor(Color.parseColor("#EF6C00"));
-                tvBadge.setText("Chờ thanh toán");
+                tvBadge.setText("Hoàn thành");
                 break;
             case "CANCELLED":
-                shape.setColor(Color.parseColor("#FFEBEE")); // Đỏ nhạt
-                tvBadge.setTextColor(Color.parseColor("#C62828"));
-                tvBadge.setText("Đã huỷ");
-                break;
             case "REFUNDED":
                 shape.setColor(Color.parseColor("#FFEBEE"));
                 tvBadge.setTextColor(Color.parseColor("#C62828"));
-                tvBadge.setText("Hoàn tiền");
+                tvBadge.setText("Đã huỷ");
                 break;
-            case "PENDING":
             default:
-                shape.setColor(Color.parseColor("#E3F2FD")); // Xanh dương nhạt
-                tvBadge.setTextColor(Color.parseColor("#1565C0"));
-                tvBadge.setText("Chờ xử lý");
+                shape.setColor(Color.parseColor("#F5F5F5"));
+                tvBadge.setTextColor(Color.parseColor("#9E9E9E"));
+                tvBadge.setText(status);
                 break;
         }
         tvBadge.setBackground(shape);
@@ -128,10 +121,9 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
         try {
             SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
             Date date = inputFormat.parse(rawDate);
-            SimpleDateFormat outputFormat = new SimpleDateFormat("dd MMMM, yyyy", new Locale("vi", "VN"));
-            return outputFormat.format(date);
+            return new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(date);
         } catch (ParseException e) {
-            return rawDate.length() >= 10 ? rawDate.substring(0, 10) : rawDate;
+            return rawDate.split("T")[0]; // Fallback
         }
     }
 
@@ -140,10 +132,53 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
         try {
             SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
             Date date = inputFormat.parse(rawDate);
-            SimpleDateFormat outputFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-            return outputFormat.format(date);
+            return new SimpleDateFormat("HH:mm", Locale.getDefault()).format(date);
         } catch (ParseException e) {
             return "--:--";
+        }
+    }
+
+    private String calculateDuration(String departure, String arrival) {
+        if (departure == null || departure.trim().isEmpty() || arrival == null || arrival.trim().isEmpty()) return "Chi tiết";
+        try {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+            String safeDep = departure.length() > 19 ? departure.substring(0, 19) : departure;
+            String safeArr = arrival.length() > 19 ? arrival.substring(0, 19) : arrival;
+            
+            Date depDate = format.parse(safeDep);
+            Date arrDate = format.parse(safeArr);
+
+            if (depDate != null && arrDate != null) {
+                long diffInMillis = arrDate.getTime() - depDate.getTime();
+                if (diffInMillis < 0) return "Chi tiết";
+                long hours = diffInMillis / (60 * 60 * 1000);
+                long minutes = (diffInMillis / (60 * 1000)) % 60;
+                if (minutes == 0) return hours + "h";
+                return hours + "h " + minutes + "m";
+            }
+        } catch (Exception e) {
+            return "Chi tiết";
+        }
+        return "Chi tiết";
+    }
+
+    public String formatClass(String rawClass) {
+        if (rawClass == null || rawClass.trim().isEmpty()) return "Economy";
+        try {
+            String[] words = rawClass.replace("_", " ").toLowerCase().split("\\s+");
+            StringBuilder sb = new StringBuilder();
+            for (String word : words) {
+                if (word != null && word.length() > 0) {
+                    sb.append(Character.toUpperCase(word.charAt(0)));
+                    if (word.length() > 1) {
+                        sb.append(word.substring(1));
+                    }
+                    sb.append(" ");
+                }
+            }
+            return sb.toString().trim();
+        } catch (Exception e) {
+            return rawClass;
         }
     }
 

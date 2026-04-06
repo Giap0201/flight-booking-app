@@ -4,8 +4,9 @@ import com.example.flight_booking_app.booking.model.FlightDetail;
 import com.example.flight_booking_app.common.ApiResponse;
 import com.example.flight_booking_app.booking.model.BookingSummary;
 import com.example.flight_booking_app.booking.model.PageResult;
+
+// IMPORT CHUẨN TỪ PACKAGE BẠN VỪA BÁO
 import com.example.flight_booking_app.booking.response.client.BookingDetailResponse;
-import java.util.UUID;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -22,10 +23,12 @@ public interface BookingApiService {
     @GET("bookings/my-bookings")
     Call<ApiResponse<PageResult<BookingSummary>>> getMyBookings(
             @Header("Authorization") String token,
-            @Query("page") int page
+            @Query("filter") String filter,
+            @Query("page") int page,
+            @Query("size") int size
     );
 
-    // ĐÃ THÊM HÀM NÀY DÀNH RIÊNG CHO CÁC TRANG DANH SÁCH LỌC (Waiting, Upcoming...)
+    // Dành riêng cho các trang danh sách lọc (Waiting, Upcoming...)
     @GET("bookings/my-bookings")
     Call<ApiResponse<PageResult<BookingSummary>>> getMyBookingsWithFilter(
             @Header("Authorization") String token,
@@ -33,9 +36,10 @@ public interface BookingApiService {
             @Query("page") int page
     );
 
+    // [QUAN TRỌNG] Đã sửa tham số UUID thành String để nhận dữ liệu từ Intent mượt mà nhất
     @GET("bookings/{id}")
     Call<ApiResponse<BookingDetailResponse>> getBookingById(
             @Header("Authorization") String token,
-            @Path("id") UUID id
+            @Path("id") String id
     );
 }

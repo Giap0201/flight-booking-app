@@ -3,10 +3,10 @@ package com.example.flight_booking_app.booking.activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Spinner;
+import android.widget.ProgressBar;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -17,10 +17,17 @@ import com.example.flight_booking_app.booking.api.BookingApiService;
 import com.example.flight_booking_app.booking.model.BookingSummary;
 import com.example.flight_booking_app.booking.model.PageResult;
 import com.example.flight_booking_app.common.ApiResponse;
+import com.example.flight_booking_app.common.AppConfig;
 import com.example.flight_booking_app.network.ApiClient;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -28,91 +35,143 @@ import retrofit2.Response;
 
 public class HistoryActivity extends AppCompatActivity {
 
-    private RecyclerView rvHistoryTickets;
-    private Spinner spinnerStatusFilter;
-
+    private RecyclerView rvHistory;
+    private ProgressBar progressBar;
     private HistoryAdapter adapter;
-    private List<BookingSummary> allTickets = new ArrayList<>();
-    private List<BookingSummary> filteredTickets = new ArrayList<>();
+    private List<BookingSummary> historyList = new ArrayList<>();
 
-    // Map các trạng thái UI với BE
-    private final String[] statusNames = {"Tất cả", "Chờ xử lý", "Chờ thanh toán", "Đã thanh toán", "Xác nhận", "Đã huỷ", "Hoàn tiền"};
-    private final String[] statusKeys = {"ALL", "PENDING", "AWAITING_PAYMENT", "PAID", "CONFIRMED", "CANCELLED", "REFUNDED"};
+    // Phân trang
+    private int currentPage = 1;
+    private int totalPages = 1;
+    private boolean isLoading = false;
+
+//    private final String TOKEN = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJ1dGMuY29tIiwic3ViIjoiNmYzNmIzOTItZjI4YS00ODg4LTgzM2MtY2ZjNmMxMDkyMDM0IiwiZXhwIjoxNzc1NTU1MTI0LCJpYXQiOjE3NzU0Njg3MjQsImp0aSI6ImI1MjhjYmM3LWRmMTktNGY4OC1hODYzLTg5YmFiNDZlOWM1MyIsInNjb3BlIjoiUk9MRV9VU0VSIn0._h_1wlfj-JFL0LMbVjxhwdkc5Es15Py3WtVM_cayhGcoZOJHb36_YKgOSkEyuiAYwVfdEugKehj3weD0Dbt6KQ";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);
 
-        rvHistoryTickets = findViewById(R.id.rvHistoryTickets);
-        spinnerStatusFilter = findViewById(R.id.spinnerStatusFilter);
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+        progressBar = findViewById(R.id.progressBar);
+        rvHistory = findViewById(R.id.rvHistory);
 
         setupRecyclerView();
-        setupSpinner();
-
-        fetchDataFromApi();
+        fetchHistoryBookings(currentPage);
     }
 
     private void setupRecyclerView() {
-        rvHistoryTickets.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new HistoryAdapter(filteredTickets);
-        rvHistoryTickets.setAdapter(adapter);
-    }
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        rvHistory.setLayoutManager(layoutManager);
+        adapter = new HistoryAdapter(historyList);
+        rvHistory.setAdapter(adapter);
 
-    private void setupSpinner() {
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, statusNames);
-        spinnerStatusFilter.setAdapter(spinnerAdapter);
-
-        spinnerStatusFilter.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        // Bắt sự kiện cuộn xuống đáy để Load More
+        rvHistory.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                applyLocalFilter(statusKeys[position]);
-            }
-            @Override public void onNothingSelected(AdapterView<?> parent) {}
-        });
-    }
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if (dy > 0) { // Đang cuộn xuống
+                    int visibleItemCount = layoutManager.getChildCount();
+                    int totalItemCount = layoutManager.getItemCount();
+                    int pastVisibleItems = layoutManager.findFirstVisibleItemPosition();
 
-    private void fetchDataFromApi() {
-        BookingApiService apiService = ApiClient.getClient().create(BookingApiService.class);
-        String myToken = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJ1dGMuY29tIiwic3ViIjoiNmYzNmIzOTItZjI4YS00ODg4LTgzM2MtY2ZjNmMxMDkyMDM0IiwiZXhwIjoxNzc1NDU2MTY1LCJpYXQiOjE3NzUzNjk3NjUsImp0aSI6IjI3NWRiOTk5LWFiNzMtNGQ0Mi04ZDIwLTEzODBjODY2NmQxOCIsInNjb3BlIjoiUk9MRV9VU0VSIn0.OZJaU3JAZouY6F2JJlsqUm4z5pwyeKVyIVxENb-xfexcP4bXYzVBeUmZctnjVwCNCqwEySaU549LyZoTVmUo0g";
-
-        // VÌ KHÔNG ĐỤNG BE: Ta gọi trang 1 và lọc local. (Có thể tăng size trên BE sau nếu dữ liệu nhiều)
-        apiService.getMyBookings(myToken, 1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<PageResult<BookingSummary>>> call, Response<ApiResponse<PageResult<BookingSummary>>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<PageResult<BookingSummary>> apiResponse = response.body();
-                    if (apiResponse.getCode() == 1000 && apiResponse.getResult() != null) {
-                        allTickets.clear();
-                        if (apiResponse.getResult().getData() != null) {
-                            allTickets.addAll(apiResponse.getResult().getData());
+                    if (!isLoading && currentPage < totalPages) {
+                        if ((visibleItemCount + pastVisibleItems) >= totalItemCount) {
+                            currentPage++;
+                            fetchHistoryBookings(currentPage);
                         }
-                        // Lọc lại dựa trên Spinner hiện tại
-                        int selectedPosition = spinnerStatusFilter.getSelectedItemPosition();
-                        applyLocalFilter(statusKeys[selectedPosition]);
                     }
-                } else {
-                    Toast.makeText(HistoryActivity.this, "Lỗi tải dữ liệu", Toast.LENGTH_SHORT).show();
                 }
             }
+        });
+    }
+
+    private void fetchHistoryBookings(int page) {
+        isLoading = true;
+        if (page == 1) progressBar.setVisibility(View.VISIBLE);
+
+        BookingApiService apiService = ApiClient.getClient().create(BookingApiService.class);
+
+        // DÙNG FILTER="ALL", TỰ LỌC VÀ SORT BẰNG JAVA
+        apiService.getMyBookingsWithFilter(AppConfig.TOKEN, "ALL", page).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<PageResult<BookingSummary>>> call, Response<ApiResponse<PageResult<BookingSummary>>> response) {
+                isLoading = false;
+                progressBar.setVisibility(View.GONE);
+
+                if (response.isSuccessful() && response.body() != null) {
+                    PageResult<BookingSummary> pageResult = response.body().getResult();
+                    List<BookingSummary> allData = pageResult.getData();
+                    totalPages = pageResult.getTotalPages();
+
+                    if (page == 1) historyList.clear();
+
+                    if (allData != null) {
+                        for (BookingSummary ticket : allData) {
+                            String status = ticket.getStatus();
+
+                            // 1. Logic lọc vé Đã hủy
+                            boolean isCancelled = "CANCELLED".equals(status) || "REFUNDED".equals(status);
+
+                            // 2. Logic lọc vé Đã bay (Hoàn thành)
+                            boolean isCompleted = ("PAID".equals(status) || "CONFIRMED".equals(status)) && isPastFlight(ticket.getDepartureTime());
+
+                            // Chỉ nạp vào danh sách nếu là History
+                            if (isCancelled || isCompleted) {
+                                historyList.add(ticket);
+                            }
+                        }
+                    }
+
+                    // 3. Logic Sort lại toàn bộ danh sách theo Ngày bay giảm dần (Mới nhất lên đầu)
+                    sortListByDepartureTimeDesc(historyList);
+
+                    adapter.setTickets(historyList);
+
+                    if (historyList.isEmpty() && page == 1) {
+                        Toast.makeText(HistoryActivity.this, "Chưa có lịch sử chuyến bay", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
             @Override
             public void onFailure(Call<ApiResponse<PageResult<BookingSummary>>> call, Throwable t) {
-                Log.e("API_ERROR", t.getMessage());
-                Toast.makeText(HistoryActivity.this, "Lỗi kết nối mạng", Toast.LENGTH_SHORT).show();
+                isLoading = false;
+                progressBar.setVisibility(View.GONE);
+                Log.e("HISTORY_PAGE", "Lỗi mạng: " + t.getMessage());
             }
         });
     }
 
-    private void applyLocalFilter(String statusKey) {
-        filteredTickets.clear();
-        for (BookingSummary ticket : allTickets) {
-            if ("ALL".equals(statusKey)) {
-                filteredTickets.add(ticket);
-            } else if (statusKey.equalsIgnoreCase(ticket.getStatus())) {
-                filteredTickets.add(ticket);
-            }
+    // Hàm kiểm tra xem chuyến bay đã cất cánh chưa
+    private boolean isPastFlight(String departureTimeStr) {
+        if (departureTimeStr == null || departureTimeStr.isEmpty()) return false;
+        try {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+            Date departureDate = format.parse(departureTimeStr);
+            return departureDate != null && departureDate.before(new Date()); // Nhỏ hơn giờ hiện tại
+        } catch (ParseException e) {
+            return false;
         }
-        adapter.notifyDataSetChanged();
+    }
+
+    // Hàm sắp xếp danh sách theo giờ bay giảm dần
+    private void sortListByDepartureTimeDesc(List<BookingSummary> list) {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+        Collections.sort(list, new Comparator<BookingSummary>() {
+            @Override
+            public int compare(BookingSummary t1, BookingSummary t2) {
+                try {
+                    Date d1 = format.parse(t1.getDepartureTime() != null ? t1.getDepartureTime() : "");
+                    Date d2 = format.parse(t2.getDepartureTime() != null ? t2.getDepartureTime() : "");
+                    // Đảo ngược d2 so với d1 để sort DESC
+                    if (d1 != null && d2 != null) return d2.compareTo(d1);
+                    return 0;
+                } catch (ParseException e) {
+                    return 0;
+                }
+            }
+        });
     }
 }

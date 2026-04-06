@@ -17,13 +17,16 @@ import com.example.flight_booking_app.booking.response.client.BookingDetailRespo
 import com.example.flight_booking_app.booking.response.client.PassengerTicketResponse;
 import com.example.flight_booking_app.booking.response.client.TicketDetailResponse;
 import com.example.flight_booking_app.common.ApiResponse;
+import com.example.flight_booking_app.common.AppConfig;
 import com.example.flight_booking_app.network.ApiClient;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Locale;
-import java.util.UUID;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -31,7 +34,7 @@ import retrofit2.Response;
 
 public class FlightDetailActivity extends AppCompatActivity {
 
-    private TextView tvBookingSpace, tvOrderId, tvDepTime, tvArrTime, tvDuration, tvOrigin, tvDest, tvAirline;
+    private TextView tvOrderId, tvDepTime, tvArrTime, tvDuration, tvOrigin, tvDest, tvAirline;
     private TextView tvPriceAirline, tvAdultCount, tvAdultSum, tvChildCount, tvChildSum, tvInfantCount, tvInfantSum, tvTotalPrice;
     private View layoutAdultPrice, layoutChildPrice, layoutInfantPrice;
 
@@ -47,23 +50,17 @@ public class FlightDetailActivity extends AppCompatActivity {
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
-        String bookingIdString = getIntent().getStringExtra("BOOKING_ID");
-        if (bookingIdString != null) {
-            try {
-                UUID id = UUID.fromString(bookingIdString);
-                fetchBookingDetail(id);
-            } catch (IllegalArgumentException e) {
-                Toast.makeText(this, "ID vé không đúng định dạng!", Toast.LENGTH_SHORT).show();
-                finish();
-            }
+        // ĐÃ SỬA: Nhận String trực tiếp, không vòng vèo qua UUID
+        String bookingId = getIntent().getStringExtra("BOOKING_ID");
+        if (bookingId != null && !bookingId.isEmpty()) {
+            fetchBookingDetail(bookingId);
         } else {
-            Toast.makeText(this, "Không tìm thấy thông tin vé!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Lỗi: Không tìm thấy mã vé!", Toast.LENGTH_SHORT).show();
             finish();
         }
     }
 
     private void initViews() {
-        tvBookingSpace = findViewById(R.id.tvBookingSpace);
         tvOrderId = findViewById(R.id.tvOrderId);
         tvDepTime = findViewById(R.id.tvDepTime);
         tvArrTime = findViewById(R.id.tvArrTime);
@@ -71,13 +68,13 @@ public class FlightDetailActivity extends AppCompatActivity {
         tvOrigin = findViewById(R.id.tvOrigin);
         tvDest = findViewById(R.id.tvDest);
         tvAirline = findViewById(R.id.tvAirline);
+        tvPriceAirline = findViewById(R.id.tvPriceAirline);
 
         rvPassengers = findViewById(R.id.rvPassengers);
         rvPassengers.setLayoutManager(new LinearLayoutManager(this));
         passengerAdapter = new PassengerAdapter(new ArrayList<>());
         rvPassengers.setAdapter(passengerAdapter);
 
-        tvPriceAirline = findViewById(R.id.tvPriceAirline);
         layoutAdultPrice = findViewById(R.id.layoutAdultPrice);
         layoutChildPrice = findViewById(R.id.layoutChildPrice);
         layoutInfantPrice = findViewById(R.id.layoutInfantPrice);
@@ -90,109 +87,129 @@ public class FlightDetailActivity extends AppCompatActivity {
         tvTotalPrice = findViewById(R.id.tvTotalPrice);
     }
 
-    private void fetchBookingDetail(UUID bookingId) {
+    // ĐÃ SỬA: Tham số là String bookingId
+    private void fetchBookingDetail(String bookingId) {
         BookingApiService apiService = ApiClient.getClient().create(BookingApiService.class);
-        String token = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJ1dGMuY29tIiwic3ViIjoiNmYzNmIzOTItZjI4YS00ODg4LTgzM2MtY2ZjNmMxMDkyMDM0IiwiZXhwIjoxNzc1NDU2MTY1LCJpYXQiOjE3NzUzNjk3NjUsImp0aSI6IjI3NWRiOTk5LWFiNzMtNGQ0Mi04ZDIwLTEzODBjODY2NmQxOCIsInNjb3BlIjoiUk9MRV9VU0VSIn0.OZJaU3JAZouY6F2JJlsqUm4z5pwyeKVyIVxENb-xfexcP4bXYzVBeUmZctnjVwCNCqwEySaU549LyZoTVmUo0g";
+//        String token = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJ1dGMuY29tIiwic3ViIjoiNmYzNmIzOTItZjI4YS00ODg4LTgzM2MtY2ZjNmMxMDkyMDM0IiwiZXhwIjoxNzc1NTU1MTI0LCJpYXQiOjE3NzU0Njg3MjQsImp0aSI6ImI1MjhjYmM3LWRmMTktNGY4OC1hODYzLTg5YmFiNDZlOWM1MyIsInNjb3BlIjoiUk9MRV9VU0VSIn0._h_1wlfj-JFL0LMbVjxhwdkc5Es15Py3WtVM_cayhGcoZOJHb36_YKgOSkEyuiAYwVfdEugKehj3weD0Dbt6KQ";
 
-        // ĐÃ SỬA: Đã truyền biến token vào hàm getBookingById
-        apiService.getBookingById(token, bookingId).enqueue(new Callback<ApiResponse<BookingDetailResponse>>() {
+        apiService.getBookingById(AppConfig.TOKEN, bookingId).enqueue(new Callback<ApiResponse<BookingDetailResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<BookingDetailResponse>> call, Response<ApiResponse<BookingDetailResponse>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getResult() != null) {
                     bindDataToUi(response.body().getResult());
                 } else {
-                    Toast.makeText(FlightDetailActivity.this, "Lỗi tải chi tiết vé", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(FlightDetailActivity.this, "Không thể tải chi tiết vé", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<BookingDetailResponse>> call, Throwable t) {
-                Log.e("DETAIL_ERROR", t.getMessage());
-                Toast.makeText(FlightDetailActivity.this, "Mất kết nối mạng", Toast.LENGTH_SHORT).show();
+                Toast.makeText(FlightDetailActivity.this, "Lỗi kết nối server: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e("FLIGHT_DETAIL", "Lỗi: " + t.getMessage());
             }
         });
     }
 
     private void bindDataToUi(BookingDetailResponse data) {
-        if (data.getPnrCode() != null) {
-            tvOrderId.setText("Order ID  " + data.getPnrCode());
+        if (data == null) return;
+
+        // 1. In Order ID
+        tvOrderId.setText("Order ID  " + (data.getPnrCode() != null ? data.getPnrCode() : "N/A"));
+
+        boolean hasDetailedFlightInfo = false; // Biến cờ hiệu theo dõi data
+
+        // 2. Thử lấy data xịn từ API (Nếu Backend có trả về)
+        List<PassengerTicketResponse> passengers = data.getPassengers();
+        if (passengers != null && !passengers.isEmpty()) {
+            passengerAdapter.setPassengers(passengers);
+
+            PassengerTicketResponse firstPax = passengers.get(0);
+            if (firstPax.getTickets() != null && !firstPax.getTickets().isEmpty()) {
+                TicketDetailResponse t = firstPax.getTickets().get(0);
+
+                tvDepTime.setText(formatTime(t.getDepartureTime()));
+                tvArrTime.setText(formatTime(t.getArrivalTime()));
+                tvOrigin.setText(t.getDepartureAirport() + " Airport");
+                tvDest.setText(t.getArrivalAirport() + " Airport");
+                tvDuration.setText(calculateDuration(t.getDepartureTime(), t.getArrivalTime()));
+
+                String className = t.getClassType() != null ? formatClass(t.getClassType()) : "Economy";
+                String flightInfo = "✈ " + (t.getFlightNumber() != null ? t.getFlightNumber() : "Flight") + " • " + className;
+                tvAirline.setText(flightInfo);
+                tvPriceAirline.setText(flightInfo);
+
+                hasDetailedFlightInfo = true; // Đánh dấu là đã lấy được data xịn
+            }
+            calculatePriceBreakdown(passengers);
         }
 
-        if (data.getPassengers() != null && !data.getPassengers().isEmpty()) {
-            passengerAdapter.setPassengers(data.getPassengers());
+        // 3. OPTION A: NẾU BE KHÔNG TRẢ DATA -> LÔI DỮ LIỆU DỰ PHÒNG TỪ INTENT RA DÙNG
+        if (!hasDetailedFlightInfo) {
+            String fallbackOrigin = getIntent().getStringExtra("ORIGIN");
+            String fallbackDest = getIntent().getStringExtra("DEST");
+            String fallbackDepTime = getIntent().getStringExtra("DEP_TIME");
 
-            PassengerTicketResponse firstPassenger = data.getPassengers().get(0);
-            if (firstPassenger.getTickets() != null && !firstPassenger.getTickets().isEmpty()) {
-                TicketDetailResponse firstTicket = firstPassenger.getTickets().get(0);
+            tvOrigin.setText(fallbackOrigin != null ? fallbackOrigin : "N/A");
+            tvDest.setText(fallbackDest != null ? fallbackDest : "N/A");
+            tvDepTime.setText(formatTime(fallbackDepTime));
 
-                tvDepTime.setText(formatTime(firstTicket.getDepartureTime()));
-                tvArrTime.setText(formatTime(firstTicket.getArrivalTime()));
-
-                tvDuration.setText("2h 15m");
-                tvOrigin.setText(firstTicket.getDepartureAirport() + " Airport");
-                tvDest.setText(firstTicket.getArrivalAirport() + " Airport");
-
-                // ĐÃ SỬA: Bỏ .name() vì getClassType() đã trả về String
-                String className = firstTicket.getClassType() != null ? firstTicket.getClassType().replace("_", " ") : "Economy";
-                if (className.length() > 1) {
-                    className = className.substring(0, 1).toUpperCase() + className.substring(1).toLowerCase();
-                }
-
-                String flightName = "✈ " + (firstTicket.getFlightNumber() != null ? firstTicket.getFlightNumber() : "") + " • " + className;
-                tvAirline.setText(flightName);
-                tvPriceAirline.setText(flightName);
-            }
-
-            int adultQty = 0, childQty = 0, infantQty = 0;
-            BigDecimal adultSum = BigDecimal.ZERO;
-            BigDecimal childSum = BigDecimal.ZERO;
-            BigDecimal infantSum = BigDecimal.ZERO;
-
-            for (PassengerTicketResponse p : data.getPassengers()) {
-                BigDecimal pTotal = BigDecimal.ZERO;
-                if (p.getTickets() != null && !p.getTickets().isEmpty() && p.getTickets().get(0).getTotalAmount() != null) {
-                    pTotal = p.getTickets().get(0).getTotalAmount();
-                }
-
-                // ĐÃ SỬA: Bỏ .name() vì getType() đã trả về String
-                String pType = p.getType() != null ? p.getType().toUpperCase() : "ADULT";
-                if (pType.contains("ADULT")) {
-                    adultQty++; adultSum = adultSum.add(pTotal);
-                } else if (pType.contains("CHILD")) {
-                    childQty++; childSum = childSum.add(pTotal);
-                } else {
-                    infantQty++; infantSum = infantSum.add(pTotal);
-                }
-            }
-
-            NumberFormat format = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
-
-            if (adultQty > 0) {
-                layoutAdultPrice.setVisibility(View.VISIBLE);
-                tvAdultCount.setText(adultQty + " Adult");
-                tvAdultSum.setText(format.format(adultSum));
-            } else { layoutAdultPrice.setVisibility(View.GONE); }
-
-            if (childQty > 0) {
-                layoutChildPrice.setVisibility(View.VISIBLE);
-                tvChildCount.setText(childQty + " Children");
-                tvChildSum.setText(format.format(childSum));
-            } else { layoutChildPrice.setVisibility(View.GONE); }
-
-            if (infantQty > 0) {
-                layoutInfantPrice.setVisibility(View.VISIBLE);
-                tvInfantCount.setText(infantQty + " Infants");
-                tvInfantSum.setText(format.format(infantSum));
-            } else { layoutInfantPrice.setVisibility(View.GONE); }
+            // Các trường không có thì gán mặc định cho đẹp UI
+            tvArrTime.setText("--:--");
+            tvDuration.setText("Chi tiết");
+            tvAirline.setText("✈ Flight • Economy");
+            tvPriceAirline.setText("✈ Flight • Economy");
         }
 
-        NumberFormat format = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
-        BigDecimal total = data.getTotalAmount() != null ? data.getTotalAmount() : BigDecimal.ZERO;
-        tvTotalPrice.setText(format.format(total));
+        // 4. In Tổng tiền
+        NumberFormat formatVND = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+        BigDecimal total = BigDecimal.valueOf(data.getTotalAmount());
+        tvTotalPrice.setText(formatVND.format(total));
+    }
+    private void calculatePriceBreakdown(List<PassengerTicketResponse> passengers) {
+        int adultQty = 0, childQty = 0, infantQty = 0;
+        BigDecimal adultSum = BigDecimal.ZERO, childSum = BigDecimal.ZERO, infantSum = BigDecimal.ZERO;
+
+        for (PassengerTicketResponse p : passengers) {
+            BigDecimal price = BigDecimal.ZERO;
+            if (p.getTickets() != null && !p.getTickets().isEmpty()) {
+                // ĐÃ SỬA: Ép kiểu an toàn từ double sang BigDecimal
+                price = BigDecimal.valueOf(p.getTickets().get(0).getTotalAmount());
+            }
+
+            String type = p.getType() != null ? p.getType().toUpperCase() : "ADULT";
+
+            if (type.contains("ADULT")) {
+                adultQty++;
+                adultSum = adultSum.add(price);
+            } else if (type.contains("CHILD")) {
+                childQty++;
+                childSum = childSum.add(price);
+            } else {
+                infantQty++;
+                infantSum = infantSum.add(price);
+            }
+        }
+
+        NumberFormat formatVND = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+        updatePriceLayout(layoutAdultPrice, tvAdultCount, tvAdultSum, adultQty, "Adult", adultSum, formatVND);
+        updatePriceLayout(layoutChildPrice, tvChildCount, tvChildSum, childQty, "Children", childSum, formatVND);
+        updatePriceLayout(layoutInfantPrice, tvInfantCount, tvInfantSum, infantQty, "Infants", infantSum, formatVND);
     }
 
+    // Hàm tiện ích cập nhật UI giá tiền
+    private void updatePriceLayout(View layout, TextView tvCount, TextView tvSum, int qty, String label, BigDecimal sum, NumberFormat format) {
+        if (qty > 0) {
+            layout.setVisibility(View.VISIBLE);
+            tvCount.setText(qty + " " + label);
+            tvSum.setText(format.format(sum));
+        } else {
+            layout.setVisibility(View.GONE);
+        }
+    }
+
+    // Hàm định dạng thời gian
     private String formatTime(String localDateTimeStr) {
-        if (localDateTimeStr == null || localDateTimeStr.equals("null")) return "--:--";
+        if (localDateTimeStr == null || localDateTimeStr.trim().isEmpty() || localDateTimeStr.equals("null")) return "--:--";
         try {
             int tIndex = localDateTimeStr.indexOf('T');
             if (tIndex != -1 && localDateTimeStr.length() >= tIndex + 6) {
@@ -200,5 +217,50 @@ public class FlightDetailActivity extends AppCompatActivity {
             }
         } catch (Exception ignored) {}
         return localDateTimeStr;
+    }
+
+    // Hàm tính khoảng cách thời gian (FE tự xử lý)
+    private String calculateDuration(String departure, String arrival) {
+        if (departure == null || departure.trim().isEmpty() || arrival == null || arrival.trim().isEmpty()) return "Chi tiết";
+        try {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+            String safeDep = departure.length() > 19 ? departure.substring(0, 19) : departure;
+            String safeArr = arrival.length() > 19 ? arrival.substring(0, 19) : arrival;
+            
+            Date depDate = format.parse(safeDep);
+            Date arrDate = format.parse(safeArr);
+
+            if (depDate != null && arrDate != null) {
+                long diffInMillis = arrDate.getTime() - depDate.getTime();
+                if (diffInMillis < 0) return "Chi tiết";
+                long hours = diffInMillis / (60 * 60 * 1000);
+                long minutes = (diffInMillis / (60 * 1000)) % 60;
+                if (minutes == 0) return hours + "h";
+                return hours + "h " + minutes + "m";
+            }
+        } catch (Exception e) {
+            return "Chi tiết";
+        }
+        return "Chi tiết";
+    }
+
+    public String formatClass(String rawClass) {
+        if (rawClass == null || rawClass.trim().isEmpty()) return "Economy";
+        try {
+            String[] words = rawClass.replace("_", " ").toLowerCase().split("\\s+");
+            StringBuilder sb = new StringBuilder();
+            for (String word : words) {
+                if (word != null && word.length() > 0) {
+                    sb.append(Character.toUpperCase(word.charAt(0)));
+                    if (word.length() > 1) {
+                        sb.append(word.substring(1));
+                    }
+                    sb.append(" ");
+                }
+            }
+            return sb.toString().trim();
+        } catch (Exception e) {
+            return rawClass;
+        }
     }
 }

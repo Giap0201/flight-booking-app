@@ -38,49 +38,64 @@ public class PassengerAdapter extends RecyclerView.Adapter<PassengerAdapter.View
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         PassengerTicketResponse p = passengers.get(position);
 
-        holder.tvPassengerName.setText(p.getFirstName() + " " + p.getLastName());
+        // 1. Hiển thị tên đầy đủ
+        String firstName = p.getFirstName() != null ? p.getFirstName() : "";
+        String lastName = p.getLastName() != null ? p.getLastName() : "";
+        holder.tvPassengerName.setText(firstName + " " + lastName);
 
-        // ĐÃ SỬA LỖI SUBSTRING CRASH: Kiểm tra độ dài an toàn
-        String idStr = p.getPassengerId() != null ? p.getPassengerId().toString() : "UNKNOWN";
-        String shortId = idStr.length() > 10 ? idStr.substring(0, 10).toUpperCase() : idStr.toUpperCase();
-        holder.tvPassengerId.setText("ID - " + shortId);
+        // 2. Hiển thị ID rút gọn (Lấy từ UUID của Passenger)
+        String idStr = p.getPassengerId() != null ? p.getPassengerId().toString() : "N/A";
+        String shortId = idStr.length() > 8 ? idStr.substring(0, 8).toUpperCase() : idStr.toUpperCase();
+        holder.tvPassengerId.setText("ID: " + shortId);
 
-        // ĐÃ SỬA LỖI INDEX OUT OF BOUNDS: Kiểm tra List có rỗng không
+        // 3. Truy cập vào danh sách vé (Tickets) của hành khách này
         if (p.getTickets() != null && !p.getTickets().isEmpty()) {
+            // Lấy vé đầu tiên (thường 1 hành khách chỉ có 1 vé cho 1 chặng bay)
             TicketDetailResponse ticket = p.getTickets().get(0);
 
-            // Dùng String.valueOf để tránh lỗi nếu Android không dùng Enum
-            String className = ticket.getClassType() != null ? String.valueOf(ticket.getClassType()).replace("_", " ") : "Economy";
-            String seat = (ticket.getSeatNumber() != null && !ticket.getSeatNumber().isEmpty()) ? ticket.getSeatNumber() : "-";
-
-            // Viết hoa chữ đầu
+            // Lấy hạng vé (Class)
+            String className = ticket.getClassType() != null ? ticket.getClassType().replace("_", " ") : "Economy";
             if (className.length() > 1) {
                 className = className.substring(0, 1).toUpperCase() + className.substring(1).toLowerCase();
             }
-            holder.tvSeatInfo.setText(className + " / " + seat);
+
+            // Lấy số ghế (Seat)
+            String seat = (ticket.getSeatNumber() != null && !ticket.getSeatNumber().isEmpty()) ? ticket.getSeatNumber() : "TBD";
+
+            // Hiển thị: Hạng vé / Số ghế
+            holder.tvSeatInfo.setText(className + " / Ghế: " + seat);
         } else {
-            holder.tvSeatInfo.setText("Not assigned");
+            holder.tvSeatInfo.setText("Chưa xác định chỗ ngồi");
         }
 
-        // Tô màu Badge an toàn
+        // 4. Thiết lập nhãn loại hành khách (Badge) - ĐÃ VIỆT HÓA
+        setupPassengerBadge(holder.tvPassengerBadge, p.getType());
+    }
+
+    private void setupPassengerBadge(TextView tvBadge, String type) {
         GradientDrawable shape = new GradientDrawable();
         shape.setCornerRadius(16f);
 
-        String type = p.getType() != null ? String.valueOf(p.getType()).toUpperCase() : "ADULT";
-        if (type.contains("ADULT")) {
-            shape.setColor(Color.parseColor("#E8F0FE")); // Xanh nhạt
-            holder.tvPassengerBadge.setTextColor(Color.parseColor("#1A73E8")); // Xanh đậm
-            holder.tvPassengerBadge.setText("Adult");
-        } else if (type.contains("CHILD")) {
+        String pType = type != null ? type.toUpperCase() : "ADULT";
+
+        if (pType.contains("ADULT")) {
+            shape.setColor(Color.parseColor("#E8F0FE")); // Xanh dương nhạt
+            tvBadge.setTextColor(Color.parseColor("#1A73E8"));
+            tvBadge.setText("Người lớn");
+        } else if (pType.contains("CHILD")) {
             shape.setColor(Color.parseColor("#FCE8E6")); // Đỏ nhạt
-            holder.tvPassengerBadge.setTextColor(Color.parseColor("#D93025")); // Đỏ đậm
-            holder.tvPassengerBadge.setText("Children");
-        } else {
+            tvBadge.setTextColor(Color.parseColor("#D93025"));
+            tvBadge.setText("Trẻ em");
+        } else if (pType.contains("INFANT")) {
             shape.setColor(Color.parseColor("#FEF3C7")); // Vàng nhạt
-            holder.tvPassengerBadge.setTextColor(Color.parseColor("#D97706")); // Cam đậm
-            holder.tvPassengerBadge.setText("Infants");
+            tvBadge.setTextColor(Color.parseColor("#D97706"));
+            tvBadge.setText("Em bé");
+        } else {
+            shape.setColor(Color.parseColor("#F3F4F6")); // Xám nhạt
+            tvBadge.setTextColor(Color.parseColor("#374151"));
+            tvBadge.setText("Khác");
         }
-        holder.tvPassengerBadge.setBackground(shape);
+        tvBadge.setBackground(shape);
     }
 
     @Override

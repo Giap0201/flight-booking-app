@@ -21,7 +21,8 @@
             android:src="@drawable/ic_back"
             android:padding="4dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true"/>
+            android:clickable="true"
+            android:focusable="true"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -33,11 +34,24 @@
             android:textColor="#333333" />
     </LinearLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvPendingAll"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="16dp"
-        android:clipToPadding="false"/>
+        android:layout_height="match_parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvAllWaiting"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp"
+            android:clipToPadding="false"/>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+    </FrameLayout>
 
 </LinearLayout>

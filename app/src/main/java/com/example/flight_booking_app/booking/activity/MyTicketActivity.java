@@ -18,6 +18,7 @@ import com.example.flight_booking_app.booking.api.BookingApiService;
 import com.example.flight_booking_app.booking.model.BookingSummary;
 import com.example.flight_booking_app.booking.model.PageResult;
 import com.example.flight_booking_app.common.ApiResponse;
+import com.example.flight_booking_app.common.AppConfig;
 import com.example.flight_booking_app.network.ApiClient;
 
 import java.util.ArrayList;
@@ -29,12 +30,9 @@ import retrofit2.Response;
 
 public class MyTicketActivity extends AppCompatActivity {
 
-    private RecyclerView rvPendingTickets;
-    private RecyclerView rvUpcomingTickets;
+    private RecyclerView rvPendingTickets, rvUpcomingTickets;
     private ImageView btnHistory;
-
-    private View layoutUpcomingHeader;
-    private View layoutWaitingHeader;
+    private View layoutUpcomingHeader, layoutWaitingHeader;
 
     private PendingTicketAdapter pendingAdapter;
     private UpcomingTicketAdapter upcomingAdapter;
@@ -42,42 +40,36 @@ public class MyTicketActivity extends AppCompatActivity {
     private List<BookingSummary> pendingList = new ArrayList<>();
     private List<BookingSummary> upcomingList = new ArrayList<>();
 
+//    private final String TOKEN = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJ1dGMuY29tIiwic3ViIjoiNmYzNmIzOTItZjI4YS00ODg4LTgzM2MtY2ZjNmMxMDkyMDM0IiwiZXhwIjoxNzc1NTU1MTI0LCJpYXQiOjE3NzU0Njg3MjQsImp0aSI6ImI1MjhjYmM3LWRmMTktNGY4OC1hODYzLTg5YmFiNDZlOWM1MyIsInNjb3BlIjoiUk9MRV9VU0VSIn0._h_1wlfj-JFL0LMbVjxhwdkc5Es15Py3WtVM_cayhGcoZOJHb36_YKgOSkEyuiAYwVfdEugKehj3weD0Dbt6KQ";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_ticket);
 
-        // Ánh xạ View
+        initViews();
+        setupRecyclerViews();
+
+        // Gọi API lấy dữ liệu
+        fetchPendingTickets();
+        fetchUpcomingTickets();
+    }
+
+    private void initViews() {
         rvPendingTickets = findViewById(R.id.rvPendingTickets);
         rvUpcomingTickets = findViewById(R.id.rvUpcomingTickets);
         btnHistory = findViewById(R.id.btnHistory);
         layoutUpcomingHeader = findViewById(R.id.layoutUpcomingHeader);
         layoutWaitingHeader = findViewById(R.id.layoutWaitingHeader);
 
-        // Nút Lịch sử
-        btnHistory.setOnClickListener(v -> {
-            Intent intent = new Intent(MyTicketActivity.this, HistoryActivity.class);
-            startActivity(intent);
-        });
+        btnHistory.setOnClickListener(v -> startActivity(new Intent(this, HistoryActivity.class)));
 
-        // Click tiêu đề Upcoming -> Sang trang danh sách Upcoming
         if (layoutUpcomingHeader != null) {
-            layoutUpcomingHeader.setOnClickListener(v -> {
-                Intent intent = new Intent(MyTicketActivity.this, UpcomingFlightsActivity.class);
-                startActivity(intent);
-            });
+            layoutUpcomingHeader.setOnClickListener(v -> startActivity(new Intent(this, UpcomingFlightsActivity.class)));
         }
-
-        // Click tiêu đề Waiting -> Sang trang danh sách Waiting
         if (layoutWaitingHeader != null) {
-            layoutWaitingHeader.setOnClickListener(v -> {
-                Intent intent = new Intent(MyTicketActivity.this, WaitingForPaymentActivity.class);
-                startActivity(intent);
-            });
+            layoutWaitingHeader.setOnClickListener(v -> startActivity(new Intent(this, WaitingForPaymentActivity.class)));
         }
-
-        setupRecyclerViews();
-        fetchMyTickets();
     }
 
     private void setupRecyclerViews() {
@@ -90,21 +82,27 @@ public class MyTicketActivity extends AppCompatActivity {
         rvUpcomingTickets.setAdapter(upcomingAdapter);
     }
 
-    private void fetchMyTickets() {
+    // 1. Logic lấy vé chờ thanh toán (Tự lọc vì BE chưa hỗ trợ filter PENDING)
+    private void fetchPendingTickets() {
         BookingApiService apiService = ApiClient.getClient().create(BookingApiService.class);
-        String myToken = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJ1dGMuY29tIiwic3ViIjoiNmYzNmIzOTItZjI4YS00ODg4LTgzM2MtY2ZjNmMxMDkyMDM0IiwiZXhwIjoxNzc1NDU2MTY1LCJpYXQiOjE3NzUzNjk3NjUsImp0aSI6IjI3NWRiOTk5LWFiNzMtNGQ0Mi04ZDIwLTEzODBjODY2NmQxOCIsInNjb3BlIjoiUk9MRV9VU0VSIn0.OZJaU3JAZouY6F2JJlsqUm4z5pwyeKVyIVxENb-xfexcP4bXYzVBeUmZctnjVwCNCqwEySaU549LyZoTVmUo0g";
 
-        // 1. LẤY 2 VÉ CHỜ THANH TOÁN (Sử dụng filter PENDING)
-        apiService.getMyBookingsWithFilter(myToken, "PENDING", 1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
+        // Lấy ALL với size lớn một chút (ví dụ 20) để đảm bảo tìm thấy các vé PENDING mới nhất
+        apiService.getMyBookingsWithFilter(AppConfig.TOKEN, "ALL", 1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
             @Override
             public void onResponse(Call<ApiResponse<PageResult<BookingSummary>>> call, Response<ApiResponse<PageResult<BookingSummary>>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().getCode() == 1000) {
-                    List<BookingSummary> data = response.body().getResult().getData();
+                if (response.isSuccessful() && response.body() != null) {
+                    List<BookingSummary> allData = response.body().getResult().getData();
                     pendingList.clear();
-                    if (data != null) {
-                        // Chỉ lấy 2 vé đầu tiên từ kết quả trả về
-                        for (int i = 0; i < Math.min(data.size(), 2); i++) {
-                            pendingList.add(data.get(i));
+
+                    if (allData != null) {
+                        for (BookingSummary item : allData) {
+                            String status = item.getStatus();
+                            // Lọc đúng các status tương ứng với "Waiting for payment"
+                            if ("PENDING".equals(status) || "AWAITING_PAYMENT".equals(status)) {
+                                pendingList.add(item);
+                            }
+                            // Dừng lại khi đủ 2 vé để hiển thị Dashboard
+                            if (pendingList.size() == 2) break;
                         }
                     }
                     pendingAdapter.setTicketList(pendingList);
@@ -113,19 +111,25 @@ public class MyTicketActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<ApiResponse<PageResult<BookingSummary>>> call, Throwable t) {
-                Log.e("MyTicket", "Lỗi Pending: " + t.getMessage());
+                Log.e("MyTicket", "Error Fetching Pending: " + t.getMessage());
             }
         });
+    }
 
-        // 2. LẤY 2 VÉ SẮP BAY (Sử dụng filter CONFIRMED)
-        apiService.getMyBookingsWithFilter(myToken, "CONFIRMED", 1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
+    // 2. Logic lấy vé sắp bay (Dùng filter chuẩn UPCOMING từ BE)
+    private void fetchUpcomingTickets() {
+        BookingApiService apiService = ApiClient.getClient().create(BookingApiService.class);
+
+        // BE đã hỗ trợ lọc vé sắp bay, ta chỉ cần lấy trang 1, size 2
+        apiService.getMyBookingsWithFilter(AppConfig.TOKEN, "UPCOMING", 1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
             @Override
             public void onResponse(Call<ApiResponse<PageResult<BookingSummary>>> call, Response<ApiResponse<PageResult<BookingSummary>>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().getCode() == 1000) {
+                if (response.isSuccessful() && response.body() != null) {
                     List<BookingSummary> data = response.body().getResult().getData();
                     upcomingList.clear();
+
                     if (data != null) {
-                        // Chỉ lấy 2 vé đầu tiên từ kết quả trả về
+                        // Chỉ lấy 2 vé đầu cho Dashboard
                         for (int i = 0; i < Math.min(data.size(), 2); i++) {
                             upcomingList.add(data.get(i));
                         }
@@ -136,10 +140,8 @@ public class MyTicketActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<ApiResponse<PageResult<BookingSummary>>> call, Throwable t) {
-                Log.e("MyTicket", "Lỗi Upcoming: " + t.getMessage());
+                Log.e("MyTicket", "Error Fetching Upcoming: " + t.getMessage());
             }
         });
     }
-
-    // Đã loại bỏ hàm filterTickets vì Backend đã thực hiện việc lọc này thông qua Query Filter
 }
