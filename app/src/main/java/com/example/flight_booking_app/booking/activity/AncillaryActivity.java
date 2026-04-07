@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,90 +26,69 @@ import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Màn hình chọn Dịch vụ bổ sung (Hành lý ký gửi, suất ăn...).
- * Đặc biệt: Áp dụng "Lazy Login" - Cho khách chọn thoải mái, bấm Xác nhận mới đòi Đăng nhập.
- */
 public class AncillaryActivity extends AppCompatActivity {
 
-    // ==============================================================================
-    // 1. KHAI BÁO CÁC THÀNH PHẦN GIAO DIỆN (VIEWS) VÀ VIEWMODEL
-    // ==============================================================================
-    private RecyclerView rvAncillaries;        // Danh sách dịch vụ
-    private TextView tvTotalAncillaryPrice;    // Chữ hiển thị tổng tiền màu đỏ
-    private Button btnConfirmAncillaries;      // Nút "Xác nhận" màu tím
-    private BookingViewModel viewModel;        // Cầu nối lấy dữ liệu từ Backend
+    private RecyclerView rvAncillaries;
+    private TextView tvTotalAncillaryPrice;
+    private Button btnConfirmAncillaries;
+    private BookingViewModel viewModel;
 
-    // ==============================================================================
-    // 2. KHAI BÁO DỮ LIỆU CỦA MÀN HÌNH NÀY
-    // ==============================================================================
-    private List<AncillaryItem> dsAncillary;   // Danh sách các gói hành lý tải từ API về
-    private AncillaryAdapter adapter;          // Thợ xây vẽ từng gói hành lý lên màn hình
+    // ⚡ MỚI THÊM: Các View để chuyển Tab (Chiều đi / Chiều về)
+    private LinearLayout layoutTabsKhuHoi;
+    private Button btnTabChieuDi;
+    private Button btnTabChieuVe;
 
-    // ==============================================================================
-    // 3. KHAI BÁO CÁC "THÙNG HÀNG" ĐỂ HỨNG DỮ LIỆU TỪ MÀN HÌNH TRƯỚC TRUYỀN SANG
-    // ==============================================================================
-    private String[] dsTenHanhKhach;           // Danh sách tên người bay (VD: "Nguyễn Văn A", "Trần Thị B")
-    private BookingRequest currentBookingRequest; // Cục dữ liệu khổng lồ (Gồm mã chuyến bay, người bay) chuẩn bị gửi lên Server
-    private double basePrice = 0;              // Tổng tiền gốc (Tiền vé máy bay)
-    private double ticketPrice = 0;            // Giá của 1 vé (Để sang màn hình sau hiển thị chi tiết)
-    private double tongTienDichVu = 0;         // Tiền dịch vụ mua thêm (Khách bấm thêm 1 gói 250k thì cộng vào đây)
+    private List<AncillaryItem> dsAncillary;
+    private AncillaryAdapter adapter;
 
-    // ==============================================================================
-    // 4. BƯU TÁ HỨNG KẾT QUẢ ĐĂNG NHẬP ("LAZY LOGIN")
-    // ==============================================================================
-    // Khai báo một "Bưu tá" chờ sẵn. Nó sẽ mở màn hình Login lên, và đứng chờ kết quả.
+    private String[] dsTenHanhKhach;
+    private BookingRequest currentBookingRequest;
+    private double basePrice = 0;
+    private double ticketPrice = 0;
+    private double tongTienDichVu = 0;
+
+    // ⚡ MỚI THÊM: Các biến kiểm soát luồng Khứ Hồi
+    private boolean isRoundTrip = false; // Nhận từ màn hình trước
+    private int currentSegmentNo = 1;    // 1: Chiều đi, 2: Chiều về
+
     private final androidx.activity.result.ActivityResultLauncher<Intent> loginLauncher =
             registerForActivityResult(
                     new androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
                     result -> {
-                        // Nếu trang Login báo về là Đăng nhập thành công (RESULT_OK)
                         if (result.getResultCode() == RESULT_OK) {
                             Toast.makeText(this, "Đăng nhập thành công! Đang chuyển sang thanh toán...", Toast.LENGTH_SHORT).show();
-
-                            // Đăng nhập xong rồi thì thực hiện tiếp nhiệm vụ: Chạy sang trang Thanh Toán
                             chuyenSangTrangThanhToan();
                         }
                     }
             );
 
-
-    // ==============================================================================
-    // ONCREATE - HÀM CHẠY ĐẦU TIÊN KHI MỞ MÀN HÌNH
-    // ==============================================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ancillary);
 
-        // 1. Ánh xạ các nút bấm, chữ viết trên giao diện với biến Java
         rvAncillaries = findViewById(R.id.rvAncillaries);
         tvTotalAncillaryPrice = findViewById(R.id.tvTotalAncillaryPrice);
         btnConfirmAncillaries = findViewById(R.id.btnConfirmAncillaries);
 
-        // Dặn RecyclerView hiển thị theo chiều dọc từ trên xuống dưới
-        rvAncillaries.setLayoutManager(new LinearLayoutManager(this));
+        // ⚡ MỚI THÊM: Ánh xạ 2 nút Tab (Bạn cần thêm vào XML ở Bước 2 nhé)
+        layoutTabsKhuHoi = findViewById(R.id.layoutTabsKhuHoi);
+        btnTabChieuDi = findViewById(R.id.btnTabChieuDi);
+        btnTabChieuVe = findViewById(R.id.btnTabChieuVe);
 
-        // Khởi tạo ViewModel (Giúp giữ data khi xoay màn hình)
+        rvAncillaries.setLayoutManager(new LinearLayoutManager(this));
         viewModel = new ViewModelProvider(this).get(BookingViewModel.class);
 
-        // 2. Mở thùng hàng lấy dữ liệu màn hình trước gửi sang
         nhanDuLieuTuManHinhTruoc();
 
-        // 3. Gọi API lên server hỏi xem có những gói hành lý nào
+        // ⚡ MỚI THÊM: Thiết lập giao diện Tab dựa trên loại vé
+        setupTabsKhuHoi();
+
         layDuLieuTuApi();
 
-        // 4. Lắng nghe sự kiện khách bấm nút "Xác nhận"
         btnConfirmAncillaries.setOnClickListener(v -> xuLyNutXacNhan());
     }
 
-    // ==============================================================================
-    // CÁC HÀM HỖ TRỢ XỬ LÝ LOGIC (CHIA NHỎ ĐỂ DỄ ĐỌC)
-    // ==============================================================================
-
-    /**
-     * Hàm mở hộp (Intent) lấy đồ từ màn hình Điền thông tin hành khách truyền sang.
-     */
     private void nhanDuLieuTuManHinhTruoc() {
         Intent incomingIntent = getIntent();
         if (incomingIntent != null) {
@@ -117,18 +97,44 @@ public class AncillaryActivity extends AppCompatActivity {
             basePrice = incomingIntent.getDoubleExtra("basePrice", 0.0);
             ticketPrice = incomingIntent.getDoubleExtra("ticketPrice", 0.0);
 
-            // Có giá gốc rồi thì in lên màn hình luôn (Dù chưa mua dịch vụ nào)
+            // ⚡ MỚI THÊM: Nhận cờ kiểm tra Khứ Hồi
+            isRoundTrip = incomingIntent.getBooleanExtra("isRoundTrip", false);
+
             capNhatTongTien();
         }
     }
 
-    /**
-     * Hàm gọi API lấy danh sách dịch vụ (Hành lý).
-     */
+    // ⚡ MỚI THÊM: Logic chuyển đổi giữa 2 chiều bay
+    private void setupTabsKhuHoi() {
+        if (layoutTabsKhuHoi == null) return; // Đề phòng layout XML chưa cập nhật
+
+        if (isRoundTrip) {
+            // NẾU LÀ KHỨ HỒI: Hiện 2 nút bấm lên
+            layoutTabsKhuHoi.setVisibility(View.VISIBLE);
+
+            // Bấm nút Chiều Đi
+            btnTabChieuDi.setOnClickListener(v -> {
+                currentSegmentNo = 1;
+                Toast.makeText(this, "Đang chọn Hành lý Chiều Đi", Toast.LENGTH_SHORT).show();
+                // Ở đây bạn có thể đổi màu nút để khách biết đang ở tab nào
+            });
+
+            // Bấm nút Chiều Về
+            btnTabChieuVe.setOnClickListener(v -> {
+                currentSegmentNo = 2;
+                Toast.makeText(this, "Đang chọn Hành lý Chiều Về", Toast.LENGTH_SHORT).show();
+            });
+
+        } else {
+            // NẾU LÀ 1 CHIỀU: Giấu 2 nút bấm đi, mặc định luông là chiều đi
+            layoutTabsKhuHoi.setVisibility(View.GONE);
+            currentSegmentNo = 1;
+        }
+    }
+
     private void layDuLieuTuApi() {
         viewModel.getAncillaries().observe(this, result -> {
             if (result != null && !result.isEmpty()) {
-                // Tải thành công -> Lưu vào danh sách và vẽ lên màn hình
                 dsAncillary = result;
                 caiDatAdapter();
             } else {
@@ -137,88 +143,52 @@ public class AncillaryActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Hàm cài đặt thợ xây (Adapter) để vẽ danh sách hành lý.
-     * Đồng thời lắng nghe xem khách bấm "Thêm" gói nào.
-     */
     private void caiDatAdapter() {
         adapter = new AncillaryAdapter(this, dsAncillary, dsTenHanhKhach, new AncillaryAdapter.OnAncillaryAddedListener() {
             @Override
             public void onAdded(AncillaryItem item, int passengerIndex) {
 
-                // 1. Cộng tiền của gói vừa mua vào Tổng tiền dịch vụ, sau đó vẽ lại giá mới lên màn hình
                 tongTienDichVu += item.getPrice();
                 capNhatTongTien();
 
-                // 2. Tạo một mảnh giấy ghi chú (AncillaryRequest): "Gói ID này, mua cho khách hàng số X"
-                AncillaryRequest ancillaryRequest = new AncillaryRequest(item.getId(), passengerIndex, 1);
+                // ⚡ ĐÃ SỬA: Thay số 1 cứng nhắc bằng biến currentSegmentNo (Linh hoạt theo Tab đang chọn) ⚡
+                AncillaryRequest ancillaryRequest = new AncillaryRequest(item.getId(), passengerIndex, currentSegmentNo);
 
-                // 3. Nhét mảnh giấy đó vào Cục dữ liệu khổng lồ (currentBookingRequest)
                 currentBookingRequest.getBookingAncillaries().add(ancillaryRequest);
 
+                String chieuBay = (currentSegmentNo == 1) ? "Chiều đi" : "Chiều về";
                 Toast.makeText(AncillaryActivity.this,
-                        "Đã thêm " + item.getName() + " cho " + dsTenHanhKhach[passengerIndex],
+                        "Đã thêm " + item.getName() + " cho " + dsTenHanhKhach[passengerIndex] + " (" + chieuBay + ")",
                         Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Giao việc cho thợ xây
         rvAncillaries.setAdapter(adapter);
     }
 
-    /**
-     * Hàm tính toán và hiển thị tổng tiền cuối cùng.
-     * Tiền cuối = Tiền vé máy bay (basePrice) + Tiền mua thêm hành lý (tongTienDichVu)
-     */
     private void capNhatTongTien() {
         double tongCong = basePrice + tongTienDichVu;
-
-        // Định dạng tiền tệ cho đẹp (VD: 1,500,000 đ)
         NumberFormat formatter = NumberFormat.getInstance(new Locale("vi", "VN"));
         tvTotalAncillaryPrice.setText(formatter.format(tongCong) + " đ");
     }
 
-    /**
-     * Xử lý luồng "Lazy Login": Chặn khách lại nếu chưa đăng nhập.
-     */
     private void xuLyNutXacNhan() {
-        // 1. Lấy "két sắt" SessionManager ra để kiểm tra
         SessionManager sessionManager = new SessionManager(AncillaryActivity.this);
-
-        // 2. Kiểm tra xem trong két sắt có chữ (Token) nào không?
         if (sessionManager.fetchAuthToken() != null && !sessionManager.fetchAuthToken().isEmpty()) {
-            // ĐÃ ĐĂNG NHẬP -> Tốt quá, chạy thẳng sang trang Thanh Toán
             chuyenSangTrangThanhToan();
         } else {
-            // CHƯA ĐĂNG NHẬP -> Dừng lại! Đẩy khách sang trang Login
             Toast.makeText(AncillaryActivity.this, "Vui lòng đăng nhập để tạo đơn hàng!", Toast.LENGTH_SHORT).show();
-
-            // Khởi tạo xe chở sang Login
             Intent loginIntent = new Intent(AncillaryActivity.this, LoginActivity.class);
-
-            // Dán cái cờ IS_FROM_BOOKING để dặn trang Login: "Ông này đang mua vé dở, login xong nhớ đẩy ổng về đây nhé!"
             loginIntent.putExtra("IS_FROM_BOOKING", true);
-
-            // Dùng cái "Bưu tá" đã tạo ở mục 4 để phóng xe đi
             loginLauncher.launch(loginIntent);
         }
     }
 
-    /**
-     * Hàm gom tất cả đồ đạc và phóng xe sang trang Hóa Đơn cuối cùng.
-     */
     private void chuyenSangTrangThanhToan() {
         Intent nextIntent = new Intent(AncillaryActivity.this, PaymentSummaryActivity.class);
-
-        // 1. Gửi cục dữ liệu khổng lồ (Đã nhét thêm phần hành lý)
         nextIntent.putExtra("bookingRequest", currentBookingRequest);
-
-        // 2. Gửi tổng tiền dịch vụ mua thêm
         nextIntent.putExtra("tongTienDichVu", tongTienDichVu);
-
-        // 3. Gửi giá của 1 vé gốc
         nextIntent.putExtra("ticketPrice", ticketPrice);
-
         startActivity(nextIntent);
     }
 }

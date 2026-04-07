@@ -29,6 +29,31 @@
             android:textSize="22sp"
             android:textStyle="bold" />
 
+        <LinearLayout
+            android:id="@+id/layoutTabsKhuHoi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            android:layout_margin="16dp">
+
+            <Button
+                android:id="@+id/btnTabChieuDi"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Hành lý Chiều Đi"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/btnTabChieuVe"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Hành lý Chiều Về"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvAncillaries"
             android:layout_width="match_parent"
