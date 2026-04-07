@@ -124,11 +124,22 @@ public class HomeFragment extends Fragment {
                 return;
             }
 
+            // --- THÊM CHECK VALIDATE KHỨ HỒI ---
+            if (isRoundTrip && (returnDate.isEmpty() || returnDate.equals("Tue, 10 May"))) {
+                Toast.makeText(requireContext(), "Vui lòng chọn ngày bay về", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             Intent intent = new Intent(getActivity(), SearchResultActivity.class);
             intent.putExtra("ORIGIN", departure);
             intent.putExtra("DESTINATION", arrival);
             intent.putExtra("DATE", date);
             intent.putExtra("PASSENGERS", totalPassengers);
+
+            // --- THÊM 2 DÒNG NÀY ---
+            intent.putExtra("IS_ROUND_TRIP", isRoundTrip);
+            intent.putExtra("RETURN_DATE", returnDate);
+
             startActivity(intent);
         });
 
