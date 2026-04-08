@@ -20,7 +20,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.flight_booking_app.R;
 import com.example.flight_booking_app.home.adapter.DestinationAdapter;
+import com.example.flight_booking_app.home.adapter.TravelGuideAdapter;
 import com.example.flight_booking_app.home.model.Destination;
+import com.example.flight_booking_app.home.model.TravelGuide;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.datepicker.MaterialDatePicker;
@@ -160,6 +162,7 @@ public class HomeFragment extends Fragment {
         });
 
         setupDestinationSlider(view);
+        setupTravelGuides(view);
 
         return view; // Trả về view cho Fragment
     }
@@ -263,5 +266,23 @@ public class HomeFragment extends Fragment {
                 sliderHandler.postDelayed(sliderRunnable, 3000); // Đổi ảnh mỗi 3 giây
             }
         });
+    }
+    private void setupTravelGuides(View view) {
+        rvTravelGuides = view.findViewById(R.id.rvTravelGuides);
+
+        // 1. Cài đặt vuốt ngang (Horizontal)
+        androidx.recyclerview.widget.LinearLayoutManager layoutManager =
+                new androidx.recyclerview.widget.LinearLayoutManager(getContext(), androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL, false);
+        rvTravelGuides.setLayoutManager(layoutManager);
+
+        // 2. Chèn Data MOCK của bạn
+        List<TravelGuide> list = new java.util.ArrayList<>();
+        list.add(new TravelGuide("1", "Cẩm nang du lịch Phú Quốc: Chơi gì, ăn gì, ở đâu?", "Kinh Nghiệm", "Cập nhật mới nhất", "https://cdn.media.dulich24.com.vn/diemden/ao-phu-quoc-3506/phu-quoc.jpg", "https://dulichkhampha24.com/kinh-nghiem-du-lich-phu-quoc.html"));
+        list.add(new TravelGuide("2", "Bản đồ ẩm thực và cẩm nang khám phá thủ đô Hà Nội", "Điểm Đến", "Cập nhật mới nhất", "https://banhtombaloc.vn/medias/2024/05/5.jpg", "https://vietnammedia.com.vn/ban-do-food-tour-ha-noi-cam-nang-du-lich-am-thuc-ha-noi"));
+        list.add(new TravelGuide("3", "Kinh nghiệm du lịch tự túc Bangkok, Thái Lan", "Quốc Tế", "Cập nhật mới nhất", "https://file.hstatic.net/200000561069/article/bangkok-tl_3619350a59554298be1b892c3592c023.jpg", "https://phuotvivu.com/blog/kinh-nghiem-du-lich/thai-lan/bangkok/"));
+
+        // 3. Gắn Adapter
+        TravelGuideAdapter guideAdapter = new TravelGuideAdapter(list);
+        rvTravelGuides.setAdapter(guideAdapter);
     }
 }
