@@ -27,10 +27,10 @@
             android:name=".authen.activity.LoginActivity"
             android:exported="false" />
         <activity
-            android:name=".home.activity.SearchLocationActivity"
+            android:name=".search.activity.SearchResultActivity"
             android:exported="false" />
         <activity
-            android:name=".home.activity.SearchResultActivity"
+            android:name=".home.activity.SearchLocationActivity"
             android:exported="false" />
         <activity
             android:name=".authen.activity.ForgotPasswordActivity"
@@ -38,6 +38,31 @@
         <activity
             android:name=".MainActivity"
             android:exported="false" />
+        <activity
+            android:name=".booking.activity.BookingFormActivity"
+            android:exported="false"/>
+        <activity
+            android:name=".booking.activity.PaymentSummaryActivity"
+            android:exported="false"/>
+        <activity
+            android:name=".booking.activity.PaymentResultActivity"
+            android:exported="true"> <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+
+            <data
+                android:scheme="flightbooking"
+                android:host="payment-result" />
+        </intent-filter>
+
+        </activity>
+        <activity
+            android:name=".booking.activity.AncillaryActivity"
+            android:exported="false"/>
+        <activity
+            android:name=".booking.activity.FlightDetailActivity"
+            android:exported="false"/>
         <activity
             android:name=".authen.activity.SplashActivity"
             android:exported="true">
@@ -47,9 +72,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".booking.activity.FlightDetailActivity"
-            android:exported="false"/>
+
+
+
 
     </application>
 

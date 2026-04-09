@@ -1,11 +1,12 @@
 package com.example.flight_booking_app.home.model;
 
 import com.google.gson.annotations.SerializedName;
-
-import java.io.Serializable;
+import java.io.Serializable; // ⚡ THÊM thư viện này
 import java.util.List;
 
+// ⚡ SỬA: implements Serializable thay vì SerializedName
 public class Flight implements Serializable {
+
     @SerializedName("id")
     private String id;
 
@@ -33,7 +34,7 @@ public class Flight implements Serializable {
     @SerializedName("classes")
     private List<FlightClass> classes; // Mảng chứa các hạng vé
 
-    // Lớp con đại diện cho 1 object bên trong mảng "classes"
+    // ⚡ SỬA: Lớp con nằm bên trong cũng BẮT BUỘC phải implements Serializable
     public static class FlightClass implements Serializable {
         @SerializedName("id")
         private String id;

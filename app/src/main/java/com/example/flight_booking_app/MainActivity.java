@@ -39,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
                 selectedFragment = new fragment_profile();
             }
 
+
+
             if (selectedFragment != null) {
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.fragment_container, selectedFragment)

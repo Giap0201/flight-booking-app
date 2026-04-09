@@ -23,6 +23,7 @@ import com.example.flight_booking_app.home.adapter.DestinationAdapter;
 import com.example.flight_booking_app.home.adapter.TravelGuideAdapter;
 import com.example.flight_booking_app.home.model.Destination;
 import com.example.flight_booking_app.home.model.TravelGuide;
+import com.example.flight_booking_app.search.activity.SearchResultActivity;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.datepicker.MaterialDatePicker;
@@ -153,11 +154,8 @@ public class HomeFragment extends Fragment {
             intent.putExtra("DESTINATION", arrival);
             intent.putExtra("DATE", date);
             intent.putExtra("PASSENGERS", totalPassengers);
-
-            // --- THÊM 2 DÒNG NÀY ---
             intent.putExtra("IS_ROUND_TRIP", isRoundTrip);
             intent.putExtra("RETURN_DATE", returnDate);
-
             startActivity(intent);
         });
 

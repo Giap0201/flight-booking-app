@@ -20,6 +20,7 @@ import com.example.flight_booking_app.booking.adapter.TicketClassAdapter;
 import com.example.flight_booking_app.booking.model.FlightClass;
 import com.example.flight_booking_app.booking.model.FlightDetail;
 import com.example.flight_booking_app.booking.viewmodel.BookingViewModel;
+import com.example.flight_booking_app.home.model.Flight;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -83,8 +84,9 @@ public class FlightDetailActivity extends AppCompatActivity {
         });
 
         // Chạy lần lượt các hàm khởi tạo từ trên xuống dưới
-        initIntentData();    // Lấy dữ liệu từ màn hình cũ
         initViews();         // Tìm và ánh xạ các thành phần giao diện
+
+        initIntentData();    // Lấy dữ liệu từ màn hình cũ
         setupRecyclerView(); // Cài đặt danh sách hạng vé
 
         // Khởi tạo ViewModel (Quản lý dữ liệu tập trung)
@@ -105,21 +107,22 @@ public class FlightDetailActivity extends AppCompatActivity {
      * Hàm này dùng để lấy dữ liệu do màn hình trước gửi sang.
      * Ở Android, "Intent" giống như một người đưa thư giữa các màn hình.
      */
+    /**
+     * Hàm này dùng để lấy dữ liệu do màn hình trước gửi sang.
+     */
     private void initIntentData() {
         Intent intent = getIntent(); // Nhận "bức thư" (Intent) gửi đến màn hình này
 
         if (intent != null) {
-            // Lấy dữ liệu ra, số sau dấu phẩy (1, 0, 0) là giá trị mặc định nếu không tìm thấy dữ liệu
-            adultCount = intent.getIntExtra("adultCount", 1);
-            childCount = intent.getIntExtra("childCount", 0);
-            infantCount = intent.getIntExtra("infantCount", 0);
+            // ⚡ ĐÃ SỬA: Viết HOA các Key để khớp chính xác với SearchResultActivity ⚡
+            adultCount = intent.getIntExtra("ADULT_COUNT", 1);
+            childCount = intent.getIntExtra("CHILD_COUNT", 0);
+            infantCount = intent.getIntExtra("INFANT_COUNT", 0);
 
-            // Kiểm tra xem màn hình trước có gửi "flightId" (Mã chuyến bay) sang không
-            if (intent.hasExtra("flightId")) {
-                currentFlightId = intent.getStringExtra("flightId");
-            } else {
-                // Nếu chạy thẳng màn hình này để test (không qua màn hình trước), ta gán cứng 1 ID giả để tránh lỗi văng app (crash)
-                currentFlightId = "0209bae7-0e59-4e64-9664-1a52b99ed2ea";
+            // ⚡ ĐÃ SỬA: Tìm đúng Key "FLIGHT_ID" ⚡
+            // Hứng cục dữ liệu
+            if (intent.hasExtra("FLIGHT_ID")) {
+                currentFlightId = intent.getStringExtra("FLIGHT_ID"); // Lúc này currentFlightId sẽ chứa "NS8118"
             }
         }
     }
