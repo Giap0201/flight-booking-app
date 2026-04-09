@@ -9,7 +9,6 @@ import com.example.flight_booking_app.ticket.api.TicketApiService;
 import com.example.flight_booking_app.ticket.model.FlightDetail;
 import com.example.flight_booking_app.ticket.response.client.BookingDetailResponse;
 import com.example.flight_booking_app.common.ApiResponse;
-import com.example.flight_booking_app.common.AppConfig;
 import com.example.flight_booking_app.network.ApiClient;
 
 import retrofit2.Call;
@@ -54,7 +53,7 @@ public class FlightRepository {
     public MutableLiveData<BookingDetailResponse> getBookingDetail(String bookingId) {
         MutableLiveData<BookingDetailResponse> bookingData = new MutableLiveData<>();
 
-        apiService.getBookingById(AppConfig.TOKEN, bookingId)
+        apiService.getBookingById(bookingId)
                 .enqueue(new Callback<ApiResponse<BookingDetailResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<BookingDetailResponse>> call,

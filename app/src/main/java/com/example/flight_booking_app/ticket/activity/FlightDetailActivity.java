@@ -17,7 +17,6 @@ import com.example.flight_booking_app.ticket.response.client.BookingDetailRespon
 import com.example.flight_booking_app.ticket.response.client.PassengerTicketResponse;
 import com.example.flight_booking_app.ticket.response.client.TicketDetailResponse;
 import com.example.flight_booking_app.common.ApiResponse;
-import com.example.flight_booking_app.common.AppConfig;
 import com.example.flight_booking_app.network.ApiClient;
 
 import java.math.BigDecimal;
@@ -90,9 +89,8 @@ public class FlightDetailActivity extends AppCompatActivity {
     // ĐÃ SỬA: Tham số là String bookingId
     private void fetchBookingDetail(String bookingId) {
         TicketApiService apiService = ApiClient.getClient(this).create(TicketApiService.class);
-//        String token = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJ1dGMuY29tIiwic3ViIjoiNmYzNmIzOTItZjI4YS00ODg4LTgzM2MtY2ZjNmMxMDkyMDM0IiwiZXhwIjoxNzc1NTU1MTI0LCJpYXQiOjE3NzU0Njg3MjQsImp0aSI6ImI1MjhjYmM3LWRmMTktNGY4OC1hODYzLTg5YmFiNDZlOWM1MyIsInNjb3BlIjoiUk9MRV9VU0VSIn0._h_1wlfj-JFL0LMbVjxhwdkc5Es15Py3WtVM_cayhGcoZOJHb36_YKgOSkEyuiAYwVfdEugKehj3weD0Dbt6KQ";
 
-        apiService.getBookingById(AppConfig.TOKEN, bookingId).enqueue(new Callback<ApiResponse<BookingDetailResponse>>() {
+        apiService.getBookingById(bookingId).enqueue(new Callback<ApiResponse<BookingDetailResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<BookingDetailResponse>> call, Response<ApiResponse<BookingDetailResponse>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getResult() != null) {

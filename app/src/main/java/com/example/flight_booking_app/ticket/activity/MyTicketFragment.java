@@ -21,7 +21,6 @@ import com.example.flight_booking_app.ticket.api.TicketApiService;
 import com.example.flight_booking_app.ticket.model.BookingSummary;
 import com.example.flight_booking_app.ticket.model.PageResult;
 import com.example.flight_booking_app.common.ApiResponse;
-import com.example.flight_booking_app.common.AppConfig;
 import com.example.flight_booking_app.network.ApiClient;
 
 import java.util.ArrayList;
@@ -104,7 +103,7 @@ public class MyTicketFragment extends Fragment {
         // ĐÃ SỬA: Thay 'this' bằng 'requireContext()'
         TicketApiService apiService = ApiClient.getClient(requireContext()).create(TicketApiService.class);
 
-        apiService.getMyBookingsWithFilter(AppConfig.TOKEN, "ALL", 1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
+        apiService.getMyBookingsWithFilter("ALL", 1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
             @Override
             public void onResponse(Call<ApiResponse<PageResult<BookingSummary>>> call, Response<ApiResponse<PageResult<BookingSummary>>> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -136,7 +135,7 @@ public class MyTicketFragment extends Fragment {
         // ĐÃ SỬA: Thay 'this' bằng 'requireContext()'
         TicketApiService apiService = ApiClient.getClient(requireContext()).create(TicketApiService.class);
 
-        apiService.getMyBookingsWithFilter(AppConfig.TOKEN, "UPCOMING", 1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
+        apiService.getMyBookingsWithFilter("UPCOMING", 1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
             @Override
             public void onResponse(Call<ApiResponse<PageResult<BookingSummary>>> call, Response<ApiResponse<PageResult<BookingSummary>>> response) {
                 if (response.isSuccessful() && response.body() != null) {

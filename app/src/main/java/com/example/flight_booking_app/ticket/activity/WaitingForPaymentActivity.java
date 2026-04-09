@@ -16,7 +16,6 @@ import com.example.flight_booking_app.ticket.api.TicketApiService;
 import com.example.flight_booking_app.ticket.model.BookingSummary;
 import com.example.flight_booking_app.ticket.model.PageResult;
 import com.example.flight_booking_app.common.ApiResponse;
-import com.example.flight_booking_app.common.AppConfig;
 import com.example.flight_booking_app.network.ApiClient;
 
 import java.util.ArrayList;
@@ -33,7 +32,6 @@ public class WaitingForPaymentActivity extends AppCompatActivity {
     private List<BookingSummary> waitingList = new ArrayList<>();
     private ProgressBar progressBar;
 
-//    private final String TOKEN = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJ1dGMuY29tIiwic3ViIjoiNmYzNmIzOTItZjI4YS00ODg4LTgzM2MtY2ZjNmMxMDkyMDM0IiwiZXhwIjoxNzc1NTU1MTI0LCJpYXQiOjE3NzU0Njg3MjQsImp0aSI6ImI1MjhjYmM3LWRmMTktNGY4OC1hODYzLTg5YmFiNDZlOWM1MyIsInNjb3BlIjoiUk9MRV9VU0VSIn0._h_1wlfj-JFL0LMbVjxhwdkc5Es15Py3WtVM_cayhGcoZOJHb36_YKgOSkEyuiAYwVfdEugKehj3weD0Dbt6KQ";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +56,7 @@ public class WaitingForPaymentActivity extends AppCompatActivity {
 
         // Theo BE: Lấy ALL rồi lọc ở FE
         // Lấy size lớn (ví dụ 50) để đảm bảo không bỏ sót vé pending nào ở các trang sau
-        apiService.getMyBookingsWithFilter(AppConfig.TOKEN, "ALL", 1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
+        apiService.getMyBookingsWithFilter("ALL", 1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
             @Override
             public void onResponse(Call<ApiResponse<PageResult<BookingSummary>>> call, Response<ApiResponse<PageResult<BookingSummary>>> response) {
                 progressBar.setVisibility(View.GONE);

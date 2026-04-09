@@ -23,7 +23,6 @@ public interface TicketApiService {
     // Dùng cho trang My Ticket (Lấy tất cả)
     @GET("bookings/my-bookings")
     Call<ApiResponse<PageResult<BookingSummary>>> getMyBookings(
-            @Header("Authorization") String token,
             @Query("filter") String filter,
             @Query("page") int page,
             @Query("size") int size
@@ -32,7 +31,6 @@ public interface TicketApiService {
     // Dành riêng cho các trang danh sách lọc (Waiting, Upcoming...)
     @GET("bookings/my-bookings")
     Call<ApiResponse<PageResult<BookingSummary>>> getMyBookingsWithFilter(
-            @Header("Authorization") String token,
             @Query("filter") String filter,
             @Query("page") int page
     );
@@ -40,7 +38,6 @@ public interface TicketApiService {
     // [QUAN TRỌNG] Đã sửa tham số UUID thành String để nhận dữ liệu từ Intent mượt mà nhất
     @GET("bookings/{id}")
     Call<ApiResponse<BookingDetailResponse>> getBookingById(
-            @Header("Authorization") String token,
             @Path("id") String id
     );
 }
