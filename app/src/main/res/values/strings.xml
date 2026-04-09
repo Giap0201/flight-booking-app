@@ -5,4 +5,6 @@
     <string name="waiting_for_payment">Waiting for payment</string>
     <string name="upcoming_flight">Upcoming Flight</string>
     <string name="desc_icon">Icon</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
