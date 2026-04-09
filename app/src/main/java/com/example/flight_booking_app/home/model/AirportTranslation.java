@@ -14,4 +14,8 @@ public class AirportTranslation {
     public String getName() { return name; }
     public String getCode() { return code; }
     public void setCode(String code) { this.code = code; }
+    public void setCity(String city) { this.city = city; }
+    public void setCountry(String country) { this.country = country; }
+
+    public void setName(String name) { this.name = name; }
 }

@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_tickets) {
                 // selectedFragment = new BookingsFragment(); // Sẽ tạo sau
             } else if (itemId == R.id.nav_profile) {
-                selectedFragment = new fragment_profile(); // Sẽ tạo sau
+                selectedFragment = new fragment_profile();
             }
 
             if (selectedFragment != null) {
