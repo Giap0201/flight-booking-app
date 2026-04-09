@@ -4,14 +4,12 @@ plugins {
 
 android {
     namespace = "com.example.flight_booking_app"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.flight_booking_app"
-        minSdk = 30
-        targetSdk = 36
+        minSdk = 24
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -28,8 +26,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
@@ -37,6 +35,8 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
+    implementation(libs.core.ktx)
+    implementation(libs.core)
     implementation(libs.constraintlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
@@ -48,4 +48,6 @@ dependencies {
 // Thư viện OkHttp để ghi log (xem request/response trong Logcat)
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
+// Thư viện ZXing để tạo mã QR cho Boarding Pass
+    implementation("com.google.zxing:core:3.5.2")
 }
