@@ -4,9 +4,9 @@ import android.util.Log;
 
 import androidx.lifecycle.MutableLiveData;
 
-import com.example.flight_booking_app.booking.api.BookingApiService;
+import com.example.flight_booking_app.ticket.api.TicketApiService;
 import com.example.flight_booking_app.booking.model.FlightDetail;
-import com.example.flight_booking_app.booking.response.client.BookingDetailResponse;
+import com.example.flight_booking_app.ticket.response.BookingDetailResponse;
 import com.example.flight_booking_app.common.ApiResponse;
 import com.example.flight_booking_app.common.AppConfig;
 import com.example.flight_booking_app.network.ApiClient;
@@ -17,11 +17,11 @@ import retrofit2.Response;
 
 public class FlightRepository {
     private static final String TAG = "FlightRepository";
-    private BookingApiService apiService;
+    private TicketApiService apiService;
 
     public FlightRepository() {
 // CÁCH GỌI MỚI: Mượn ApiClient dùng chung để tạo ra Service riêng của Booking
-        apiService = ApiClient.getClient().create(BookingApiService.class);
+        apiService = ApiClient.getClient().create(TicketApiService.class);
     }
 
     // Hàm này trả về một LiveData chứa FlightDetail
