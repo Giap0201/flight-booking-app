@@ -4,6 +4,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
+import com.example.flight_booking_app.ticket.activity.MyTicketFragment;
 import com.example.flight_booking_app.user.activity.fragment_profile;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -34,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
             if (itemId == R.id.nav_home) {
                 selectedFragment = new HomeFragment();
             } else if (itemId == R.id.nav_tickets) {
-                // selectedFragment = new BookingsFragment(); // Sẽ tạo sau
+                selectedFragment = new MyTicketFragment();
             } else if (itemId == R.id.nav_profile) {
                 selectedFragment = new fragment_profile();
             }

@@ -78,7 +78,7 @@
             android:exported="false" />
 
         <activity
-            android:name=".ticket.activity.MyTicketActivity"
+            android:name=".authen.activity.SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

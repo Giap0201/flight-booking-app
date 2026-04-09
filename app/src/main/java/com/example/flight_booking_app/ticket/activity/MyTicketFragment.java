@@ -1,12 +1,16 @@
-package com.example.flight_booking_app.ticket.activity;
+package com.example.flight_booking_app.ticket.activity; // Khuyên dùng: Sau này bạn nên move file này sang package 'ticket.fragment' cho chuẩn nhé
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment; // ĐÃ ĐỔI TỪ AppCompatActivity SANG Fragment
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -27,7 +31,8 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MyTicketActivity extends AppCompatActivity {
+// ĐÃ SỬA: extends Fragment thay vì AppCompatActivity
+public class MyTicketFragment extends Fragment {
 
     private RecyclerView rvPendingTickets, rvUpcomingTickets;
     private ImageView btnHistory;
@@ -39,14 +44,23 @@ public class MyTicketActivity extends AppCompatActivity {
     private List<BookingSummary> pendingList = new ArrayList<>();
     private List<BookingSummary> upcomingList = new ArrayList<>();
 
-//    private final String TOKEN = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJ1dGMuY29tIiwic3ViIjoiNmYzNmIzOTItZjI4YS00ODg4LTgzM2MtY2ZjNmMxMDkyMDM0IiwiZXhwIjoxNzc1NTU1MTI0LCJpYXQiOjE3NzU0Njg3MjQsImp0aSI6ImI1MjhjYmM3LWRmMTktNGY4OC1hODYzLTg5YmFiNDZlOWM1MyIsInNjb3BlIjoiUk9MRV9VU0VSIn0._h_1wlfj-JFL0LMbVjxhwdkc5Es15Py3WtVM_cayhGcoZOJHb36_YKgOSkEyuiAYwVfdEugKehj3weD0Dbt6KQ";
+    // Constructor rỗng bắt buộc cho Fragment
+    public MyTicketFragment() {
+    }
 
+    // ĐÃ SỬA: Dùng onCreateView để "thổi" layout (thay cho setContentView)
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_my_ticket);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_my_ticket, container, false);
+    }
 
-        initViews();
+    // ĐÃ SỬA: Viết logic code ở onViewCreated
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        initViews(view); // Truyền 'view' vào để findViewById
         setupRecyclerViews();
 
         // Gọi API lấy dữ liệu
@@ -54,38 +68,42 @@ public class MyTicketActivity extends AppCompatActivity {
         fetchUpcomingTickets();
     }
 
-    private void initViews() {
-        rvPendingTickets = findViewById(R.id.rvPendingTickets);
-        rvUpcomingTickets = findViewById(R.id.rvUpcomingTickets);
-        btnHistory = findViewById(R.id.btnHistory);
-        layoutUpcomingHeader = findViewById(R.id.layoutUpcomingHeader);
-        layoutWaitingHeader = findViewById(R.id.layoutWaitingHeader);
+    // ĐÃ SỬA: Thêm tham số View và dùng view.findViewById
+    private void initViews(View view) {
+        rvPendingTickets = view.findViewById(R.id.rvPendingTickets);
+        rvUpcomingTickets = view.findViewById(R.id.rvUpcomingTickets);
+        btnHistory = view.findViewById(R.id.btnHistory);
+        layoutUpcomingHeader = view.findViewById(R.id.layoutUpcomingHeader);
+        layoutWaitingHeader = view.findViewById(R.id.layoutWaitingHeader);
 
-        btnHistory.setOnClickListener(v -> startActivity(new Intent(this, HistoryActivity.class)));
+        // ĐÃ SỬA: Thay 'this' bằng 'requireContext()' trong Intent
+        btnHistory.setOnClickListener(v -> startActivity(new Intent(requireContext(), HistoryActivity.class)));
 
         if (layoutUpcomingHeader != null) {
-            layoutUpcomingHeader.setOnClickListener(v -> startActivity(new Intent(this, UpcomingFlightsActivity.class)));
+            layoutUpcomingHeader.setOnClickListener(v -> startActivity(new Intent(requireContext(), UpcomingFlightsActivity.class)));
         }
         if (layoutWaitingHeader != null) {
-            layoutWaitingHeader.setOnClickListener(v -> startActivity(new Intent(this, WaitingForPaymentActivity.class)));
+            layoutWaitingHeader.setOnClickListener(v -> startActivity(new Intent(requireContext(), WaitingForPaymentActivity.class)));
         }
     }
 
     private void setupRecyclerViews() {
-        rvPendingTickets.setLayoutManager(new LinearLayoutManager(this));
+        // ĐÃ SỬA: Thay 'this' bằng 'requireContext()'
+        rvPendingTickets.setLayoutManager(new LinearLayoutManager(requireContext()));
         pendingAdapter = new PendingTicketAdapter(pendingList);
         rvPendingTickets.setAdapter(pendingAdapter);
 
-        rvUpcomingTickets.setLayoutManager(new LinearLayoutManager(this));
+        // ĐÃ SỬA: Thay 'this' bằng 'requireContext()'
+        rvUpcomingTickets.setLayoutManager(new LinearLayoutManager(requireContext()));
         upcomingAdapter = new UpcomingTicketAdapter(upcomingList);
         rvUpcomingTickets.setAdapter(upcomingAdapter);
     }
 
-    // 1. Logic lấy vé chờ thanh toán (Tự lọc vì BE chưa hỗ trợ filter PENDING)
+    // 1. Logic lấy vé chờ thanh toán
     private void fetchPendingTickets() {
-        TicketApiService apiService = ApiClient.getClient(this).create(TicketApiService.class);
+        // ĐÃ SỬA: Thay 'this' bằng 'requireContext()'
+        TicketApiService apiService = ApiClient.getClient(requireContext()).create(TicketApiService.class);
 
-        // Lấy ALL với size lớn một chút (ví dụ 20) để đảm bảo tìm thấy các vé PENDING mới nhất
         apiService.getMyBookingsWithFilter(AppConfig.TOKEN, "ALL", 1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
             @Override
             public void onResponse(Call<ApiResponse<PageResult<BookingSummary>>> call, Response<ApiResponse<PageResult<BookingSummary>>> response) {
@@ -96,11 +114,9 @@ public class MyTicketActivity extends AppCompatActivity {
                     if (allData != null) {
                         for (BookingSummary item : allData) {
                             String status = item.getStatus();
-                            // Lọc đúng các status tương ứng với "Waiting for payment"
                             if ("PENDING".equals(status) || "AWAITING_PAYMENT".equals(status)) {
                                 pendingList.add(item);
                             }
-                            // Dừng lại khi đủ 2 vé để hiển thị Dashboard
                             if (pendingList.size() == 2) break;
                         }
                     }
@@ -115,11 +131,11 @@ public class MyTicketActivity extends AppCompatActivity {
         });
     }
 
-    // 2. Logic lấy vé sắp bay (Dùng filter chuẩn UPCOMING từ BE)
+    // 2. Logic lấy vé sắp bay
     private void fetchUpcomingTickets() {
-        TicketApiService apiService = ApiClient.getClient(this).create(TicketApiService.class);
+        // ĐÃ SỬA: Thay 'this' bằng 'requireContext()'
+        TicketApiService apiService = ApiClient.getClient(requireContext()).create(TicketApiService.class);
 
-        // BE đã hỗ trợ lọc vé sắp bay, ta chỉ cần lấy trang 1, size 2
         apiService.getMyBookingsWithFilter(AppConfig.TOKEN, "UPCOMING", 1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
             @Override
             public void onResponse(Call<ApiResponse<PageResult<BookingSummary>>> call, Response<ApiResponse<PageResult<BookingSummary>>> response) {
@@ -128,7 +144,6 @@ public class MyTicketActivity extends AppCompatActivity {
                     upcomingList.clear();
 
                     if (data != null) {
-                        // Chỉ lấy 2 vé đầu cho Dashboard
                         for (int i = 0; i < Math.min(data.size(), 2); i++) {
                             upcomingList.add(data.get(i));
                         }
