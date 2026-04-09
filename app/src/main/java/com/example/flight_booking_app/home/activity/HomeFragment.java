@@ -130,6 +130,8 @@ public class HomeFragment extends Fragment {
             intent.putExtra("DESTINATION", arrival);
             intent.putExtra("DATE", date);
             intent.putExtra("PASSENGERS", totalPassengers);
+            intent.putExtra("IS_ROUND_TRIP", isRoundTrip);
+            intent.putExtra("RETURN_DATE", returnDate);
             startActivity(intent);
         });
 

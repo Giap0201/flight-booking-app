@@ -58,8 +58,10 @@ public class DateStripAdapter extends RecyclerView.Adapter<DateStripAdapter.View
             SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             Date date = parser.parse(item.getDate());
 
-            holder.tvDayOfWeek.setText(new SimpleDateFormat("EEE", Locale.getDefault()).format(date));
-            holder.tvDateMonth.setText(new SimpleDateFormat("d MMM", Locale.getDefault()).format(date));
+            // Ép buộc dùng Locale Việt Nam để hiển thị "Th 2" và "thg 5"
+            Locale vnLocale = new Locale("vi", "VN");
+            holder.tvDayOfWeek.setText(new SimpleDateFormat("EEE", vnLocale).format(date));
+            holder.tvDateMonth.setText(new SimpleDateFormat("d MMM", vnLocale).format(date));
         } catch (Exception e) {
             holder.tvDayOfWeek.setText("---");
             holder.tvDateMonth.setText(item.getDate());

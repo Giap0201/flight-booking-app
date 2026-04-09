@@ -8,6 +8,7 @@ import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
+import com.example.flight_booking_app.search.model.Airline;
 import com.example.flight_booking_app.search.model.CheapestDate;
 import com.example.flight_booking_app.search.model.FilterCriteria;
 import com.example.flight_booking_app.search.model.Flight;
@@ -41,7 +42,7 @@ public class SearchResultViewModel extends AndroidViewModel {
     private final MutableLiveData<SortOption> currentSort = new MutableLiveData<>(SortOption.DEPARTURE_EARLIEST);
 
     private final MutableLiveData<List<CheapestDate>> cheapestDates = new MutableLiveData<>();
-    private final MutableLiveData<List<String>> airlineNames = new MutableLiveData<>();
+    private final MutableLiveData<List<Airline>> airlines = new MutableLiveData<>();
 
     public SearchResultViewModel(@NonNull Application application) {
         super(application);
@@ -51,14 +52,16 @@ public class SearchResultViewModel extends AndroidViewModel {
         // Lưu ý: Chỉ các tiêu chí Server-side mới kích hoạt switchMap này
         searchResults = Transformations.switchMap(searchInput, request -> {
             SortOption sort = currentSort.getValue();
-            String sortBy = "departureTime";
+            String sortBy = "departureTime"; // Mặc định
             String sortDir = "asc";
 
             if (sort == SortOption.PRICE_LOWEST) {
                 sortBy = "classes.basePrice";
+            } else if (sort == SortOption.DEPARTURE_EARLIEST) {
+                sortBy = "departureTime";
             }
+            // Lưu ý: DURATION_SHORTEST sẽ dùng mặc định của Server rồi lọc lại ở Client
 
-            // Gọi Repository với tham số sắp xếp cho Backend
             return repository.searchFlights(request, sortBy, sortDir);
         });
 
@@ -86,25 +89,30 @@ public class SearchResultViewModel extends AndroidViewModel {
 
     // Lấy danh sách hãng bay để UI hiển thị vào Filter
     public void loadAirlinesForFilter() {
-        repository.getAirlineNames().observeForever(data -> {
-            if (data != null) airlineNames.setValue(data);
+        // Logic gọi repository lấy PageResponse<Airline> từ API v1/airlines
+        repository.getAirlines().observeForever(data -> {
+            if (data != null) {
+                // data ở đây là List<Airline> lấy từ PageResponse.getData()
+                airlines.setValue(data);
+            }
         });
     }
 
     public LiveData<List<CheapestDate>> getCheapestDates() { return cheapestDates; }
-    public LiveData<List<String>> getAirlineNames() { return airlineNames; }
+    public LiveData<List<Airline>> getAirlines() {
+        return airlines;
+    }
 
     private void updateFinalResults() {
         if (searchResults.getValue() == null) return;
 
-        // Lấy dữ liệu gốc và chạy hàm lọc
+        // 1. Lấy dữ liệu gốc và chạy hàm lọc
         List<Flight> list = applyFilter(searchResults.getValue().getData(), currentFilter.getValue());
 
-        // ⚡ XỬ LÝ LỌC TRÊN CLIENT (Dành cho các trường tính toán)
-        if (currentSort.getValue() == SortOption.DURATION_SHORTEST) {
-            sortFlightsByDuration(list);
-        }
+        // 2. ⚡ SỬA TẠI ĐÂY: Sắp xếp cục bộ cho TẤT CẢ các tiêu chí để UI nhảy ngay lập tức
+        sortFlights(list, currentSort.getValue());
 
+        // 3. Cập nhật kết quả cuối cùng
         filteredResults.setValue(list);
     }
 
@@ -178,9 +186,17 @@ public class SearchResultViewModel extends AndroidViewModel {
     // UI gọi hàm này khi người dùng chọn tiêu chí sắp xếp mới
     public void updateSort(SortOption option) {
         currentSort.setValue(option);
-        // Nếu là sắp xếp Server-side, trigger lại searchInput để gọi API
+
+        // Nếu chọn Giá hoặc Giờ bay -> Gọi lại API để Server sắp xếp
         if (option == SortOption.PRICE_LOWEST || option == SortOption.DEPARTURE_EARLIEST) {
-            searchInput.setValue(searchInput.getValue());
+            SearchRequest current = searchInput.getValue();
+            if (current != null) {
+                // Đẩy lại giá trị để trigger switchMap gọi API mới
+                searchInput.setValue(current);
+            }
+        } else {
+            // Nếu chọn Thời lượng ngắn nhất -> Chỉ cần chạy lại hàm lọc/sắp xếp tại Client
+            updateFinalResults();
         }
     }
 
@@ -261,5 +277,9 @@ public class SearchResultViewModel extends AndroidViewModel {
 
     public LiveData<List<Flight>> getFilteredResults() {
         return filteredResults;
+    }
+
+    public FilterCriteria getCurrentFilterValue() {
+        return currentFilter.getValue() != null ? currentFilter.getValue() : new FilterCriteria();
     }
 }

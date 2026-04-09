@@ -1,6 +1,8 @@
 package com.example.flight_booking_app.search.api;
 
 import com.example.flight_booking_app.common.ApiResponse;
+import com.example.flight_booking_app.common.PageResponse;
+import com.example.flight_booking_app.search.model.Airline;
 import com.example.flight_booking_app.search.model.CheapestDate;
 import com.example.flight_booking_app.search.model.FlightPageResponse;
 import com.example.flight_booking_app.search.model.SearchRequest;
@@ -35,5 +37,5 @@ public interface SearchApiService {
 
     // 3. Lấy danh sách hãng bay: GET /v1/airlines (Để đổ vào bộ lọc)
     @GET("v1/airlines")
-    Call<ApiResponse<FlightPageResponse>> getAirlines(@Query("size") int size);
+    Call<ApiResponse<PageResponse<Airline>>> getAirlines(@Query("size") int size);
 }

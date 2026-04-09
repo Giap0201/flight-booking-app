@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="20dp">
+
+    <TextView
+        android:id="@+id/tvDepartureLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Giờ khởi hành"
+        android:textColor="@color/black"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvDepartureValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="00:00 - 24:00"
+        android:textColor="#6200EE"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@id/tvDepartureLabel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tvDepartureLabel" />
+
+    <com.google.android.material.slider.RangeSlider
+        android:id="@+id/sliderDepartureTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:valueFrom="0.0"
+        android:valueTo="24.0"
+        android:stepSize="0.5"
+        app:values="@array/initial_range_values"
+        app:thumbColor="#6200EE"
+        app:trackColorActive="#6200EE"
+        app:trackColorInactive="#E0E0E0"
+        app:labelBehavior="gone"
+        app:layout_constraintTop_toBottomOf="@id/tvDepartureLabel" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="00:00"
+        android:textSize="12sp"
+        android:textColor="#757575"
+        app:layout_constraintStart_toStartOf="@id/sliderDepartureTime"
+        app:layout_constraintTop_toBottomOf="@id/sliderDepartureTime" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="24:00"
+        android:textSize="12sp"
+        android:textColor="#757575"
+        app:layout_constraintEnd_toEndOf="@id/sliderDepartureTime"
+        app:layout_constraintTop_toBottomOf="@id/sliderDepartureTime" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

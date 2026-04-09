@@ -140,6 +140,11 @@ public class HomeActivity extends AppCompatActivity {
             // (Bạn vẫn có thể gửi thêm biến PASSENGERS nếu API tìm kiếm chuyến bay cũ đang cần nó)
             intent.putExtra("PASSENGERS", totalPassengers);
 
+            intent.putExtra("IS_ROUND_TRIP", isRoundTrip);
+            if (isRoundTrip) {
+                intent.putExtra("RETURN_DATE", tvReturnDate.getText().toString().trim());
+            }
+
             startActivity(intent);
         });
     }
