@@ -1,4 +1,4 @@
-package com.example.flight_booking_app.home.activity; // Package của bạn
+package com.example.flight_booking_app.home.activity;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -33,10 +33,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-// LƯU Ý: extends Fragment thay vì AppCompatActivity
 public class HomeFragment extends Fragment {
 
-    // --- KHAI BÁO BIẾN (Giữ nguyên) ---
     private TextView tvDeparture, tvArrival, tvDate, tvPassengers;
     private TextView tvReturnDate, tvDayCount;
     private ImageButton btnSwap;
@@ -51,11 +49,9 @@ public class HomeFragment extends Fragment {
     private com.google.android.material.tabs.TabLayout tabLayoutDots;
     private DestinationAdapter destinationAdapter;
 
-    // Biến dùng để auto-slide
     private android.os.Handler sliderHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private Runnable sliderRunnable;
 
-    // --- BƯU TÁ NHẬN KẾT QUẢ TỪ MÀN HÌNH CHỌN SÂN BAY ---
     private final ActivityResultLauncher<Intent> departureLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -74,14 +70,11 @@ public class HomeFragment extends Fragment {
             }
     );
 
-    // BẮT BUỘC ĐỐI VỚI FRAGMENT: Thay thế onCreate bằng onCreateView
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // Nạp giao diện fragment_home
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        // 1. Ánh xạ View (Chú ý: phải gọi view.findViewById thay vì findViewById)
         tvDeparture = view.findViewById(R.id.tvDeparture);
         tvArrival = view.findViewById(R.id.tvArrival);
         tvDate = view.findViewById(R.id.tvDate);
@@ -95,7 +88,6 @@ public class HomeFragment extends Fragment {
 
         rvTravelGuides.setNestedScrollingEnabled(false);
 
-        // 2. Xử lý Toggle (Một chiều / Khứ hồi)
         toggleGroupTripType.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (isChecked) {
                 if (checkedId == R.id.btnRoundTrip) {
@@ -110,7 +102,6 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        // 3. Nút Đảo chiều (Swap)
         btnSwap.setOnClickListener(v -> {
             String temp = tvDeparture.getText().toString();
             tvDeparture.setText(tvArrival.getText().toString());
@@ -118,50 +109,71 @@ public class HomeFragment extends Fragment {
             btnSwap.animate().rotationBy(180f).setDuration(300).start();
         });
 
-        // 4. Chọn Ngày Bay
         tvDate.setOnClickListener(v -> showDatePicker(tvDate, "Chọn ngày bay đi"));
         tvReturnDate.setOnClickListener(v -> showDatePicker(tvReturnDate, "Chọn ngày bay về"));
 
-        // 5. Chọn Sân Bay (Gọi Activity SearchLocationActivity)
-        // LƯU Ý: Phải dùng getActivity() thay vì HomeActivity.this
         tvDeparture.setOnClickListener(v -> departureLauncher.launch(new Intent(getActivity(), SearchLocationActivity.class)));
         tvArrival.setOnClickListener(v -> arrivalLauncher.launch(new Intent(getActivity(), SearchLocationActivity.class)));
 
-        // 6. Hành Khách
         tvPassengers.setOnClickListener(v -> showPassengerBottomSheet());
 
-        // 7. Nút Tìm Kiếm
+        // =========================================================
+        // NÂNG CẤP: XỬ LÝ VALIDATE NGÀY THÁNG KHI BẤM NÚT TÌM KIẾM
+        // =========================================================
         btnSearch.setOnClickListener(v -> {
             String departure = tvDeparture.getText().toString().trim().toUpperCase();
             String arrival = tvArrival.getText().toString().trim().toUpperCase();
             String date = tvDate.getText().toString().trim();
             String returnDate = isRoundTrip ? tvReturnDate.getText().toString().trim() : "";
 
-            if (departure.isEmpty() || arrival.isEmpty() || date.equals("Mon, May 7")) {
-                // LƯU Ý: Dùng requireContext() thay vì this cho Toast
-                Toast.makeText(requireContext(), "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+            // 1. Check rỗng hoặc chưa chọn (đang hiện chữ mặc định)
+            if (departure.isEmpty() || departure.equals("ĐIỂM ĐI") || arrival.isEmpty() || arrival.equals("ĐIỂM ĐẾN") || date.isEmpty() || date.equals("Ngày đi")) {
+                Toast.makeText(requireContext(), "Vui lòng chọn đầy đủ Điểm đi, Điểm đến và Ngày đi", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // --- THÊM CHECK VALIDATE KHỨ HỒI ---
-            if (isRoundTrip && (returnDate.isEmpty() || returnDate.equals("Tue, 10 May"))) {
+            if (isRoundTrip && (returnDate.isEmpty() || returnDate.equals("Ngày về"))) {
                 Toast.makeText(requireContext(), "Vui lòng chọn ngày bay về", Toast.LENGTH_SHORT).show();
                 return;
             }
 
+            // 2. Logic so sánh ngày tháng
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            try {
+                Date parsedDateDi = sdf.parse(date);
+
+                // Lấy ngày hiện tại, ép format rồi parse lại để loại bỏ giờ/phút/giây (tránh lỗi so sánh trong cùng 1 ngày)
+                Date today = sdf.parse(sdf.format(new Date()));
+
+                // Validate 1: Ngày đi < Ngày hiện tại
+                if (parsedDateDi != null && parsedDateDi.before(today)) {
+                    Toast.makeText(requireContext(), "Ngày khởi hành không được chọn trong quá khứ!", Toast.LENGTH_SHORT).show();
+                    return; // Chặn không cho chạy tiếp
+                }
+
+                // Validate 2: Ngày về < Ngày đi
+                if (isRoundTrip) {
+                    Date parsedDateVe = sdf.parse(returnDate);
+                    if (parsedDateVe != null && parsedDateVe.before(parsedDateDi)) {
+                        Toast.makeText(requireContext(), "Ngày về không được trước ngày khởi hành!", Toast.LENGTH_SHORT).show();
+                        return; // Chặn không cho chạy tiếp
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(requireContext(), "Định dạng ngày không hợp lệ!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // 3. Vượt qua mọi rào cản -> Chuyển trang
             Intent intent = new Intent(getActivity(), SearchResultActivity.class);
             intent.putExtra("ORIGIN", departure);
             intent.putExtra("DESTINATION", arrival);
             intent.putExtra("DATE", date);
-
-            // --- GỬI TỔNG SỐ LƯỢNG (Dành cho việc hiển thị UI) ---
             intent.putExtra("PASSENGERS", totalPassengers);
-
-            // --- ĐÃ SỬA: GỬI CHI TIẾT TỪNG LOẠI HÀNH KHÁCH ---
             intent.putExtra("ADULT_COUNT", adultCount);
             intent.putExtra("CHILD_COUNT", childCount);
             intent.putExtra("INFANT_COUNT", infantCount);
-
             intent.putExtra("IS_ROUND_TRIP", isRoundTrip);
             intent.putExtra("RETURN_DATE", returnDate);
             startActivity(intent);
@@ -170,12 +182,10 @@ public class HomeFragment extends Fragment {
         setupDestinationSlider(view);
         setupTravelGuides(view);
 
-        return view; // Trả về view cho Fragment
+        return view;
     }
 
-    // --- HÀM HỖ TRỢ BOTTOM SHEET HÀNH KHÁCH ---
     private void showPassengerBottomSheet() {
-        // LƯU Ý: Dùng requireContext() thay vì this
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
         dialog.setContentView(R.layout.bottom_sheet_passengers);
 
@@ -214,7 +224,6 @@ public class HomeFragment extends Fragment {
         dialog.show();
     }
 
-    // --- HÀM HỖ TRỢ LỊCH ---
     private void showDatePicker(TextView targetTextView, String title) {
         MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker().setTitleText(title).setSelection(MaterialDatePicker.todayInUtcMilliseconds()).build();
         datePicker.addOnPositiveButtonClickListener(selection -> {
@@ -222,7 +231,6 @@ public class HomeFragment extends Fragment {
             sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
             targetTextView.setText(sdf.format(new Date(selection)));
         });
-        // LƯU Ý: Fragment dùng getChildFragmentManager() thay vì getSupportFragmentManager()
         datePicker.show(getChildFragmentManager(), "DATE_PICKER");
     }
 
@@ -230,7 +238,6 @@ public class HomeFragment extends Fragment {
         vpDestinations = view.findViewById(R.id.vpDestinations);
         tabLayoutDots = view.findViewById(R.id.tabLayoutDots);
 
-        // Đưa data MOCK của bạn vào List Java
         List<Destination> list = new java.util.ArrayList<>();
         list.add(new Destination("1", "Đà Nẵng, Việt Nam", "Vé chỉ từ 599.000 đ", "https://tourism.danang.vn/wp-content/uploads/2023/02/tour-du-lich-da-nang-1.jpg"));
         list.add(new Destination("2", "Phú Quốc, Việt Nam", "Vé chỉ từ 799.000 đ", "https://thoibaotaichinhvietnam.vn/stores/news_dataimages/2024/102024/18/14/phu-quoc20241018144932.1152350.jpg"));
@@ -245,49 +252,42 @@ public class HomeFragment extends Fragment {
         destinationAdapter = new DestinationAdapter(list);
         vpDestinations.setAdapter(destinationAdapter);
 
-        // Kết nối ViewPager2 với TabLayout để tạo dấu chấm tròn
         new com.google.android.material.tabs.TabLayoutMediator(tabLayoutDots, vpDestinations,
-                (tab, position) -> {
-                    // Không cần làm gì, chỉ để nó tự tạo dấu chấm
-                }
+                (tab, position) -> {}
         ).attach();
 
-        // LOGIC LƯỚT TỰ ĐỘNG
         sliderRunnable = () -> {
             int currentItem = vpDestinations.getCurrentItem();
             int totalItems = destinationAdapter.getItemCount();
             if (currentItem < totalItems - 1) {
                 vpDestinations.setCurrentItem(currentItem + 1);
             } else {
-                vpDestinations.setCurrentItem(0); // Lướt hết thì quay lại từ đầu
+                vpDestinations.setCurrentItem(0);
             }
         };
 
-        // Lắng nghe khi người dùng vuốt bằng tay
         vpDestinations.registerOnPageChangeCallback(new androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
                 super.onPageSelected(position);
                 sliderHandler.removeCallbacks(sliderRunnable);
-                sliderHandler.postDelayed(sliderRunnable, 3000); // Đổi ảnh mỗi 3 giây
+                sliderHandler.postDelayed(sliderRunnable, 3000);
             }
         });
     }
+
     private void setupTravelGuides(View view) {
         rvTravelGuides = view.findViewById(R.id.rvTravelGuides);
 
-        // 1. Cài đặt vuốt ngang (Horizontal)
         androidx.recyclerview.widget.LinearLayoutManager layoutManager =
                 new androidx.recyclerview.widget.LinearLayoutManager(getContext(), androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL, false);
         rvTravelGuides.setLayoutManager(layoutManager);
 
-        // 2. Chèn Data MOCK của bạn
         List<TravelGuide> list = new java.util.ArrayList<>();
         list.add(new TravelGuide("1", "Cẩm nang du lịch Phú Quốc: Chơi gì, ăn gì, ở đâu?", "Kinh Nghiệm", "Cập nhật mới nhất", "https://cdn.media.dulich24.com.vn/diemden/ao-phu-quoc-3506/phu-quoc.jpg", "https://dulichkhampha24.com/kinh-nghiem-du-lich-phu-quoc.html"));
         list.add(new TravelGuide("2", "Bản đồ ẩm thực và cẩm nang khám phá thủ đô Hà Nội", "Điểm Đến", "Cập nhật mới nhất", "https://banhtombaloc.vn/medias/2024/05/5.jpg", "https://vietnammedia.com.vn/ban-do-food-tour-ha-noi-cam-nang-du-lich-am-thuc-ha-noi"));
         list.add(new TravelGuide("3", "Kinh nghiệm du lịch tự túc Bangkok, Thái Lan", "Quốc Tế", "Cập nhật mới nhất", "https://file.hstatic.net/200000561069/article/bangkok-tl_3619350a59554298be1b892c3592c023.jpg", "https://phuotvivu.com/blog/kinh-nghiem-du-lich/thai-lan/bangkok/"));
 
-        // 3. Gắn Adapter
         TravelGuideAdapter guideAdapter = new TravelGuideAdapter(list);
         rvTravelGuides.setAdapter(guideAdapter);
     }

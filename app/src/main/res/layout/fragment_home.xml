@@ -167,7 +167,8 @@
                             android:hint="Ngày về"
                             android:textColor="#111827"
                             android:textSize="16sp"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"
+                            android:visibility="gone"/>
                     </LinearLayout>
 
                     <View
