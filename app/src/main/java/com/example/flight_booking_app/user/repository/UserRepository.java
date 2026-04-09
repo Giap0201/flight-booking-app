@@ -8,6 +8,7 @@ import com.example.flight_booking_app.common.ApiResponse;
 import com.example.flight_booking_app.network.ApiClient;
 import com.example.flight_booking_app.user.api.UserApiService;
 import com.example.flight_booking_app.user.model.dto.ChangePasswordRequest;
+import com.example.flight_booking_app.user.model.dto.RegisterRequest;
 import com.example.flight_booking_app.user.model.dto.UserResponse;
 import com.example.flight_booking_app.user.model.dto.UserUpdateRequest;
 
@@ -71,6 +72,26 @@ public class UserRepository {
                 changePwStatus.setValue(false);
             }
         });
+
     }
+    public void registerUser(RegisterRequest request, MutableLiveData<Boolean> registerStatus) {
+
+        apiService.registerUser(request).enqueue(new Callback<ApiResponse<UserResponse>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<UserResponse>> call, Response<ApiResponse<UserResponse>> response) {
+
+                if (response.isSuccessful() && response.body() != null && response.body().getCode() == 1000) {
+                    registerStatus.setValue(true);
+                } else {
+                    registerStatus.setValue(false);
+                }
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<UserResponse>> call, Throwable t) {
+                registerStatus.setValue(false);
+            }
+        });
     }
+}
+
 

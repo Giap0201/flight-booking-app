@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.example.flight_booking_app.authen.repository.AuthRepository;
 import com.example.flight_booking_app.user.model.dto.ChangePasswordRequest;
+import com.example.flight_booking_app.user.model.dto.RegisterRequest;
 import com.example.flight_booking_app.user.model.dto.UserResponse;
 import com.example.flight_booking_app.user.model.dto.UserUpdateRequest;
 import com.example.flight_booking_app.user.repository.UserRepository;
@@ -21,15 +22,17 @@ public class ProfileViewModel extends AndroidViewModel {
     private MutableLiveData<UserResponse> userInfo = new MutableLiveData<>();
 
     private MutableLiveData<Boolean> updateStatus = new MutableLiveData<>();
-    // Khai báo thêm LiveData này ở trên cùng
+
     private MutableLiveData<Boolean> changePasswordStatus = new MutableLiveData<>();
 
-    // Thêm Getter cho Activity lắng nghe
+    private MutableLiveData<Boolean> registerStatus = new MutableLiveData<>();
+
+
     public MutableLiveData<Boolean> getChangePasswordStatus() {
         return changePasswordStatus;
     }
 
-    // Thêm hàm gọi đổi pass
+
     public void changePassword(ChangePasswordRequest request) {
         userRepository.changeUserPassword(request, changePasswordStatus);
     }
@@ -38,6 +41,15 @@ public class ProfileViewModel extends AndroidViewModel {
         super(application);
         authRepository = new AuthRepository(application);
         userRepository = new UserRepository(application);
+    }
+
+    public MutableLiveData<Boolean> getRegisterStatus() {
+        return registerStatus;
+    }
+
+    public void register(RegisterRequest request) {
+        // Gọi hàm đăng ký từ UserRepository như ý của ông
+        userRepository.registerUser(request, registerStatus);
     }
 
     // ================= CÁC HÀM CỦA USER =================

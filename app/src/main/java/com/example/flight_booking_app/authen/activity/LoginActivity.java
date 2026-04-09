@@ -15,6 +15,7 @@ import android.widget.Toast;
 import com.example.flight_booking_app.MainActivity;
 import com.example.flight_booking_app.R;
 import com.example.flight_booking_app.authen.viewmodel.LoginViewModel;
+import com.example.flight_booking_app.user.activity.RegisterActivity;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -22,8 +23,7 @@ public class LoginActivity extends AppCompatActivity {
 
     // Khai báo các biến ánh xạ với giao diện
     private TextInputEditText edtEmail, edtPassword;
-    private CheckBox cbRemember;
-    private TextView tvForgot;
+    private TextView tvForgot, tvSignUp;
     private MaterialButton btnSignIn;
 
     private LoginViewModel loginViewModel;
@@ -87,12 +87,20 @@ public class LoginActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        tvSignUp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     private void initViews() {
         edtEmail = findViewById(R.id.edtEmail);
         edtPassword = findViewById(R.id.edtPassword);
-        cbRemember = findViewById(R.id.cbRemember);
+        tvSignUp = findViewById(R.id.tvSignUp);
         tvForgot = findViewById(R.id.tvForgot);
         btnSignIn = findViewById(R.id.btnSignIn);
     }
