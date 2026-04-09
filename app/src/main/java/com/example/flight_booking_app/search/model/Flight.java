@@ -8,6 +8,9 @@ public class Flight implements Serializable {
     @SerializedName("flightNumber")
     private String flightNumber;
 
+    @SerializedName("id")
+    private String id;
+
     @SerializedName("airlineName")
     private String airlineName;
 
@@ -38,4 +41,8 @@ public class Flight implements Serializable {
     public String getArrivalTime() { return arrivalTime; }
     public String getStatus() { return status; }
     public List<FlightClass> getClasses() { return classes; }
+
+    public String getId() {
+        return id;
+    }
 }

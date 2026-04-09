@@ -154,6 +154,9 @@ public class SearchResultActivity extends AppCompatActivity {
         Intent intent = new Intent(this, FlightDetailActivity.class);
 
         // Truyền thông tin số lượng khách
+        intent.putExtra("FLIGHT_ID", selectedFlight.getId());
+        intent.putExtra("ORIGIN", originalOrigin);
+        intent.putExtra("DESTINATION", originalDestination);
         intent.putExtra("IS_ROUND_TRIP", isRoundTrip);
         intent.putExtra("ADULT_COUNT", adultCount);
         intent.putExtra("CHILD_COUNT", childCount);
