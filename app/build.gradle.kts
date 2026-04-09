@@ -48,4 +48,6 @@ dependencies {
 // Thư viện OkHttp để ghi log (xem request/response trong Logcat)
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
+// Thư viện ZXing để tạo mã QR cho Boarding Pass
+    implementation("com.google.zxing:core:3.5.2")
 }

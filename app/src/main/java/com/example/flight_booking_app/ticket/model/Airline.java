@@ -1,4 +1,4 @@
-package com.example.flight_booking_app.booking.model;
+package com.example.flight_booking_app.ticket.model;
 
 import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;

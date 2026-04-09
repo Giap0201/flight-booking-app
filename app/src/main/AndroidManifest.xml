@@ -61,8 +61,25 @@
             android:name=".booking.activity.AncillaryActivity"
             android:exported="false"/>
         <activity
-            android:name=".booking.activity.FlightDetailActivity"
-            android:exported="false"/>
+            android:name=".ticket.activity.FlightDetailActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ticket.activity.BookingDetailActivity"
+            android:exported="false" />
+
+
+        <activity
+            android:name=".ticket.activity.UpcomingFlightsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ticket.activity.HistoryActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ticket.activity.WaitingForPaymentActivity"
+            android:exported="false" />
+
         <activity
             android:name=".authen.activity.SplashActivity"
             android:exported="true">
@@ -72,8 +89,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-
 
 
     </application>
