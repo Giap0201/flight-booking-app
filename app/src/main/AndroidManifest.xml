@@ -24,10 +24,10 @@
             android:name=".authen.activity.LoginActivity"
             android:exported="false" />
         <activity
-            android:name=".home.activity.SearchLocationActivity"
+            android:name=".search.activity.SearchResultActivity"
             android:exported="false" />
         <activity
-            android:name=".home.activity.SearchResultActivity"
+            android:name=".home.activity.SearchLocationActivity"
             android:exported="false" />
         <activity
             android:name=".authen.activity.ForgotPasswordActivity"
