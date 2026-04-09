@@ -16,11 +16,11 @@
         android:theme="@style/Theme.Flightbookingapp">
 
         <activity
-            android:name=".booking.activity.FlightDetailActivity"
+            android:name=".ticket.activity.FlightDetailActivity"
             android:exported="false" />
 
         <activity
-            android:name=".booking.activity.BookingDetailActivity"
+            android:name=".ticket.activity.BookingDetailActivity"
             android:exported="false" />
 
         <activity
@@ -28,18 +28,18 @@
             android:exported="false" />
 
         <activity
-            android:name=".booking.activity.UpcomingFlightsActivity"
+            android:name=".ticket.activity.UpcomingFlightsActivity"
             android:exported="false" />
 
         <activity
-            android:name=".booking.activity.HistoryActivity"
+            android:name=".ticket.activity.HistoryActivity"
             android:exported="false" />
         <activity
-            android:name=".booking.activity.WaitingForPaymentActivity"
+            android:name=".ticket.activity.WaitingForPaymentActivity"
             android:exported="false" />
 
         <activity
-            android:name=".booking.activity.MyTicketActivity"
+            android:name=".ticket.activity.MyTicketActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
