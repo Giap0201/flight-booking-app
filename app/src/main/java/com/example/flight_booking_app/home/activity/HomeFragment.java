@@ -153,7 +153,15 @@ public class HomeFragment extends Fragment {
             intent.putExtra("ORIGIN", departure);
             intent.putExtra("DESTINATION", arrival);
             intent.putExtra("DATE", date);
+
+            // --- GỬI TỔNG SỐ LƯỢNG (Dành cho việc hiển thị UI) ---
             intent.putExtra("PASSENGERS", totalPassengers);
+
+            // --- ĐÃ SỬA: GỬI CHI TIẾT TỪNG LOẠI HÀNH KHÁCH ---
+            intent.putExtra("ADULT_COUNT", adultCount);
+            intent.putExtra("CHILD_COUNT", childCount);
+            intent.putExtra("INFANT_COUNT", infantCount);
+
             intent.putExtra("IS_ROUND_TRIP", isRoundTrip);
             intent.putExtra("RETURN_DATE", returnDate);
             startActivity(intent);
