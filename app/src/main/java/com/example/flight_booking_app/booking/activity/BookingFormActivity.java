@@ -25,93 +25,117 @@ import java.util.List;
 
 public class BookingFormActivity extends AppCompatActivity {
 
+    // =========================================================
+    // 1. KHAI BÁO GIAO DIỆN & DỮ LIỆU CHUNG
+    // =========================================================
     private EditText edtContactName, edtContactEmail, edtContactPhone;
     private TextView tvTotalPrice;
     private Button btnConfirmBooking;
 
-    // ĐÃ THAY ĐỔI: Chuyển từ ListView sang RecyclerView
     private RecyclerView rvPassengers;
     private PassengerAdapter passengerAdapter;
     private List<PassengerRequest> listPassengers;
 
     private BookingViewModel viewModel;
 
+    // =========================================================
+    // 2. KHAI BÁO BIẾN CHO CHIỀU ĐI (SEGMENT 1)
+    // =========================================================
     private String currentFlightId;
     private String currentFlightClassId;
     private double ticketPrice;
-    private double totalPrice; // Lưu lại tổng tiền gốc để truyền sang màn sau
 
-    // Thêm 3 biến để hứng số lượng hành khách
-    private int adultCount;
-    private int childCount;
-    private int infantCount;
+    // =========================================================
+    // 3. KHAI BÁO BIẾN CHO CHIỀU VỀ (SEGMENT 2 - NẾU CÓ)
+    // =========================================================
+    private boolean isRoundTrip = false; // Cờ đánh dấu: true là khứ hồi, false là 1 chiều
+    private String returnFlightId;
+    private String returnFlightClassId;
+    private double returnTicketPrice;
+
+    // =========================================================
+    // 4. BIẾN TÍNH TOÁN
+    // =========================================================
+    private double totalPrice; // Tổng tiền vé gốc (Chưa tính dịch vụ)
+    private int adultCount, childCount, infantCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_booking_form);
 
-        // 1. Nhận toàn bộ dữ liệu từ màn trước
+        // ==========================================================
+        // BƯỚC 1: HỨNG DỮ LIỆU TỪ MÀN HÌNH CHỌN VÉ (INTENT)
+        // ==========================================================
         Intent intent = getIntent();
         if (intent != null) {
-            currentFlightId = intent.getStringExtra("flightId");
-            currentFlightClassId = intent.getStringExtra("flightClassId");
-            ticketPrice = intent.getDoubleExtra("ticketPrice", 0.0);
-
-            // Lấy số lượng người (Nếu ko có thì mặc định là 1 người lớn)
+            // Nhận số lượng khách
             adultCount = intent.getIntExtra("adultCount", 1);
             childCount = intent.getIntExtra("childCount", 0);
             infantCount = intent.getIntExtra("infantCount", 0);
 
-            // TODO: KHI NÀO GHÉP CODE THẬT VỚI MÀN HÌNH TÌM KIẾM THÌ BỎ COMMENT 3 DÒNG NÀY ĐỂ KHÔNG BỊ FIX CỨNG
-//            adultCount = 1;
-//            childCount = 1;
-//            infantCount = 1;
+            // Nhận vé CHIỀU ĐI (Bắt buộc phải có)
+            currentFlightId = intent.getStringExtra("flightId");
+            currentFlightClassId = intent.getStringExtra("flightClassId");
+            ticketPrice = intent.getDoubleExtra("ticketPrice", 0.0);
+
+            // ⚡ Nhận vé CHIỀU VỀ (Có thể có hoặc không) ⚡
+            // Đọc cờ isRoundTrip để biết khách chọn loại hành trình nào
+            isRoundTrip = intent.getBooleanExtra("isRoundTrip", false);
+
+            if (isRoundTrip) {
+                returnFlightId = intent.getStringExtra("returnFlightId");
+                returnFlightClassId = intent.getStringExtra("returnFlightClassId");
+                returnTicketPrice = intent.getDoubleExtra("returnTicketPrice", 0.0);
+            }
         }
 
-        // 2. Ánh xạ view
+        // ==========================================================
+        // BƯỚC 2: ÁNH XẠ VIEW & TÍNH TOÁN TỔNG TIỀN
+        // ==========================================================
+        initViews();
+
+        int totalTickets = adultCount + childCount + infantCount;
+
+        // ⚡ LOGIC TÍNH TIỀN KHỨ HỒI ⚡
+        // Nếu 1 chiều: Tiền = Giá vé chiều đi * Số người
+        // Nếu Khứ hồi: Tiền = (Giá vé chiều đi + Giá vé chiều về) * Số người
+        if (isRoundTrip) {
+            totalPrice = (ticketPrice + returnTicketPrice) * totalTickets;
+        } else {
+            totalPrice = ticketPrice * totalTickets;
+        }
+
+        // In ra màn hình
+        java.text.NumberFormat formatter = java.text.NumberFormat.getInstance(new java.util.Locale("vi", "VN"));
+        tvTotalPrice.setText(formatter.format(totalPrice) + " đ");
+
+        // ==========================================================
+        // BƯỚC 3: TẠO FORM ĐIỀN TÊN HÀNH KHÁCH
+        // ==========================================================
+        listPassengers = new ArrayList<>();
+        for (int i = 0; i < adultCount; i++) listPassengers.add(new PassengerRequest("", "", "", "MALE", "ADULT"));
+        for (int i = 0; i < childCount; i++) listPassengers.add(new PassengerRequest("", "", "", "MALE", "CHILD"));
+        for (int i = 0; i < infantCount; i++) listPassengers.add(new PassengerRequest("", "", "", "MALE", "INFANT"));
+
+        rvPassengers.setLayoutManager(new LinearLayoutManager(this));
+        passengerAdapter = new PassengerAdapter(this, listPassengers);
+        rvPassengers.setAdapter(passengerAdapter);
+
+        // Nút Xác nhận
+        btnConfirmBooking.setOnClickListener(v -> submitBooking());
+    }
+
+    private void initViews() {
         edtContactName = findViewById(R.id.edtContactName);
         edtContactEmail = findViewById(R.id.edtContactEmail);
         edtContactPhone = findViewById(R.id.edtContactPhone);
         tvTotalPrice = findViewById(R.id.tvTotalPrice);
         btnConfirmBooking = findViewById(R.id.btnConfirmBooking);
-
-        // Ánh xạ RecyclerView
         rvPassengers = findViewById(R.id.rvPassengers);
-
-        // 3. Tính toán và hiển thị tổng tiền
-        int totalTickets = adultCount + childCount + infantCount;
-        totalPrice = ticketPrice * totalTickets;
-
-        java.text.NumberFormat formatter = java.text.NumberFormat.getInstance(new java.util.Locale("vi", "VN"));
-        tvTotalPrice.setText(formatter.format(totalPrice) + " đ");
-
-        // 4. Sinh danh sách form hành khách DỰA TRÊN SỐ LƯỢNG
-        listPassengers = new ArrayList<>();
-
-        for (int i = 0; i < adultCount; i++) {
-            listPassengers.add(new PassengerRequest("", "", "", "MALE", "ADULT"));
-        }
-        for (int i = 0; i < childCount; i++) {
-            listPassengers.add(new PassengerRequest("", "", "", "MALE", "CHILD"));
-        }
-        for (int i = 0; i < infantCount; i++) {
-            listPassengers.add(new PassengerRequest("", "", "", "MALE", "INFANT"));
-        }
-
-        // 5. Cài đặt RecyclerView và Adapter
-        // Bắt buộc phải có LayoutManager để RecyclerView biết cách sắp xếp các item (từ trên xuống dưới)
-        rvPassengers.setLayoutManager(new LinearLayoutManager(this));
-        passengerAdapter = new PassengerAdapter(this, listPassengers);
-        rvPassengers.setAdapter(passengerAdapter);
-
-        // 6. Khởi tạo ViewModel & Bắt sự kiện
-        viewModel = new ViewModelProvider(this).get(BookingViewModel.class);
-        btnConfirmBooking.setOnClickListener(v -> submitBooking());
     }
 
     private void submitBooking() {
-
         // ===== A. Validate contact =====
         String contactName = edtContactName.getText().toString().trim();
         String contactEmail = edtContactEmail.getText().toString().trim();
@@ -143,45 +167,50 @@ public class BookingFormActivity extends AppCompatActivity {
             passenger.setDateOfBirth(dobApi);
         }
 
-        // ===== C. Build request (Tạo object request để mang sang màn hình sau) =====
+        // ==========================================================
+        // ⚡ BƯỚC QUAN TRỌNG: ĐÓNG GÓI CHUYẾN BAY (1 HOẶC NHIỀU CHUYẾN) ⚡
+        // ==========================================================
         BookingRequest request = new BookingRequest();
         request.setContactName(contactName);
-        request.setContactEmail(contactEmail);
-        request.setContactPhone(contactPhone);
+        request.setContactEmail(edtContactEmail.getText().toString().trim());
+        request.setContactPhone(edtContactPhone.getText().toString().trim());
         request.setCurrency("VND");
         request.setPromotionCode("");
 
+        // Tạo giỏ chứa các chuyến bay
         List<FlightRequest> flights = new ArrayList<>();
+
+        // 1. Chắc chắn phải add Chiều Đi (Segment 1)
         flights.add(new FlightRequest(currentFlightId, currentFlightClassId));
+
+        // 2. Nếu là khứ hồi, add thêm Chiều Về (Segment 2)
+        if (isRoundTrip && returnFlightId != null) {
+            flights.add(new FlightRequest(returnFlightId, returnFlightClassId));
+        }
+
+        // Gắn giỏ chuyến bay vào Request tổng
         request.setFlights(flights);
         request.setPassengers(listPassengers);
-
-        // Khởi tạo danh sách dịch vụ rỗng (vì bước này chưa chọn)
-        request.setBookingAncillaries(new ArrayList<>());
+        request.setBookingAncillaries(new ArrayList<>()); // Dịch vụ để trang sau tính
 
         // ==========================================================
-        // D. CHUYỂN SANG MÀN HÌNH CHỌN DỊCH VỤ (ANCILLARY)
+        // CHUYỂN SANG MÀN HÌNH CHỌN DỊCH VỤ (ANCILLARY)
         // ==========================================================
-
-        // 1. Tạo mảng tên hành khách để hiện trong Dialog ở màn sau
         String[] dsTenHanhKhach = new String[listPassengers.size()];
         for (int i = 0; i < listPassengers.size(); i++) {
             PassengerRequest p = listPassengers.get(i);
             dsTenHanhKhach[i] = "Khách " + (i + 1) + ": " + p.getLastName() + " " + p.getFirstName();
         }
 
-        // 2. Tạo Intent để chuyển trang
         Intent nextIntent = new Intent(BookingFormActivity.this, AncillaryActivity.class);
-
-        // 3. Gói dữ liệu gửi đi
         nextIntent.putExtra("passengerNames", dsTenHanhKhach);
         nextIntent.putExtra("bookingRequest", request);
-        nextIntent.putExtra("basePrice", totalPrice);   // Tiền tổng
+        nextIntent.putExtra("basePrice", totalPrice);
 
-        // 🔥 THÊM DÒNG NÀY: Phải gửi giá của 1 vé đi thì màn cuối mới chia tiền được!
-        nextIntent.putExtra("ticketPrice", ticketPrice);
+        // Truyền thêm cờ này sang trang Dịch vụ để trang dịch vụ biết đường hỏi khách mua hành lý chiều nào
+        nextIntent.putExtra("isRoundTrip", isRoundTrip);
 
-        // 4. Thực hiện chuyển trang
         startActivity(nextIntent);
     }
 }
+

@@ -16,42 +16,43 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 /**
- * Interface này chứa các đường dẫn API liên quan đến Đặt vé và Chuyến bay.
- * Retrofit sẽ đọc các Annotation (@GET, @POST) ở đây để tự động tạo code gọi mạng.
+ * Interface định nghĩa các cổng giao tiếp (Endpoints) với Backend.
+ * Mỗi hàm ở đây tương ứng với một tính năng mà người dùng thực hiện trên App.
  */
 public interface BookingApiService {
 
-    // --- HÀM CŨ BẠN ĐÃ CÓ (Lấy thông tin chuyến bay) ---
+    /**
+     * Lấy thông tin chi tiết của một chuyến bay cụ thể.
+     * @param flightId: Mã định danh chuyến bay (VD: "VN123")
+     * URL thực tế: GET /api/flights/{flightId}
+     */
     @GET("flights/{id}")
     Call<ApiResponse<FlightDetail>> getFlightDetail(@Path("id") String flightId);
 
-    // --- HÀM MỚI THÊM VÀO CHO CHỨC NĂNG ĐẶT VÉ ---
     /**
-     * @POST("bookings"): Báo cho Retrofit biết đây là phương thức POST,
-     * nối vào đuôi BASE_URL (http://10.0.2.2:8080/api/bookings)
-     * * @Body: Lệnh này cực kỳ quan trọng! Nó bảo Retrofit lấy cái hộp BookingRequest của mình,
-     * tự động dịch (parse) nó thành 1 chuỗi JSON chuẩn chỉ như bạn thiết kế trên Swagger,
-     * rồi nhét vào phần "Request Body" để gửi đi.
-     * * Call<ApiResponse<BookingResult>>: Cục hứng dữ liệu trả về.
-     * ApiResponse bọc bên ngoài (chứa code 1000), BookingResult nằm ở lõi (chứa mã PNR, tiền...).
+     * Gửi yêu cầu đặt vé lên hệ thống.
+     * @param request: Đối tượng chứa thông tin hành khách, chuyến bay đã chọn.
+     * @return Trả về kết quả đặt vé bao gồm mã đặt chỗ (PNR).
      */
     @POST("bookings")
     Call<ApiResponse<BookingResult>> createBooking(@Body BookingRequest request);
 
-
-    // ==========================================================
-    // THÊM DÒNG NÀY: Gọi API lấy danh sách dịch vụ
-    // Giả sử đường dẫn của bạn là GET /ancillaries (Bạn chỉnh lại cho đúng nhé)
-    // ==========================================================
+    /**
+     * Lấy danh sách các dịch vụ bổ trợ (Suất ăn, hành lý, bảo hiểm...).
+     * Trả về một List (danh sách) các đối tượng AncillaryItem.
+     */
     @GET("ancillary-catalogs")
-    Call<ApiResponse<List<AncillaryItem>>> getAncillaries();
+    Call<ApiResponse<List<AncillaryItem>>> fetchAncillaryCatalog();
 
-
-    // Thêm @Query("platform") để báo cho Backend biết là Android đang gọi
+    /**
+     * Tạo đường dẫn thanh toán trực tuyến (Ví dụ: VNPay, Momo).
+     * @param bookingId: Mã đặt chỗ vừa tạo ở bước trên.
+     * @param platform: Định danh nền tảng (thường là "android") để Backend xử lý callback.
+     * @return Một chuỗi String (URL) để App mở Webview hoặc trình duyệt cho người dùng thanh toán.
+     */
     @GET("payments/create-url")
-    Call<ApiResponse<String>> createPaymentUrl(
+    Call<ApiResponse<String>> generatePaymentUrl(
             @Query("bookingId") String bookingId,
             @Query("platform") String platform
     );
-
 }

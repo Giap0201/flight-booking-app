@@ -1,7 +1,6 @@
 package com.example.flight_booking_app.booking.adapter;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,32 +12,31 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.flight_booking_app.R;
-import com.example.flight_booking_app.booking.activity.BookingFormActivity;
 import com.example.flight_booking_app.booking.model.FlightClass;
 
 import java.util.List;
 
 public class TicketClassAdapter extends RecyclerView.Adapter<TicketClassAdapter.TicketViewHolder> {
 
+    // 1. Khai báo cái "Bộ đàm" (Interface)
+    public interface OnTicketSelectedListener {
+        void onSelect(FlightClass ticket);
+    }
+
     private Context context;
     private List<FlightClass> listTickets;
-    private String currentFlightId;
-    private int adultCount, childCount, infantCount;
+    private OnTicketSelectedListener listener; // Biến giữ bộ đàm
 
-    public TicketClassAdapter(Context context, List<FlightClass> listTickets, String currentFlightId,
-                              int adultCount, int childCount, int infantCount) {
+    // Constructor bây giờ siêu gọn nhẹ
+    public TicketClassAdapter(Context context, List<FlightClass> listTickets, OnTicketSelectedListener listener) {
         this.context = context;
         this.listTickets = listTickets;
-        this.currentFlightId = currentFlightId;
-        this.adultCount = adultCount;
-        this.childCount = childCount;
-        this.infantCount = infantCount;
+        this.listener = listener;
     }
 
     @NonNull
     @Override
     public TicketViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Nạp layout item_ticket_class vào
         View view = LayoutInflater.from(context).inflate(R.layout.item_ticket_class, parent, false);
         return new TicketViewHolder(view);
     }
@@ -47,29 +45,17 @@ public class TicketClassAdapter extends RecyclerView.Adapter<TicketClassAdapter.
     public void onBindViewHolder(@NonNull TicketViewHolder holder, int position) {
         FlightClass ticket = listTickets.get(position);
 
-        // Đổ dữ liệu vào view thông qua Holder
         holder.tvClassName.setText(ticket.getClassType());
         holder.tvPrice.setText(String.format("$%.2f", ticket.getBasePrice()));
 
-        // Giá cũ (giả lập khuyến mãi)
         holder.tvOldPrice.setText(String.format("$%.2f", ticket.getBasePrice() + 20));
         holder.tvOldPrice.setPaintFlags(holder.tvOldPrice.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
 
-        // Sự kiện click nút Select
+        // 2. Bắt sự kiện Click: Thay vì gọi Intent, chỉ cần "alo" qua bộ đàm
         holder.btnSelectTicket.setOnClickListener(v -> {
-            Intent intent = new Intent(context, BookingFormActivity.class);
-
-            // Truyền các ID quan trọng
-            intent.putExtra("flightId", currentFlightId);
-            intent.putExtra("flightClassId", ticket.getId());
-            intent.putExtra("ticketPrice", ticket.getBasePrice());
-
-            // Truyền số lượng khách từ màn hình tìm kiếm sang
-            intent.putExtra("adultCount", adultCount);
-            intent.putExtra("childCount", childCount);
-            intent.putExtra("infantCount", infantCount);
-
-            context.startActivity(intent);
+            if (listener != null) {
+                listener.onSelect(ticket); // Ném thông tin vé ra ngoài cho Activity tự xử lý
+            }
         });
     }
 
@@ -78,7 +64,6 @@ public class TicketClassAdapter extends RecyclerView.Adapter<TicketClassAdapter.
         return listTickets != null ? listTickets.size() : 0;
     }
 
-    // Lớp ViewHolder để giữ các tham chiếu View, giúp tối ưu hiệu năng
     public static class TicketViewHolder extends RecyclerView.ViewHolder {
         TextView tvClassName, tvPrice, tvOldPrice;
         Button btnSelectTicket;
