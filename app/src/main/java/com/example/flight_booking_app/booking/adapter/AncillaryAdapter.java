@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -20,31 +21,41 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * ĐÃ NÂNG CẤP LÊN RECYCLERVIEW.ADAPTER
- * Giúp danh sách dịch vụ cuộn mượt mà hơn, không bị giật lag khi có nhiều mục.
+ * ADAPTER QUẢN LÝ DANH SÁCH DỊCH VỤ (Hành lý, suất ăn...)
+ * Đã được nâng cấp để hỗ trợ Khứ hồi (Tab chiều đi/về) và tính năng Hủy dịch vụ.
  */
 public class AncillaryAdapter extends RecyclerView.Adapter<AncillaryAdapter.AncillaryViewHolder> {
 
-    // 1. Khai báo các biến dữ liệu cần thiết
+    // --- 1. KHAI BÁO CÁC BIẾN DỮ LIỆU ---
     private Context context;
-    private List<AncillaryItem> dsAncillary; // Danh sách các dịch vụ lấy từ API
-    private String[] danhSachTenHanhKhach;   // Mảng chứa tên hành khách để hiện lên Dialog chọn người
+    private List<AncillaryItem> dsAncillary;
+    private String[] danhSachTenHanhKhach;
 
-    // Khai báo "người đưa thư" (Listener) để báo tin về cho Activity
-    private OnAncillaryAddedListener listener;
+    // ⚡ MỚI THÊM: Biến lưu trữ xem người dùng đang ở Tab nào (1: Chiều đi, 2: Chiều về)
+    private int currentSegment = 1;
 
-    // Interface dùng để tạo kênh giao tiếp giữa Adapter và Activity
-    public interface OnAncillaryAddedListener {
-        // Hàm này sẽ mang theo Món dịch vụ được chọn + Vị trí của người được chọn bay về Activity
+    // ⚡ ĐÃ SỬA: Đổi tên Listener để phản ánh việc nó có thể lắng nghe cả Thêm và Hủy
+    private OnAncillaryChangeListener listener;
+
+    // Interface tạo kênh giao tiếp giữa Adapter và Activity
+    public interface OnAncillaryChangeListener {
+        // Hàm báo cáo khi khách bấm "Thêm"
         void onAdded(AncillaryItem item, int passengerIndex);
+        // Hàm báo cáo khi khách bấm "Hủy"
+        void onRemoved(AncillaryItem item, int passengerIndex);
     }
 
-    // 2. Hàm khởi tạo (Constructor)
-    public AncillaryAdapter(Context context, List<AncillaryItem> dsAncillary, String[] danhSachTenHanhKhach, OnAncillaryAddedListener listener) {
+    // --- 2. HÀM KHỞI TẠO (CONSTRUCTOR) ---
+    public AncillaryAdapter(Context context, List<AncillaryItem> dsAncillary, String[] danhSachTenHanhKhach, OnAncillaryChangeListener listener) {
         this.context = context;
         this.dsAncillary = dsAncillary;
         this.danhSachTenHanhKhach = danhSachTenHanhKhach;
         this.listener = listener;
+    }
+
+    // ⚡ MỚI THÊM: Hàm này được Activity gọi khi người dùng bấm chuyển Tab (Chiều đi / Chiều về)
+    public void setCurrentSegment(int segmentNo) {
+        this.currentSegment = segmentNo;
     }
 
     /**
@@ -53,25 +64,23 @@ public class AncillaryAdapter extends RecyclerView.Adapter<AncillaryAdapter.Anci
     @NonNull
     @Override
     public AncillaryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // "Bơm" file XML giao diện (item_ancillary.xml) thành một View thực sự
+        // "Bơm" file XML giao diện thành một View
         View view = LayoutInflater.from(context).inflate(R.layout.item_ancillary, parent, false);
-
-        // Giao View này cho class AncillaryViewHolder ở dưới cùng quản lý
         return new AncillaryViewHolder(view);
     }
 
     /**
-     * BƯỚC 2: ĐỔ DỮ LIỆU VÀ BẮT SỰ KIỆN (Chạy liên tục mỗi khi người dùng cuộn danh sách)
+     * BƯỚC 2: ĐỔ DỮ LIỆU VÀ BẮT SỰ KIỆN (Chạy liên tục mỗi khi cuộn danh sách)
      */
     @Override
     public void onBindViewHolder(@NonNull AncillaryViewHolder holder, int position) {
-        // Lấy ra thông tin dịch vụ ở vị trí hiện tại
+        // Lấy ra dịch vụ ở vị trí hiện tại
         AncillaryItem ancillary = dsAncillary.get(position);
 
         // --- ĐỔ DỮ LIỆU LÊN GIAO DIỆN ---
         holder.tvAncillaryName.setText(ancillary.getName());
 
-        // Xử lý logic hiển thị mô tả phụ tùy theo loại dịch vụ (Type) trả về từ API
+        // Phân loại mô tả hiển thị
         if ("BAGGAGE".equals(ancillary.getType())) {
             holder.tvAncillaryDescription.setText("Hành lý ký gửi");
         } else if ("MEAL".equals(ancillary.getType())) {
@@ -80,34 +89,62 @@ public class AncillaryAdapter extends RecyclerView.Adapter<AncillaryAdapter.Anci
             holder.tvAncillaryDescription.setText("Dịch vụ khác");
         }
 
-        // Format tiền tệ thành chuẩn Việt Nam (VD: 250.000 đ)
+        // Format tiền tệ chuẩn VN
         NumberFormat formatter = NumberFormat.getInstance(new Locale("vi", "VN"));
         holder.tvAncillaryPrice.setText(formatter.format(ancillary.getPrice()) + " đ");
 
-        // --- BẮT SỰ KIỆN KHI BẤM NÚT "THÊM" ---
+        // --- BẮT SỰ KIỆN KHI BẤM NÚT CHỌN DỊCH VỤ ---
         holder.btnAddAncillary.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Khi bấm Thêm, tạo một hộp thoại (Dialog) để hỏi xem muốn mua cho ai
+                // TẠO HỘP THOẠI 1: CHỌN HÀNH KHÁCH
                 AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                builder.setTitle("Thêm dịch vụ cho hành khách nào?");
 
-                // Truyền mảng tên hành khách vào Dialog
+                // Hiển thị tiêu đề động theo Tab đang chọn cho rõ ràng
+                String chieuBay = (currentSegment == 1) ? "Chiều đi" : "Chiều về";
+                builder.setTitle("Chọn hành khách (" + chieuBay + ")");
+
                 builder.setItems(danhSachTenHanhKhach, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        // Biến 'which' chính là số thứ tự của hành khách (0, 1, 2...) mà người dùng vừa chọn
+                        // which: là vị trí hành khách được chọn (0, 1, 2...)
 
-                        // Nếu "người đưa thư" (listener) đã được khởi tạo ở Activity
-                        if (listener != null) {
-                            // Thì hét lên cho Activity biết: "Ê, khách hàng vừa chọn gói [ancillary] cho người thứ [which] nè!"
-                            listener.onAdded(ancillary, which);
-                        }
+                        // ⚡ MỚI THÊM: TẠO HỘP THOẠI 2: HỎI THÊM HAY HỦY?
+                        // Chỗ này giúp người dùng có quyền rút lại quyết định nếu lỡ bấm nhầm
+                        AlertDialog.Builder actionBuilder = new AlertDialog.Builder(context);
+                        actionBuilder.setTitle("Thao tác");
+                        actionBuilder.setMessage("Bạn muốn Thêm hay Hủy [" + ancillary.getName() + "] cho " + danhSachTenHanhKhach[which] + "?");
+
+                        // Nút THÊM
+                        actionBuilder.setPositiveButton("Thêm", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                if (listener != null) {
+                                    // Báo về Activity là hãy THÊM dịch vụ này
+                                    listener.onAdded(ancillary, which);
+                                }
+                            }
+                        });
+
+                        // Nút HỦY
+                        actionBuilder.setNegativeButton("Hủy", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                if (listener != null) {
+                                    // Báo về Activity là hãy XÓA dịch vụ này khỏi danh sách
+                                    listener.onRemoved(ancillary, which);
+                                }
+                            }
+                        });
+
+                        // Nút BỎ QUA (Tắt popup)
+                        actionBuilder.setNeutralButton("Đóng", null);
+
+                        actionBuilder.show(); // Hiển thị hộp thoại 2
                     }
                 });
 
-                // Hiển thị cái Dialog lên màn hình
-                builder.show();
+                builder.show(); // Hiển thị hộp thoại 1
             }
         });
     }
@@ -117,23 +154,20 @@ public class AncillaryAdapter extends RecyclerView.Adapter<AncillaryAdapter.Anci
      */
     @Override
     public int getItemCount() {
-        // Nếu danh sách không rỗng thì trả về số lượng, nếu rỗng thì trả về 0 để tránh lỗi Crash
         return dsAncillary != null ? dsAncillary.size() : 0;
     }
 
     /**
-     * LỚP VIEWHOLDER: Nhiệm vụ duy nhất là tìm (findViewById) các thành phần giao diện 1 LẦN DUY NHẤT.
-     * Tránh việc hệ thống phải đi tìm lại giao diện liên tục gây giật lag app.
+     * LỚP VIEWHOLDER: Tìm và lưu trữ các thành phần giao diện
      */
     public static class AncillaryViewHolder extends RecyclerView.ViewHolder {
         TextView tvAncillaryName;
         TextView tvAncillaryDescription;
         TextView tvAncillaryPrice;
-        Button btnAddAncillary; // Dùng Button hoặc MaterialButton đều được
+        Button btnAddAncillary;
 
         public AncillaryViewHolder(@NonNull View itemView) {
             super(itemView);
-            // Ánh xạ các View từ file XML (item_ancillary.xml)
             tvAncillaryName = itemView.findViewById(R.id.tvAncillaryName);
             tvAncillaryDescription = itemView.findViewById(R.id.tvAncillaryDescription);
             tvAncillaryPrice = itemView.findViewById(R.id.tvAncillaryPrice);

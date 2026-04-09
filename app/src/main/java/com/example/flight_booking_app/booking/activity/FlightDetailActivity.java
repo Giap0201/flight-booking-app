@@ -30,12 +30,13 @@ import java.util.Locale;
 
 /**
  * Lớp FlightDetailActivity đại diện cho màn hình "Chi tiết chuyến bay".
- * Hiển thị thời gian bay, tuyến đường và danh sách các HẠNG VÉ để khách chọn.
+ * Nhiệm vụ chính: Hiện thông tin giờ bay và danh sách HẠNG VÉ để khách bấm "Chọn".
+ * Đặc biệt: Có xử lý logic rẽ nhánh thông minh cho vé Khứ Hồi và 1 Chiều.
  */
 public class FlightDetailActivity extends AppCompatActivity {
 
     // =========================================================================
-    // 1. KHAI BÁO GIAO DIỆN & VIEWMODEL
+    // 1. KHAI BÁO CÁC THÀNH PHẦN GIAO DIỆN (VIEWS) VÀ VIEWMODEL
     // =========================================================================
     private TextView tvRoute, tvFlightInfo, tvFlightDate;
     private TextView tvDepartureTimeTimeline, tvArrivalTimeTimeline;
@@ -46,7 +47,7 @@ public class FlightDetailActivity extends AppCompatActivity {
     private TicketClassAdapter adapter;
     private List<FlightClass> listFlightClasses;
 
-    private BookingViewModel viewModel;
+    private BookingViewModel viewModel; // Cầu nối lấy dữ liệu từ Backend (Spring Boot)
 
     // =========================================================================
     // 2. BIẾN HỨNG DỮ LIỆU TỪ MÀN HÌNH TÌM KIẾM (SEARCH RESULT)
@@ -54,17 +55,21 @@ public class FlightDetailActivity extends AppCompatActivity {
     private int adultCount = 1;
     private int childCount = 0;
     private int infantCount = 0;
-    private String currentFlightId;
-
-    // ⚡ CÁC CỜ VÀ BIẾN LƯU TẠM DÀNH CHO KHỨ HỒI ⚡
-    private boolean isRoundTrip = false;
-    private boolean isSelectingReturnFlight = false;
-    private String outboundFlightId;
-    private String outboundFlightClassId;
-    private double outboundTicketPrice;
+    private String currentFlightId; // Mã chuyến bay đang xem (VD: "FL123")
 
     // =========================================================================
-    // VÒNG ĐỜI ONCREATE
+    // 3. CÁC CỜ VÀ BIẾN "LƯU NHÁP" DÀNH RIÊNG CHO KHỨ HỒI
+    // =========================================================================
+    private boolean isRoundTrip = false;              // Có phải khách đang mua vé Khứ hồi không?
+    private boolean isSelectingReturnFlight = false;  // Có phải đang ở bước chọn vé Chiều Về không?
+
+    // Nếu đang chọn Chiều Về, mình phải cầm hộ 3 thông tin của Chiều Đi mà khách vừa chọn lúc nãy
+    private String outboundFlightId;       // Mã chuyến đi
+    private String outboundFlightClassId;  // Hạng vé chuyến đi (VD: Eco, Thương gia)
+    private double outboundTicketPrice;    // Giá vé chuyến đi
+
+    // =========================================================================
+    // VÒNG ĐỜI ONCREATE (Hàm chạy đầu tiên khi mở màn hình này)
     // =========================================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,30 +77,32 @@ public class FlightDetailActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_flight_detail);
 
+        // Chỉnh padding để giao diện không bị tai thỏ (notch) đè lên
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        // 1. Ánh xạ View
+        // 1. Ánh xạ View (Tìm các nút, chữ trên giao diện XML gắn vào biến Java)
         initViews();
 
-        // 2. Hứng dữ liệu Intent gửi sang
+        // 2. Mở hộp Intent lấy đồ từ màn hình Search gửi sang
         initIntentData();
 
-        // 3. Khởi tạo danh sách Hạng Vé (Nơi chứa logic rẽ nhánh)
+        // 3. Cài đặt thợ xây (Adapter) để vẽ danh sách Hạng Vé (Và chứa logic bấm chọn vé)
         setupRecyclerView();
 
-        // 4. Gọi API lấy chi tiết chuyến bay
+        // 4. Nhờ ViewModel gọi API tải thông tin chi tiết chuyến bay này về
         viewModel = new ViewModelProvider(this).get(BookingViewModel.class);
         observeData();
 
+        // 5. Nút mũi tên quay lại
         btnBack.setOnClickListener(v -> finish());
     }
 
     // =========================================================================
-    // CÁC HÀM HỖ TRỢ XỬ LÝ LOGIC
+    // CÁC HÀM HỖ TRỢ XỬ LÝ LOGIC (Chia nhỏ ra cho code dễ đọc)
     // =========================================================================
 
     private void initViews() {
@@ -114,10 +121,12 @@ public class FlightDetailActivity extends AppCompatActivity {
         Intent intent = getIntent();
 
         if (intent != null) {
+            // Lấy số lượng hành khách
             adultCount = intent.getIntExtra("ADULT_COUNT", 1);
             childCount = intent.getIntExtra("CHILD_COUNT", 0);
             infantCount = intent.getIntExtra("INFANT_COUNT", 0);
 
+            // Lấy ID chuyến bay
             if (intent.hasExtra("FLIGHT_ID")) {
                 currentFlightId = intent.getStringExtra("FLIGHT_ID");
             }
@@ -126,6 +135,7 @@ public class FlightDetailActivity extends AppCompatActivity {
             isRoundTrip = intent.getBooleanExtra("IS_ROUND_TRIP", false);
             isSelectingReturnFlight = intent.getBooleanExtra("IS_SELECTING_RETURN_FLIGHT", false);
 
+            // Nếu đang chọn lượt về, lục ví lấy đồ của lượt đi ra cất vào biến
             if (isSelectingReturnFlight) {
                 outboundFlightId = intent.getStringExtra("OUTBOUND_FLIGHT_ID");
                 outboundFlightClassId = intent.getStringExtra("OUTBOUND_FLIGHT_CLASS_ID");
@@ -135,33 +145,34 @@ public class FlightDetailActivity extends AppCompatActivity {
     }
 
     /**
-     * ⚡ ĐÃ SỬA TOÀN BỘ: Nơi cài đặt Adapter và xử lý logic điều hướng khi chọn vé ⚡
+     * TẠO DANH SÁCH HẠNG VÉ VÀ XỬ LÝ SỰ KIỆN KHI KHÁCH BẤM "CHỌN VÉ NÀY"
      */
     private void setupRecyclerView() {
         listFlightClasses = new ArrayList<>();
 
-        // Sử dụng Interface (Bộ đàm) để lắng nghe sự kiện từ TicketClassAdapter
+        // Sử dụng Interface (Bộ đàm) để lắng nghe xem Adapter báo khách chọn vé nào
         adapter = new TicketClassAdapter(this, listFlightClasses, ticket -> {
 
             // ==========================================================
             // TRƯỜNG HỢP 1: LÀ KHỨ HỒI VÀ ĐANG CHỌN CHIỀU ĐI
+            // Khách mới chọn được nửa đường, bắt quay lại trang Search chọn tiếp Chiều Về
             // ==========================================================
             if (isRoundTrip && !isSelectingReturnFlight) {
 
                 Toast.makeText(this, "Đã chọn xong Chiều đi. Vui lòng chọn chuyến Về!", Toast.LENGTH_SHORT).show();
 
-                // Quay lại trang SearchResultActivity để chọn chuyến về
-                // (Đảm bảo đường dẫn tới SearchResultActivity của bạn là đúng)
+                // Quay lại trang SearchResultActivity
                 Intent intent = new Intent(FlightDetailActivity.this, SearchResultActivity.class);
 
-                // Báo hiệu: "Lần tới mở lên là chọn chuyến về nhé"
+                // Báo hiệu cờ: "Ông Search ơi, mở lên tìm chuyến về nhé"
                 intent.putExtra("IS_ROUND_TRIP", true);
                 intent.putExtra("IS_SELECTING_RETURN_FLIGHT", true);
 
+                // ⚡ ÉP KIỂU (double) CỰC KỲ QUAN TRỌNG ĐỂ KHÔNG BỊ LỖI 0 Đ ⚡
                 // Đóng gói thông tin chuyến đi mang theo
                 intent.putExtra("OUTBOUND_FLIGHT_ID", currentFlightId);
                 intent.putExtra("OUTBOUND_FLIGHT_CLASS_ID", ticket.getId());
-                intent.putExtra("OUTBOUND_TICKET_PRICE", ticket.getBasePrice());
+                intent.putExtra("OUTBOUND_TICKET_PRICE", (double) ticket.getBasePrice());
 
                 // Gửi kèm số lượng hành khách
                 intent.putExtra("ADULT_COUNT", adultCount);
@@ -172,10 +183,10 @@ public class FlightDetailActivity extends AppCompatActivity {
 
             }
             // ==========================================================
-            // TRƯỜNG HỢP 2: VÉ 1 CHIỀU --- HOẶC --- ĐÃ XONG CẢ 2 CHIỀU
+            // TRƯỜNG HỢP 2: VÉ 1 CHIỀU --- HOẶC --- ĐÃ CHỌN XONG CẢ 2 CHIỀU CỦA KHỨ HỒI
+            // Đã đủ điều kiện, phóng xe sang trang Điền Thông Tin (BookingForm)
             // ==========================================================
             else {
-                // Sang thẳng màn hình điền thông tin (BookingFormActivity)
                 Intent intent = new Intent(FlightDetailActivity.this, BookingFormActivity.class);
 
                 intent.putExtra("adultCount", adultCount);
@@ -183,37 +194,42 @@ public class FlightDetailActivity extends AppCompatActivity {
                 intent.putExtra("infantCount", infantCount);
                 intent.putExtra("isRoundTrip", isRoundTrip);
 
-                // Nếu đang là Khứ hồi (Chiều về) -> Gửi cả 2 vé sang
+                // NẾU ĐANG LÀ KHỨ HỒI (Lượt về) -> Phải gửi cả 2 vé sang cho Form
                 if (isRoundTrip && isSelectingReturnFlight) {
-                    // Chuyến hiện tại là chiều về
+                    // 1. Chuyến hiện tại khách vừa bấm chính là Chiều Về
                     intent.putExtra("returnFlightId", currentFlightId);
                     intent.putExtra("returnFlightClassId", ticket.getId());
-                    intent.putExtra("returnTicketPrice", ticket.getBasePrice());
+                    intent.putExtra("returnTicketPrice", (double) ticket.getBasePrice()); // ⚡ Ép kiểu (double)
 
-                    // Chuyến lúc nãy mang theo là chiều đi
+                    // 2. Chuyến lúc nãy mình cầm hộ ở trong ví chính là Chiều Đi
                     intent.putExtra("flightId", outboundFlightId);
                     intent.putExtra("flightClassId", outboundFlightClassId);
-                    intent.putExtra("ticketPrice", outboundTicketPrice);
+                    intent.putExtra("ticketPrice", (double) outboundTicketPrice); // ⚡ Ép kiểu (double)
                 }
-                // Nếu là vé 1 chiều bình thường
+                // NẾU LÀ VÉ 1 CHIỀU BÌNH THƯỜNG -> Chỉ có 1 vé gửi đi thôi
                 else {
                     intent.putExtra("flightId", currentFlightId);
                     intent.putExtra("flightClassId", ticket.getId());
-                    intent.putExtra("ticketPrice", ticket.getBasePrice());
+                    intent.putExtra("ticketPrice", (double) ticket.getBasePrice()); // ⚡ Ép kiểu (double)
                 }
 
                 startActivity(intent);
             }
         });
 
+        // Báo cho danh sách biết là hãy sắp xếp theo chiều dọc
         rvTickets.setLayoutManager(new LinearLayoutManager(this));
         rvTickets.setAdapter(adapter);
     }
 
+    /**
+     * LẮNG NGHE DỮ LIỆU TỪ SERVER TRẢ VỀ
+     */
     private void observeData() {
         if (currentFlightId != null) {
             viewModel.getFlightDetailLiveData(currentFlightId).observe(this, flightDetail -> {
                 if (flightDetail != null) {
+                    // Nếu có data thì đem vẽ lên giao diện
                     updateUI(flightDetail);
                 } else {
                     Toast.makeText(this, "Không tải được dữ liệu chi tiết!", Toast.LENGTH_SHORT).show();
@@ -224,12 +240,17 @@ public class FlightDetailActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * VẼ DỮ LIỆU LÊN MÀN HÌNH SAU KHI TẢI XONG
+     */
     private void updateUI(FlightDetail flightDetail) {
+        // Gắn chữ cơ bản
         tvRoute.setText(flightDetail.getOrigin().getCityCode() + " — " + flightDetail.getDestination().getCityCode());
         tvOriginAirport.setText(flightDetail.getOrigin().getCode() + " " + flightDetail.getOrigin().getName());
         tvDestinationAirport.setText(flightDetail.getDestination().getCode() + " " + flightDetail.getDestination().getName());
         tvFlightInfo.setText(flightDetail.getAirline().getName());
 
+        // Xử lý Ngày Giờ (Rất dễ văng App nên phải bọc bằng try-catch)
         try {
             SimpleDateFormat inFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
             SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
@@ -239,9 +260,11 @@ public class FlightDetailActivity extends AppCompatActivity {
             Date arrDate = inFormat.parse(flightDetail.getArrivalTime());
 
             if (depDate != null && arrDate != null) {
+                // In giờ ra giao diện
                 tvDepartureTimeTimeline.setText(timeFormat.format(depDate));
                 tvArrivalTimeTimeline.setText(timeFormat.format(arrDate));
 
+                // Tính toán thời gian bay (VD: 2h 30m)
                 long diffMs = arrDate.getTime() - depDate.getTime();
                 long diffHours = diffMs / (3600000);
                 long diffMinutes = (diffMs / 60000) % 60;
@@ -253,6 +276,7 @@ public class FlightDetailActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+        // Báo cho Adapter biết là có dữ liệu Hạng vé mới rồi, vẽ lên đi
         listFlightClasses.clear();
         listFlightClasses.addAll(flightDetail.getFlightClasses());
         adapter.notifyDataSetChanged();

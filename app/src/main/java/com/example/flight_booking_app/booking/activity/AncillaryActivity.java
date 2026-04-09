@@ -23,34 +23,41 @@ import com.example.flight_booking_app.booking.model.BookingRequest;
 import com.example.flight_booking_app.booking.viewmodel.BookingViewModel;
 
 import java.text.NumberFormat;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
 public class AncillaryActivity extends AppCompatActivity {
 
+    // --- KHAI BÁO CÁC BIẾN GIAO DIỆN (UI) ---
     private RecyclerView rvAncillaries;
     private TextView tvTotalAncillaryPrice;
     private Button btnConfirmAncillaries;
-    private BookingViewModel viewModel;
 
-    // ⚡ MỚI THÊM: Các View để chuyển Tab (Chiều đi / Chiều về)
+    // Các View quản lý Tab Khứ hồi (Chiều đi / Chiều về)
     private LinearLayout layoutTabsKhuHoi;
     private Button btnTabChieuDi;
     private Button btnTabChieuVe;
 
+    // --- KHAI BÁO CÁC BIẾN DỮ LIỆU ---
+    private BookingViewModel viewModel;
     private List<AncillaryItem> dsAncillary;
     private AncillaryAdapter adapter;
 
     private String[] dsTenHanhKhach;
     private BookingRequest currentBookingRequest;
+
     private double basePrice = 0;
     private double ticketPrice = 0;
     private double tongTienDichVu = 0;
 
-    // ⚡ MỚI THÊM: Các biến kiểm soát luồng Khứ Hồi
-    private boolean isRoundTrip = false; // Nhận từ màn hình trước
-    private int currentSegmentNo = 1;    // 1: Chiều đi, 2: Chiều về
+    // --- KHAI BÁO CÁC BIẾN ĐIỀU KHIỂN LUỒNG (LOGIC) ---
+    private boolean isRoundTrip = false;
 
+    // ⚡ ĐÃ SỬA: Đánh dấu chặng bay: 0 = Chiều đi, 1 = Chiều về (Khớp chuẩn Backend)
+    private int currentSegmentNo = 0;
+
+    // Lắng nghe kết quả trả về từ màn hình Đăng Nhập
     private final androidx.activity.result.ActivityResultLauncher<Intent> loginLauncher =
             registerForActivityResult(
                     new androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
@@ -67,26 +74,26 @@ public class AncillaryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ancillary);
 
+        anhXaView();
+
+        viewModel = new ViewModelProvider(this).get(BookingViewModel.class);
+        rvAncillaries.setLayoutManager(new LinearLayoutManager(this));
+
+        nhanDuLieuTuManHinhTruoc();
+        setupTabsKhuHoi();
+        layDuLieuTuApi();
+
+        btnConfirmAncillaries.setOnClickListener(v -> xuLyNutXacNhan());
+    }
+
+    private void anhXaView() {
         rvAncillaries = findViewById(R.id.rvAncillaries);
         tvTotalAncillaryPrice = findViewById(R.id.tvTotalAncillaryPrice);
         btnConfirmAncillaries = findViewById(R.id.btnConfirmAncillaries);
 
-        // ⚡ MỚI THÊM: Ánh xạ 2 nút Tab (Bạn cần thêm vào XML ở Bước 2 nhé)
         layoutTabsKhuHoi = findViewById(R.id.layoutTabsKhuHoi);
         btnTabChieuDi = findViewById(R.id.btnTabChieuDi);
         btnTabChieuVe = findViewById(R.id.btnTabChieuVe);
-
-        rvAncillaries.setLayoutManager(new LinearLayoutManager(this));
-        viewModel = new ViewModelProvider(this).get(BookingViewModel.class);
-
-        nhanDuLieuTuManHinhTruoc();
-
-        // ⚡ MỚI THÊM: Thiết lập giao diện Tab dựa trên loại vé
-        setupTabsKhuHoi();
-
-        layDuLieuTuApi();
-
-        btnConfirmAncillaries.setOnClickListener(v -> xuLyNutXacNhan());
     }
 
     private void nhanDuLieuTuManHinhTruoc() {
@@ -96,39 +103,43 @@ public class AncillaryActivity extends AppCompatActivity {
             currentBookingRequest = (BookingRequest) incomingIntent.getSerializableExtra("bookingRequest");
             basePrice = incomingIntent.getDoubleExtra("basePrice", 0.0);
             ticketPrice = incomingIntent.getDoubleExtra("ticketPrice", 0.0);
-
-            // ⚡ MỚI THÊM: Nhận cờ kiểm tra Khứ Hồi
             isRoundTrip = incomingIntent.getBooleanExtra("isRoundTrip", false);
 
             capNhatTongTien();
         }
     }
 
-    // ⚡ MỚI THÊM: Logic chuyển đổi giữa 2 chiều bay
     private void setupTabsKhuHoi() {
-        if (layoutTabsKhuHoi == null) return; // Đề phòng layout XML chưa cập nhật
+        if (layoutTabsKhuHoi == null) return;
 
         if (isRoundTrip) {
-            // NẾU LÀ KHỨ HỒI: Hiện 2 nút bấm lên
             layoutTabsKhuHoi.setVisibility(View.VISIBLE);
 
-            // Bấm nút Chiều Đi
+            // ⚡ ĐÃ SỬA: Cập nhật currentSegmentNo thành 0 cho chiều đi
             btnTabChieuDi.setOnClickListener(v -> {
-                currentSegmentNo = 1;
-                Toast.makeText(this, "Đang chọn Hành lý Chiều Đi", Toast.LENGTH_SHORT).show();
-                // Ở đây bạn có thể đổi màu nút để khách biết đang ở tab nào
+                currentSegmentNo = 0;
+                capNhatGiaoDienAdapterChuyenTab();
+                Toast.makeText(this, "Đang chọn dịch vụ Chiều Đi", Toast.LENGTH_SHORT).show();
             });
 
-            // Bấm nút Chiều Về
+            // ⚡ ĐÃ SỬA: Cập nhật currentSegmentNo thành 1 cho chiều về
             btnTabChieuVe.setOnClickListener(v -> {
-                currentSegmentNo = 2;
-                Toast.makeText(this, "Đang chọn Hành lý Chiều Về", Toast.LENGTH_SHORT).show();
+                currentSegmentNo = 1;
+                capNhatGiaoDienAdapterChuyenTab();
+                Toast.makeText(this, "Đang chọn dịch vụ Chiều Về", Toast.LENGTH_SHORT).show();
             });
 
         } else {
-            // NẾU LÀ 1 CHIỀU: Giấu 2 nút bấm đi, mặc định luông là chiều đi
+            // NẾU LÀ VÉ 1 CHIỀU: Mặc định segmentNo = 0
             layoutTabsKhuHoi.setVisibility(View.GONE);
-            currentSegmentNo = 1;
+            currentSegmentNo = 0;
+        }
+    }
+
+    private void capNhatGiaoDienAdapterChuyenTab() {
+        if (adapter != null) {
+            adapter.setCurrentSegment(currentSegmentNo);
+            adapter.notifyDataSetChanged();
         }
     }
 
@@ -144,26 +155,60 @@ public class AncillaryActivity extends AppCompatActivity {
     }
 
     private void caiDatAdapter() {
-        adapter = new AncillaryAdapter(this, dsAncillary, dsTenHanhKhach, new AncillaryAdapter.OnAncillaryAddedListener() {
+        adapter = new AncillaryAdapter(this, dsAncillary, dsTenHanhKhach, new AncillaryAdapter.OnAncillaryChangeListener() {
+
             @Override
             public void onAdded(AncillaryItem item, int passengerIndex) {
-
                 tongTienDichVu += item.getPrice();
+
+                // ⚡ ĐÃ SỬA: Truyền item.getId() (kiểu String) vào constructor
+                AncillaryRequest newAncillary = new AncillaryRequest(item.getId(), passengerIndex, currentSegmentNo);
+                currentBookingRequest.getBookingAncillaries().add(newAncillary);
+
                 capNhatTongTien();
 
-                // ⚡ ĐÃ SỬA: Thay số 1 cứng nhắc bằng biến currentSegmentNo (Linh hoạt theo Tab đang chọn) ⚡
-                AncillaryRequest ancillaryRequest = new AncillaryRequest(item.getId(), passengerIndex, currentSegmentNo);
-
-                currentBookingRequest.getBookingAncillaries().add(ancillaryRequest);
-
-                String chieuBay = (currentSegmentNo == 1) ? "Chiều đi" : "Chiều về";
+                // ⚡ ĐÃ SỬA: So sánh currentSegmentNo == 0
+                String chieuBay = (currentSegmentNo == 0) ? "Chiều đi" : "Chiều về";
                 Toast.makeText(AncillaryActivity.this,
                         "Đã thêm " + item.getName() + " cho " + dsTenHanhKhach[passengerIndex] + " (" + chieuBay + ")",
                         Toast.LENGTH_SHORT).show();
             }
+
+            @Override
+            public void onRemoved(AncillaryItem item, int passengerIndex) {
+                // ⚡ ĐÃ SỬA: Truyền item.getId() (kiểu String) vào hàm xóa
+                xoaDichVuKhoiDanhSach(item.getId(), passengerIndex, currentSegmentNo, item.getPrice());
+
+                // ⚡ ĐÃ SỬA: So sánh currentSegmentNo == 0
+                String chieuBay = (currentSegmentNo == 0) ? "Chiều đi" : "Chiều về";
+                Toast.makeText(AncillaryActivity.this,
+                        "Đã hủy " + item.getName() + " của " + dsTenHanhKhach[passengerIndex] + " (" + chieuBay + ")",
+                        Toast.LENGTH_SHORT).show();
+            }
         });
 
+        adapter.setCurrentSegment(currentSegmentNo);
         rvAncillaries.setAdapter(adapter);
+    }
+
+    // ⚡ ĐÃ SỬA: Thay đổi kiểu dữ liệu tham số đầu tiên thành String catalogId
+    private void xoaDichVuKhoiDanhSach(String catalogId, int passengerIndex, int segmentNo, double priceToSubtract) {
+        Iterator<AncillaryRequest> iterator = currentBookingRequest.getBookingAncillaries().iterator();
+        while (iterator.hasNext()) {
+            AncillaryRequest req = iterator.next();
+
+            // ⚡ ĐÃ SỬA: Dùng hàm getCatalogId() và so sánh chuỗi bằng .equals()
+            if (req.getCatalogId() != null &&
+                    req.getCatalogId().equals(catalogId) &&
+                    req.getPassengerIndex() == passengerIndex &&
+                    req.getSegmentNo() == segmentNo) {
+
+                iterator.remove();
+                tongTienDichVu -= priceToSubtract;
+                break;
+            }
+        }
+        capNhatTongTien();
     }
 
     private void capNhatTongTien() {
@@ -174,6 +219,7 @@ public class AncillaryActivity extends AppCompatActivity {
 
     private void xuLyNutXacNhan() {
         SessionManager sessionManager = new SessionManager(AncillaryActivity.this);
+
         if (sessionManager.fetchAuthToken() != null && !sessionManager.fetchAuthToken().isEmpty()) {
             chuyenSangTrangThanhToan();
         } else {

@@ -33,9 +33,13 @@ public class PaymentSummaryActivity extends AppCompatActivity {
     private BookingRequest currentBookingRequest;
 
     // Dữ liệu truyền từ các màn hình trước
-    private double ticketPrice = 0.0;     // Giá gốc của 1 vé
-    private double tongTienDichVu = 0.0;  // Tổng tiền hành lý, ăn uống
-    private double taxRateFromDB = 0.0;   // % Thuế lấy từ Database (Ví dụ: 0.1 là 10%)
+    private double ticketPrice = 0.0;       // Giá gốc của 1 vé chiều đi
+    private double tongTienDichVu = 0.0;    // Tổng tiền hành lý, ăn uống
+    private double taxRateFromDB = 0.0;     // % Thuế lấy từ Database (Ví dụ: 0.1 là 10%)
+
+    // ⚡ [MỚI THÊM]: Biến hỗ trợ tính giá vé Khứ hồi
+    private boolean isRoundTrip = false;
+    private double returnTicketPrice = 0.0; // Giá vé chiều về
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,9 +57,11 @@ public class PaymentSummaryActivity extends AppCompatActivity {
             currentBookingRequest = (BookingRequest) intent.getSerializableExtra("bookingRequest");
             ticketPrice = intent.getDoubleExtra("ticketPrice", 0.0);
             tongTienDichVu = intent.getDoubleExtra("tongTienDichVu", 0.0);
-
-            // Lấy % thuế từ màn hình trước truyền sang (Nếu không có thì mặc định là 0.1 tức 10%)
             taxRateFromDB = intent.getDoubleExtra("taxPercentage", 0.1);
+
+            // ⚡ [MỚI THÊM]: Nhận thêm dữ liệu khứ hồi (Hãy đảm bảo Activity trước có putExtra 2 biến này nhé)
+            isRoundTrip = intent.getBooleanExtra("isRoundTrip", false);
+            returnTicketPrice = intent.getDoubleExtra("returnTicketPrice", 0.0);
         }
 
         // =========================================================================
@@ -83,25 +89,26 @@ public class PaymentSummaryActivity extends AppCompatActivity {
                         btnPayNow.setText("Đang kết nối cổng thanh toán...");
 
                         // HÀNH ĐỘNG 2: Dùng ID đơn hàng đó, gọi API tiếp để lấy Link VNPay/MoMo
-                        // Lưu ý: Truyền chữ "android" để Backend biết đường đá về App
                         viewModel.createPaymentUrl(bookingId, "android").observe(PaymentSummaryActivity.this, paymentUrl -> {
-
-                            // Mở khóa nút lại
-                            btnPayNow.setEnabled(true);
-                            btnPayNow.setText("Thanh toán & Đặt vé");
 
                             // Nếu Backend trả về link Web VNPay thành công
                             if (paymentUrl != null && !paymentUrl.isEmpty()) {
+
+                                // Mở khóa nút lại (Phòng trường hợp khách quay lại màn hình này)
+                                btnPayNow.setEnabled(true);
+                                btnPayNow.setText("Thanh toán & Đặt vé");
 
                                 // HÀNH ĐỘNG 3: Bật trình duyệt web lên để khách quẹt thẻ
                                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(paymentUrl));
                                 startActivity(browserIntent);
 
-                                // Đóng màn hình Hóa đơn này lại.
-                                // Vì lát nữa thanh toán xong, Deep Link sẽ bật thẳng màn hình "PaymentResultActivity"
+                                // Đóng màn hình Hóa đơn này lại
                                 finish();
 
                             } else {
+                                // ⚡ [ĐÃ SỬA]: LỖI KẸT NÚT - Mở khóa nút lại nếu không lấy được link
+                                btnPayNow.setEnabled(true);
+                                btnPayNow.setText("Thanh toán & Đặt vé");
                                 Toast.makeText(PaymentSummaryActivity.this, "Không lấy được link thanh toán!", Toast.LENGTH_SHORT).show();
                             }
                         });
@@ -117,7 +124,7 @@ public class PaymentSummaryActivity extends AppCompatActivity {
         });
     }
 
-    // Hàm này tính toán tiền y hệt logic trong file Spring Boot của bạn
+    // Hàm này tính toán tiền
     private void calculateAndDisplayPrice() {
         int adultCount = 0;
         int childCount = 0;
@@ -136,10 +143,14 @@ public class PaymentSummaryActivity extends AppCompatActivity {
             }
         }
 
+        // ⚡ [MỚI THÊM]: Tính tổng giá vé trên 1 người (Đã bao gồm cả đi lẫn về nếu là vé khứ hồi)
+        double baseTicketPricePerPerson = isRoundTrip ? (ticketPrice + returnTicketPrice) : ticketPrice;
+
         // 2. Tính giá tiền cho từng nhóm tuổi (Người lớn 100%, Trẻ em 75%, Em bé 10%)
-        double adultTotalBase = adultCount * ticketPrice;
-        double childTotalBase = childCount * (ticketPrice * 0.75);
-        double infantTotalBase = infantCount * (ticketPrice * 0.10);
+        // ⚡ [ĐÃ SỬA]: Thay thế ticketPrice bằng baseTicketPricePerPerson
+        double adultTotalBase = adultCount * baseTicketPricePerPerson;
+        double childTotalBase = childCount * (baseTicketPricePerPerson * 0.75);
+        double infantTotalBase = infantCount * (baseTicketPricePerPerson * 0.10);
 
         // 3. Cộng tổng tiền vé gốc
         double totalBaseFare = adultTotalBase + childTotalBase + infantTotalBase;

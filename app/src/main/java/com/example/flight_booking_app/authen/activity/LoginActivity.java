@@ -8,7 +8,6 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.view.View;
-import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,7 +37,7 @@ public class LoginActivity extends AppCompatActivity {
         // 1. Khởi tạo ViewModel
         loginViewModel = new ViewModelProvider(this).get(LoginViewModel.class);
 
-        // 2. Lắng nghe trạng thái Loading để đổi text và khóa nút bấm (tránh user spam click)
+        // 2. Lắng nghe trạng thái Loading để đổi text và khóa nút bấm
         loginViewModel.getIsLoading().observe(this, new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean isLoading) {
@@ -61,12 +60,29 @@ public class LoginActivity extends AppCompatActivity {
                 if ("SUCCESS".equals(result)) {
                     Toast.makeText(LoginActivity.this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
 
-                    // Chuyển sang màn hình chính
-                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                    startActivity(intent);
-                    finish();
-                } else {
+                    // ==============================================================================
+                    // ⚡ ĐÃ KHÔI PHỤC: LOGIC LAZY LOGIN (ĐIỀU HƯỚNG THÔNG MINH) ⚡
+                    // ==============================================================================
+                    // Lấy cờ từ Intent xem có phải bị đẩy sang từ màn hình Đặt vé không
+                    boolean isFromBooking = getIntent().getBooleanExtra("IS_FROM_BOOKING", false);
 
+                    if (isFromBooking) {
+                        // NẾU ĐANG MUA VÉ DỞ DANG:
+                        // Trả kết quả OK về cho bưu tá (loginLauncher) ở màn hình trước
+                        setResult(RESULT_OK);
+
+                        // Đóng màn hình Login này lại, nó sẽ tự lùi về đúng chỗ cũ
+                        finish();
+                    } else {
+                        // NẾU ĐĂNG NHẬP BÌNH THƯỜNG TỪ ĐẦU:
+                        // Phóng xe thẳng về trang Chủ (MainActivity)
+                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                        startActivity(intent);
+                        finish();
+                    }
+                    // ==============================================================================
+
+                } else {
                     Toast.makeText(LoginActivity.this, result, Toast.LENGTH_LONG).show();
                 }
             }

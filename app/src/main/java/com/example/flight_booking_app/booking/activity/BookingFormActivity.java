@@ -205,9 +205,16 @@ public class BookingFormActivity extends AppCompatActivity {
         Intent nextIntent = new Intent(BookingFormActivity.this, AncillaryActivity.class);
         nextIntent.putExtra("passengerNames", dsTenHanhKhach);
         nextIntent.putExtra("bookingRequest", request);
-        nextIntent.putExtra("basePrice", totalPrice);
 
-        // Truyền thêm cờ này sang trang Dịch vụ để trang dịch vụ biết đường hỏi khách mua hành lý chiều nào
+        // 1. Gửi TỔNG TIỀN (Chỉ để màn Hành lý hiển thị cho đẹp)
+        nextIntent.putExtra("basePrice", (double) totalPrice);
+
+        // 2. ⚡ SỬA CHỖ NÀY: Gửi GIÁ VÉ CỦA 1 NGƯỜI (Để màn Hóa đơn tính toán)
+        // Nếu là khứ hồi thì giá 1 người = Giá vé đi + Giá vé về
+        double unitTicketPrice = isRoundTrip ? (ticketPrice + returnTicketPrice) : ticketPrice;
+        nextIntent.putExtra("ticketPrice", (double) unitTicketPrice); // Ép kiểu Double cẩn thận
+
+        // 3. Truyền thêm cờ này sang trang Dịch vụ
         nextIntent.putExtra("isRoundTrip", isRoundTrip);
 
         startActivity(nextIntent);
