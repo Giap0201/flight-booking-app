@@ -83,7 +83,7 @@ public class MyTicketActivity extends AppCompatActivity {
 
     // 1. Logic lấy vé chờ thanh toán (Tự lọc vì BE chưa hỗ trợ filter PENDING)
     private void fetchPendingTickets() {
-        TicketApiService apiService = ApiClient.getClient().create(TicketApiService.class);
+        TicketApiService apiService = ApiClient.getClient(this).create(TicketApiService.class);
 
         // Lấy ALL với size lớn một chút (ví dụ 20) để đảm bảo tìm thấy các vé PENDING mới nhất
         apiService.getMyBookingsWithFilter(AppConfig.TOKEN, "ALL", 1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
@@ -117,7 +117,7 @@ public class MyTicketActivity extends AppCompatActivity {
 
     // 2. Logic lấy vé sắp bay (Dùng filter chuẩn UPCOMING từ BE)
     private void fetchUpcomingTickets() {
-        TicketApiService apiService = ApiClient.getClient().create(TicketApiService.class);
+        TicketApiService apiService = ApiClient.getClient(this).create(TicketApiService.class);
 
         // BE đã hỗ trợ lọc vé sắp bay, ta chỉ cần lấy trang 1, size 2
         apiService.getMyBookingsWithFilter(AppConfig.TOKEN, "UPCOMING", 1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {

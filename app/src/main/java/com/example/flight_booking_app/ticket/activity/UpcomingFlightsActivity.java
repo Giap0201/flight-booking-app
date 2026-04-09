@@ -75,7 +75,7 @@ public class UpcomingFlightsActivity extends AppCompatActivity {
 
     private void fetchUpcomingBookings() {
         progressBar.setVisibility(View.VISIBLE);
-        TicketApiService apiService = ApiClient.getClient().create(TicketApiService.class);
+        TicketApiService apiService = ApiClient.getClient(this).create(TicketApiService.class);
 
         apiService.getMyBookingsWithFilter(AppConfig.TOKEN, "UPCOMING", 1).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {
             @Override

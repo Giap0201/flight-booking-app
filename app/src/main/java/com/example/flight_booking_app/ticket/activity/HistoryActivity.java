@@ -91,7 +91,7 @@ public class HistoryActivity extends AppCompatActivity {
         isLoading = true;
         if (page == 1) progressBar.setVisibility(View.VISIBLE);
 
-        TicketApiService apiService = ApiClient.getClient().create(TicketApiService.class);
+        TicketApiService apiService = ApiClient.getClient(this).create(TicketApiService.class);
 
         // DÙNG FILTER="ALL", TỰ LỌC VÀ SORT BẰNG JAVA
         apiService.getMyBookingsWithFilter(AppConfig.TOKEN, "ALL", page).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {

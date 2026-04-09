@@ -1,5 +1,6 @@
-package com.example.flight_booking_app.ticket.repository; // Đổi package cho khớp
+package com.example.flight_booking_app.ticket.repository;
 
+import android.content.Context;
 import android.util.Log;
 
 import androidx.lifecycle.MutableLiveData;
@@ -19,12 +20,11 @@ public class FlightRepository {
     private static final String TAG = "FlightRepository";
     private TicketApiService apiService;
 
-    public FlightRepository() {
-// CÁCH GỌI MỚI: Mượn ApiClient dùng chung để tạo ra Service riêng của Booking
-        apiService = ApiClient.getClient().create(TicketApiService.class);
+    public FlightRepository(Context context) {
+        // Fix: Pass the 'context' parameter, NOT 'this'
+        apiService = ApiClient.getClient(context).create(TicketApiService.class);
     }
 
-    // Hàm này trả về một LiveData chứa FlightDetail
     public MutableLiveData<FlightDetail> getFlightDetail(String flightId) {
         MutableLiveData<FlightDetail> flightData = new MutableLiveData<>();
 
@@ -32,8 +32,7 @@ public class FlightRepository {
             @Override
             public void onResponse(Call<ApiResponse<FlightDetail>> call, Response<ApiResponse<FlightDetail>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    if (response.body().getCode() == 1000) { // Code = 1000 là thành công
-                        // Đẩy dữ liệu lấy được vào LiveData
+                    if (response.body().getCode() == 1000) {
                         flightData.setValue(response.body().getResult());
                     } else {
                         flightData.setValue(null);
@@ -52,10 +51,6 @@ public class FlightRepository {
         return flightData;
     }
 
-    // =====================================================================================
-    // [MỚI] Lấy chi tiết booking theo ID — dùng cho BookingDetailActivity
-    // Pattern hoàn toàn giống getFlightDetail(): enqueue → check code 1000 → đẩy vào LiveData
-    // =====================================================================================
     public MutableLiveData<BookingDetailResponse> getBookingDetail(String bookingId) {
         MutableLiveData<BookingDetailResponse> bookingData = new MutableLiveData<>();
 
@@ -66,22 +61,19 @@ public class FlightRepository {
                                    Response<ApiResponse<BookingDetailResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     if (response.body().getCode() == 1000) {
-                        // Thành công — đẩy BookingDetailResponse vào LiveData
                         bookingData.setValue(response.body().getResult());
                     } else {
-                        Log.w(TAG, "API trả code lỗi: " + response.body().getCode()
-                                + " — " + response.body().getMessage());
+                        Log.w(TAG, "API Error Code: " + response.body().getCode());
                         bookingData.setValue(null);
                     }
                 } else {
-                    Log.w(TAG, "Response không thành công: " + response.code());
                     bookingData.setValue(null);
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<BookingDetailResponse>> call, Throwable t) {
-                Log.e(TAG, "Lỗi mạng khi gọi getBookingDetail: " + t.getMessage());
+                Log.e(TAG, "Network Error: " + t.getMessage());
                 bookingData.setValue(null);
             }
         });

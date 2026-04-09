@@ -54,7 +54,7 @@ public class WaitingForPaymentActivity extends AppCompatActivity {
 
     private void fetchAllWaitingTickets() {
         progressBar.setVisibility(View.VISIBLE);
-        TicketApiService apiService = ApiClient.getClient().create(TicketApiService.class);
+        TicketApiService apiService = ApiClient.getClient(this).create(TicketApiService.class);
 
         // Theo BE: Lấy ALL rồi lọc ở FE
         // Lấy size lớn (ví dụ 50) để đảm bảo không bỏ sót vé pending nào ở các trang sau
