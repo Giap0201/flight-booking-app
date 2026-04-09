@@ -29,21 +29,18 @@ import java.util.Locale;
 
 public class AncillaryActivity extends AppCompatActivity {
 
-    // --- KHAI BÁO CÁC BIẾN GIAO DIỆN (UI) ---
+    // --- CÁC BIẾN GIAO DIỆN ---
     private RecyclerView rvAncillaries;
     private TextView tvTotalAncillaryPrice;
     private Button btnConfirmAncillaries;
-
-    // Các View quản lý Tab Khứ hồi (Chiều đi / Chiều về)
     private LinearLayout layoutTabsKhuHoi;
     private Button btnTabChieuDi;
     private Button btnTabChieuVe;
 
-    // --- KHAI BÁO CÁC BIẾN DỮ LIỆU ---
+    // --- CÁC BIẾN DỮ LIỆU ---
     private BookingViewModel viewModel;
     private List<AncillaryItem> dsAncillary;
     private AncillaryAdapter adapter;
-
     private String[] dsTenHanhKhach;
     private BookingRequest currentBookingRequest;
 
@@ -51,19 +48,22 @@ public class AncillaryActivity extends AppCompatActivity {
     private double ticketPrice = 0;
     private double tongTienDichVu = 0;
 
-    // --- KHAI BÁO CÁC BIẾN ĐIỀU KHIỂN LUỒNG (LOGIC) ---
+    // --- BIẾN ĐIỀU KHIỂN LUỒNG ---
     private boolean isRoundTrip = false;
 
-    // ⚡ ĐÃ SỬA: Đánh dấu chặng bay: 0 = Chiều đi, 1 = Chiều về (Khớp chuẩn Backend)
-    private int currentSegmentNo = 0;
+    /**
+     * LOGIC SEGMENT:
+     * 1 = Chiều đi (Mặc định cho vé 1 chiều và chặng đầu khứ hồi)
+     * 2 = Chiều về (Dành cho chặng thứ 2 của khứ hồi)
+     */
+    private int currentSegmentNo = 1;
 
-    // Lắng nghe kết quả trả về từ màn hình Đăng Nhập
     private final androidx.activity.result.ActivityResultLauncher<Intent> loginLauncher =
             registerForActivityResult(
                     new androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
                     result -> {
                         if (result.getResultCode() == RESULT_OK) {
-                            Toast.makeText(this, "Đăng nhập thành công! Đang chuyển sang thanh toán...", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
                             chuyenSangTrangThanhToan();
                         }
                     }
@@ -80,7 +80,7 @@ public class AncillaryActivity extends AppCompatActivity {
         rvAncillaries.setLayoutManager(new LinearLayoutManager(this));
 
         nhanDuLieuTuManHinhTruoc();
-        setupTabsKhuHoi();
+        setupTabsKhuHoi(); // Thiết lập Segment mặc định dựa trên loại vé
         layDuLieuTuApi();
 
         btnConfirmAncillaries.setOnClickListener(v -> xuLyNutXacNhan());
@@ -90,7 +90,6 @@ public class AncillaryActivity extends AppCompatActivity {
         rvAncillaries = findViewById(R.id.rvAncillaries);
         tvTotalAncillaryPrice = findViewById(R.id.tvTotalAncillaryPrice);
         btnConfirmAncillaries = findViewById(R.id.btnConfirmAncillaries);
-
         layoutTabsKhuHoi = findViewById(R.id.layoutTabsKhuHoi);
         btnTabChieuDi = findViewById(R.id.btnTabChieuDi);
         btnTabChieuVe = findViewById(R.id.btnTabChieuVe);
@@ -114,25 +113,25 @@ public class AncillaryActivity extends AppCompatActivity {
 
         if (isRoundTrip) {
             layoutTabsKhuHoi.setVisibility(View.VISIBLE);
+            // Mặc định ban đầu vào là Chiều đi (Segment 1)
+            currentSegmentNo = 1;
 
-            // ⚡ ĐÃ SỬA: Cập nhật currentSegmentNo thành 0 cho chiều đi
             btnTabChieuDi.setOnClickListener(v -> {
-                currentSegmentNo = 0;
-                capNhatGiaoDienAdapterChuyenTab();
-                Toast.makeText(this, "Đang chọn dịch vụ Chiều Đi", Toast.LENGTH_SHORT).show();
-            });
-
-            // ⚡ ĐÃ SỬA: Cập nhật currentSegmentNo thành 1 cho chiều về
-            btnTabChieuVe.setOnClickListener(v -> {
                 currentSegmentNo = 1;
                 capNhatGiaoDienAdapterChuyenTab();
-                Toast.makeText(this, "Đang chọn dịch vụ Chiều Về", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Chọn dịch vụ: Chiều Đi", Toast.LENGTH_SHORT).show();
+            });
+
+            btnTabChieuVe.setOnClickListener(v -> {
+                currentSegmentNo = 2;
+                capNhatGiaoDienAdapterChuyenTab();
+                Toast.makeText(this, "Chọn dịch vụ: Chiều Về", Toast.LENGTH_SHORT).show();
             });
 
         } else {
-            // NẾU LÀ VÉ 1 CHIỀU: Mặc định segmentNo = 0
+            // Vé 1 chiều: Luôn là Segment 1
             layoutTabsKhuHoi.setVisibility(View.GONE);
-            currentSegmentNo = 0;
+            currentSegmentNo = 1;
         }
     }
 
@@ -161,28 +160,25 @@ public class AncillaryActivity extends AppCompatActivity {
             public void onAdded(AncillaryItem item, int passengerIndex) {
                 tongTienDichVu += item.getPrice();
 
-                // ⚡ ĐÃ SỬA: Truyền item.getId() (kiểu String) vào constructor
+                // Tạo request mới với Segment hiện tại (1 hoặc 2)
                 AncillaryRequest newAncillary = new AncillaryRequest(item.getId(), passengerIndex, currentSegmentNo);
                 currentBookingRequest.getBookingAncillaries().add(newAncillary);
 
                 capNhatTongTien();
 
-                // ⚡ ĐÃ SỬA: So sánh currentSegmentNo == 0
-                String chieuBay = (currentSegmentNo == 0) ? "Chiều đi" : "Chiều về";
+                String loaiChieu = (currentSegmentNo == 1) ? "Chiều đi" : "Chiều về";
                 Toast.makeText(AncillaryActivity.this,
-                        "Đã thêm " + item.getName() + " cho " + dsTenHanhKhach[passengerIndex] + " (" + chieuBay + ")",
+                        "Thêm " + item.getName() + " cho " + dsTenHanhKhach[passengerIndex] + " (" + loaiChieu + ")",
                         Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onRemoved(AncillaryItem item, int passengerIndex) {
-                // ⚡ ĐÃ SỬA: Truyền item.getId() (kiểu String) vào hàm xóa
                 xoaDichVuKhoiDanhSach(item.getId(), passengerIndex, currentSegmentNo, item.getPrice());
 
-                // ⚡ ĐÃ SỬA: So sánh currentSegmentNo == 0
-                String chieuBay = (currentSegmentNo == 0) ? "Chiều đi" : "Chiều về";
+                String loaiChieu = (currentSegmentNo == 1) ? "Chiều đi" : "Chiều về";
                 Toast.makeText(AncillaryActivity.this,
-                        "Đã hủy " + item.getName() + " của " + dsTenHanhKhach[passengerIndex] + " (" + chieuBay + ")",
+                        "Hủy " + item.getName() + " của " + dsTenHanhKhach[passengerIndex] + " (" + loaiChieu + ")",
                         Toast.LENGTH_SHORT).show();
             }
         });
@@ -191,13 +187,11 @@ public class AncillaryActivity extends AppCompatActivity {
         rvAncillaries.setAdapter(adapter);
     }
 
-    // ⚡ ĐÃ SỬA: Thay đổi kiểu dữ liệu tham số đầu tiên thành String catalogId
     private void xoaDichVuKhoiDanhSach(String catalogId, int passengerIndex, int segmentNo, double priceToSubtract) {
         Iterator<AncillaryRequest> iterator = currentBookingRequest.getBookingAncillaries().iterator();
         while (iterator.hasNext()) {
             AncillaryRequest req = iterator.next();
 
-            // ⚡ ĐÃ SỬA: Dùng hàm getCatalogId() và so sánh chuỗi bằng .equals()
             if (req.getCatalogId() != null &&
                     req.getCatalogId().equals(catalogId) &&
                     req.getPassengerIndex() == passengerIndex &&
@@ -219,11 +213,10 @@ public class AncillaryActivity extends AppCompatActivity {
 
     private void xuLyNutXacNhan() {
         SessionManager sessionManager = new SessionManager(AncillaryActivity.this);
-
         if (sessionManager.fetchAuthToken() != null && !sessionManager.fetchAuthToken().isEmpty()) {
             chuyenSangTrangThanhToan();
         } else {
-            Toast.makeText(AncillaryActivity.this, "Vui lòng đăng nhập để tạo đơn hàng!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(AncillaryActivity.this, "Vui lòng đăng nhập để tiếp tục!", Toast.LENGTH_SHORT).show();
             Intent loginIntent = new Intent(AncillaryActivity.this, LoginActivity.class);
             loginIntent.putExtra("IS_FROM_BOOKING", true);
             loginLauncher.launch(loginIntent);
