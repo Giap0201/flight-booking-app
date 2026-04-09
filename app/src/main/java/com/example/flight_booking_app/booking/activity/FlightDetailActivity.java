@@ -20,6 +20,7 @@ import com.example.flight_booking_app.booking.adapter.TicketClassAdapter;
 import com.example.flight_booking_app.booking.model.FlightClass;
 import com.example.flight_booking_app.booking.model.FlightDetail;
 import com.example.flight_booking_app.booking.viewmodel.BookingViewModel;
+import com.example.flight_booking_app.search.activity.SearchResultActivity;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -151,7 +152,7 @@ public class FlightDetailActivity extends AppCompatActivity {
 
                 // Quay lại trang SearchResultActivity để chọn chuyến về
                 // (Đảm bảo đường dẫn tới SearchResultActivity của bạn là đúng)
-                Intent intent = new Intent(FlightDetailActivity.this, com.example.flight_booking_app.home.activity.SearchResultActivity.class);
+                Intent intent = new Intent(FlightDetailActivity.this, SearchResultActivity.class);
 
                 // Báo hiệu: "Lần tới mở lên là chọn chuyến về nhé"
                 intent.putExtra("IS_ROUND_TRIP", true);

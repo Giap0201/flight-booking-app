@@ -2,31 +2,23 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/bg_bottom_sheet"
     android:padding="24dp">
 
-    <ImageButton
-        android:id="@+id/btnCloseSheet"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@android:drawable/ic_menu_close_clear_cancel"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="#6B7280" />
     <TextView
+        android:id="@+id/tvPassengersTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Passengers"
+        android:text="Hành khách"
         android:textColor="#111827"
         android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@id/btnCloseSheet"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/btnCloseSheet" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
         android:id="@+id/layoutAdults"
@@ -35,13 +27,13 @@
         android:layout_marginTop="32dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        app:layout_constraintTop_toBottomOf="@id/btnCloseSheet">
+        app:layout_constraintTop_toBottomOf="@id/tvPassengersTitle">
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Adult"
+            android:text="Người lớn"
             android:textColor="#111827"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -94,17 +86,19 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Children"
+                android:text="Trẻ em"
                 android:textColor="#111827"
                 android:textSize="16sp"
                 android:textStyle="bold" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="2-11 years at time of travel"
+                android:text="2-11 tuổi"
                 android:textColor="#9CA3AF"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -157,17 +151,19 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Infants (Lap)"
+                android:text="Em bé"
                 android:textColor="#111827"
                 android:textSize="16sp"
                 android:textStyle="bold" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Under 2 years at time of travel"
+                android:text="Dưới 2 tuổi"
                 android:textColor="#9CA3AF"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -204,10 +200,11 @@
         android:layout_height="60dp"
         android:layout_marginTop="32dp"
         android:backgroundTint="#7C3AED"
-        android:text="Confirmation"
+        android:text="Xác nhận"
         android:textAllCaps="false"
         android:textSize="18sp"
         app:cornerRadius="30dp"
-        app:layout_constraintTop_toBottomOf="@id/layoutInfants" />
+        app:layout_constraintTop_toBottomOf="@id/layoutInfants"
+        tools:layout_editor_absoluteX="24dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

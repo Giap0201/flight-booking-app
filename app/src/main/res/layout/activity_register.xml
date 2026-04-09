@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Đăng ký tài khoản"
+            android:textColor="#333333"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Vui lòng điền thông tin để bắt đầu"
+            android:textColor="#757575"
+            android:layout_marginBottom="32dp"/>
+
+        <EditText
+            android:id="@+id/edtFullName"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:backgroundTint="#7F00FF"
+            android:hint="Họ và tên"
+            android:inputType="textPersonName"
+            android:maxLength="50"
+            android:layout_marginBottom="16dp"/>
+
+        <EditText
+            android:id="@+id/edtPhone"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:backgroundTint="#7F00FF"
+            android:hint="Số điện thoại"
+            android:inputType="number"
+            android:maxLength="10"
+            android:layout_marginBottom="16dp"/>
+
+        <EditText
+            android:id="@+id/edtEmail"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:backgroundTint="#7F00FF"
+            android:hint="Email"
+            android:inputType="textEmailAddress"
+            android:layout_marginBottom="16dp"/>
+
+        <EditText
+            android:id="@+id/edtPassword"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:backgroundTint="#7F00FF"
+            android:hint="Mật khẩu (từ 6 - 50 ký tự)"
+            android:inputType="textPassword"
+            android:maxLength="50"
+            android:layout_marginBottom="16dp"/>
+
+        <EditText
+            android:id="@+id/edtConfirmPassword"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:backgroundTint="#7F00FF"
+            android:hint="Xác nhận mật khẩu"
+            android:inputType="textPassword"
+            android:maxLength="50"
+            android:layout_marginBottom="32dp"/>
+
+        <Button
+            android:id="@+id/btnRegister"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:text="ĐĂNG KÝ"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#7F00FF"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Đã có tài khoản? "
+                android:textColor="#757575"/>
+
+            <TextView
+                android:id="@+id/tvLoginNow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Đăng nhập ngay"
+                android:textColor="#7F00FF"
+                android:textStyle="bold"
+                android:padding="8dp"/>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
