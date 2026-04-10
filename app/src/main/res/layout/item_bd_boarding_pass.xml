@@ -18,7 +18,7 @@
             android:id="@+id/tvBpTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="E-Boarding Pass"
+            android:text="@string/e_boarding_pass"
             android:textStyle="bold"
             android:textSize="18sp"
             android:textColor="#111827"
@@ -110,7 +110,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Ghế / Seat"
+                    android:text="@string/seat"
                     android:textSize="12sp"
                     android:textColor="#6B7280"/>
                 <TextView
