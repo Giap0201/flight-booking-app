@@ -17,6 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import android.util.Log;
 
 public class UpcomingFlightAdapter extends RecyclerView.Adapter<UpcomingFlightAdapter.ViewHolder> {
     private List<BookingSummary> flights;
@@ -188,9 +189,17 @@ public class UpcomingFlightAdapter extends RecyclerView.Adapter<UpcomingFlightAd
         }
 
         int passengersSize = booking.getPassengers() != null ? booking.getPassengers().size() : 0;
-        int backendCount = booking.getPassengerCount() != null ? booking.getPassengerCount() : 0;
+        int backendCount = booking.getTotalPassengers() != null ? booking.getTotalPassengers() : 0;
 
-        return Math.max(passengersSize, backendCount);
+        int finalCount = Math.max(passengersSize, backendCount);
+        
+        Log.d("DEBUG_TICKET", "Booking ID: " + booking.getId() + 
+              " | List size: " + passengersSize + 
+              " | API Total Passengers: " + backendCount + 
+              " => Display: " + finalCount);
+
+        // Fallback safety if the API somehow totally omits the fields and we still want valid display
+        return finalCount > 0 ? finalCount : 1; 
     }
 
     @Override
