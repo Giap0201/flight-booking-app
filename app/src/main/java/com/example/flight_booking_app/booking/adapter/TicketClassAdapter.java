@@ -18,16 +18,14 @@ import java.util.List;
 
 public class TicketClassAdapter extends RecyclerView.Adapter<TicketClassAdapter.TicketViewHolder> {
 
-    // 1. Khai báo cái "Bộ đàm" (Interface)
     public interface OnTicketSelectedListener {
         void onSelect(FlightClass ticket);
     }
 
     private Context context;
     private List<FlightClass> listTickets;
-    private OnTicketSelectedListener listener; // Biến giữ bộ đàm
+    private OnTicketSelectedListener listener;
 
-    // Constructor bây giờ siêu gọn nhẹ
     public TicketClassAdapter(Context context, List<FlightClass> listTickets, OnTicketSelectedListener listener) {
         this.context = context;
         this.listTickets = listTickets;
@@ -45,16 +43,35 @@ public class TicketClassAdapter extends RecyclerView.Adapter<TicketClassAdapter.
     public void onBindViewHolder(@NonNull TicketViewHolder holder, int position) {
         FlightClass ticket = listTickets.get(position);
 
+        // 1. Gán Tên hạng vé và Giá tiền
         holder.tvClassName.setText(ticket.getClassType());
+
+        // (Nếu BE trả về VNĐ thì bạn sửa lại format cho đúng nhé)
         holder.tvPrice.setText(String.format("$%.2f", ticket.getBasePrice()));
 
         holder.tvOldPrice.setText(String.format("$%.2f", ticket.getBasePrice() + 20));
         holder.tvOldPrice.setPaintFlags(holder.tvOldPrice.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
 
-        // 2. Bắt sự kiện Click: Thay vì gọi Intent, chỉ cần "alo" qua bộ đàm
+        // 2. HIỂN THỊ SỐ GHẾ THỰC TẾ (Load từ API)
+        // Chú ý: Đảm bảo model FlightClass của bạn có hàm getAvailableSeats()
+        int availableSeats = ticket.getAvailableSeats();
+        holder.tvAvailableSeats.setText("Available: " + availableSeats + " seats");
+
+        // Logic chặn người dùng chọn nếu hết ghế
+        if (availableSeats > 0) {
+            holder.btnSelectTicket.setEnabled(true);
+            holder.btnSelectTicket.setText("Chọn");
+            holder.btnSelectTicket.setAlpha(1.0f); // Hiện rõ nút
+        } else {
+            holder.btnSelectTicket.setEnabled(false);
+            holder.btnSelectTicket.setText("Hết vé");
+            holder.btnSelectTicket.setAlpha(0.5f); // Làm mờ nút đi
+        }
+
+        // 3. Bắt sự kiện Click: "Alo" qua bộ đàm
         holder.btnSelectTicket.setOnClickListener(v -> {
             if (listener != null) {
-                listener.onSelect(ticket); // Ném thông tin vé ra ngoài cho Activity tự xử lý
+                listener.onSelect(ticket);
             }
         });
     }
@@ -66,6 +83,10 @@ public class TicketClassAdapter extends RecyclerView.Adapter<TicketClassAdapter.
 
     public static class TicketViewHolder extends RecyclerView.ViewHolder {
         TextView tvClassName, tvPrice, tvOldPrice;
+
+        // ⚡ MỚI THÊM: Biến cho số lượng ghế
+        TextView tvAvailableSeats;
+
         Button btnSelectTicket;
 
         public TicketViewHolder(@NonNull View itemView) {
@@ -74,6 +95,9 @@ public class TicketClassAdapter extends RecyclerView.Adapter<TicketClassAdapter.
             tvPrice = itemView.findViewById(R.id.tvPrice);
             tvOldPrice = itemView.findViewById(R.id.tvOldPrice);
             btnSelectTicket = itemView.findViewById(R.id.btnSelectTicket);
+
+            // ⚡ MỚI THÊM: Ánh xạ View
+            tvAvailableSeats = itemView.findViewById(R.id.tvAvailableSeats);
         }
     }
 }

@@ -7,6 +7,7 @@ import com.example.flight_booking_app.booking.model.FlightDetail;
 import com.example.flight_booking_app.common.ApiResponse;
 
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -55,4 +56,6 @@ public interface BookingApiService {
             @Query("bookingId") String bookingId,
             @Query("platform") String platform
     );
+    @GET("api/v1/payments/verify-status/{pnrCode}") // Sửa lại đúng đường dẫn API của BE bạn
+    Call<ApiResponse<Map<String, Object>>> verifyPaymentStatus(@Path("pnrCode") String pnrCode);
 }
