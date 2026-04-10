@@ -22,7 +22,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Order ID  TBW7FWZ"
+                tools:text="Order ID  TBW7FWZ"
                 android:id="@+id/tvOrderId"
                 android:textColor="@color/colorCardSurface"
                 android:textStyle="bold"

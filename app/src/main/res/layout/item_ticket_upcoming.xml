@@ -136,7 +136,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Date"
+                        android:text="@string/date"
                         android:textColor="#BDBDBD"
                         android:textSize="12sp" />
                     <TextView
@@ -160,7 +160,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Class"
+                        android:text="@string/ticket_class"
                         android:textColor="#BDBDBD"
                         android:textSize="12sp" />
 
@@ -186,7 +186,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Passenger"
+                        android:text="@string/passenger"
                         android:textColor="#BDBDBD"
                         android:textSize="12sp" />
                     <TextView
