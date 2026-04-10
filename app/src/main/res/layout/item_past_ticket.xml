@@ -40,7 +40,7 @@
                     android:id="@+id/tvOrderLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Order ID "
+                    android:text="@string/order_id_prefix"
                     android:textColor="#757575"
                     android:textSize="14sp" />
 
