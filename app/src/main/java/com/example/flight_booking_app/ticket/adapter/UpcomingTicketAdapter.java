@@ -90,12 +90,7 @@ public class UpcomingTicketAdapter extends RecyclerView.Adapter<UpcomingTicketAd
         }
 
         // 5. Số lượng hành khách
-        int passengerCount = 1;
-        if (ticket.getPassengers() != null && !ticket.getPassengers().isEmpty()) {
-            passengerCount = ticket.getPassengers().size();
-        } else if (ticket.getPassengerCount() != null) {
-            passengerCount = ticket.getPassengerCount();
-        }
+        int passengerCount = resolvePassengerCount(ticket);
         holder.tvPassengerCount.setText(String.valueOf(passengerCount));
 
         // 6. Hạng vé
@@ -159,6 +154,17 @@ public class UpcomingTicketAdapter extends RecyclerView.Adapter<UpcomingTicketAd
         } catch (Exception e) {
             return rawClass;
         }
+    }
+
+    private int resolvePassengerCount(BookingSummary booking) {
+        if (booking == null) {
+            return 0;
+        }
+
+        int passengersSize = booking.getPassengers() != null ? booking.getPassengers().size() : 0;
+        int backendCount = booking.getPassengerCount() != null ? booking.getPassengerCount() : 0;
+
+        return Math.max(passengersSize, backendCount);
     }
 
     @Override

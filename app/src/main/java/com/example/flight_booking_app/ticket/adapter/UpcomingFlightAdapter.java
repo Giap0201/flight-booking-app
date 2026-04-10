@@ -80,12 +80,7 @@ public class UpcomingFlightAdapter extends RecyclerView.Adapter<UpcomingFlightAd
             holder.tvClass.setText("Economy");
         }
 
-        int passengerCount = 1;
-        if (flight.getPassengers() != null && !flight.getPassengers().isEmpty()) {
-            passengerCount = flight.getPassengers().size();
-        } else if (flight.getPassengerCount() != null) {
-            passengerCount = flight.getPassengerCount();
-        }
+        int passengerCount = resolvePassengerCount(flight);
         holder.tvPassengerCount.setText(String.valueOf(passengerCount));
 
         if (flight.getArrivalTime() != null) {
@@ -185,6 +180,17 @@ public class UpcomingFlightAdapter extends RecyclerView.Adapter<UpcomingFlightAd
         } catch (Exception e) {
             return rawClass;
         }
+    }
+
+    private int resolvePassengerCount(BookingSummary booking) {
+        if (booking == null) {
+            return 0;
+        }
+
+        int passengersSize = booking.getPassengers() != null ? booking.getPassengers().size() : 0;
+        int backendCount = booking.getPassengerCount() != null ? booking.getPassengerCount() : 0;
+
+        return Math.max(passengersSize, backendCount);
     }
 
     @Override
