@@ -6,7 +6,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F4F6F9"
+    android:background="#F8F9FB"
     tools:context=".booking.activity.AncillaryActivity">
 
     <LinearLayout
@@ -14,7 +14,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:orientation="vertical"
-        android:padding="16dp"
+        android:paddingTop="20dp"
         app:layout_constraintBottom_toTopOf="@+id/bottomBar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -23,10 +23,11 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginBottom="20dp"
             android:text="Dịch vụ bổ sung"
             android:textColor="#1A1A1A"
-            android:textSize="22sp"
+            android:textSize="24sp"
             android:textStyle="bold" />
 
         <LinearLayout
@@ -35,30 +36,37 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:visibility="gone"
-            android:layout_margin="16dp">
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginBottom="16dp"
+            tools:visibility="visible">
 
             <Button
                 android:id="@+id/btnTabChieuDi"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Hành lý Chiều Đi"
-                android:layout_marginEnd="8dp"/>
+                android:text="Chiều Đi"
+                android:textAllCaps="false"
+                android:layout_marginEnd="6dp"/>
 
             <Button
                 android:id="@+id/btnTabChieuVe"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Hành lý Chiều Về"
-                android:layout_marginStart="8dp"/>
+                android:text="Chiều Về"
+                android:textAllCaps="false"
+                android:layout_marginStart="6dp"/>
         </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvAncillaries"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="20dp"
             android:scrollbars="none"
             tools:listitem="@layout/item_ancillary" />
 
@@ -68,7 +76,7 @@
         android:id="@+id/bottomBar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:cardElevation="16dp"
+        app:cardElevation="24dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
@@ -77,7 +85,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingHorizontal="20dp"
-            android:paddingVertical="16dp"
+            android:paddingVertical="18dp"
             android:background="#FFFFFF">
 
             <TextView
@@ -85,8 +93,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Tổng tiền thanh toán"
-                android:textColor="#666666"
-                android:textSize="14sp"
+                android:textColor="#999999"
+                android:textSize="13sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -103,15 +111,15 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnConfirmAncillaries"
-                android:layout_width="140dp"
-                android:layout_height="54dp"
+                android:layout_width="150dp"
+                android:layout_height="56dp"
                 android:backgroundTint="#7C00F6"
                 android:text="Xác nhận"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                app:cornerRadius="12dp"
+                app:cornerRadius="14dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
