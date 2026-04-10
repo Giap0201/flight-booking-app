@@ -2,6 +2,7 @@ package com.example.flight_booking_app.booking.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Patterns;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -17,71 +18,60 @@ import com.example.flight_booking_app.booking.adapter.PassengerAdapter;
 import com.example.flight_booking_app.booking.model.BookingRequest;
 import com.example.flight_booking_app.booking.model.FlightRequest;
 import com.example.flight_booking_app.booking.model.PassengerRequest;
-import com.example.flight_booking_app.booking.viewmodel.BookingViewModel;
 import com.example.flight_booking_app.common.DateUtils;
 
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BookingFormActivity extends AppCompatActivity {
 
-    // =========================================================
-    // 1. KHAI BÁO GIAO DIỆN & DỮ LIỆU CHUNG
-    // =========================================================
     private EditText edtContactName, edtContactEmail, edtContactPhone;
     private TextView tvTotalPrice;
     private Button btnConfirmBooking;
-
     private RecyclerView rvPassengers;
     private PassengerAdapter passengerAdapter;
     private List<PassengerRequest> listPassengers;
 
-    private BookingViewModel viewModel;
-
-    // =========================================================
-    // 2. KHAI BÁO BIẾN CHO CHIỀU ĐI (SEGMENT 1)
-    // =========================================================
-    private String currentFlightId;
-    private String currentFlightClassId;
+    private String currentFlightId, currentFlightClassId;
     private double ticketPrice;
-
-    // =========================================================
-    // 3. KHAI BÁO BIẾN CHO CHIỀU VỀ (SEGMENT 2 - NẾU CÓ)
-    // =========================================================
-    private boolean isRoundTrip = false; // Cờ đánh dấu: true là khứ hồi, false là 1 chiều
-    private String returnFlightId;
-    private String returnFlightClassId;
+    private boolean isRoundTrip = false;
+    private String returnFlightId, returnFlightClassId;
     private double returnTicketPrice;
-
-    // =========================================================
-    // 4. BIẾN TÍNH TOÁN
-    // =========================================================
-    private double totalPrice; // Tổng tiền vé gốc (Chưa tính dịch vụ)
+    private double totalPrice;
     private int adultCount, childCount, infantCount;
+
+    // ⚡ MỚI: Cần ngày khởi hành để tính tuổi chính xác
+    private String departureDateStr;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_booking_form);
 
-        // ==========================================================
-        // BƯỚC 1: HỨNG DỮ LIỆU TỪ MÀN HÌNH CHỌN VÉ (INTENT)
-        // ==========================================================
+        nhanDuLieuTuIntent();
+        initViews();
+        tinhToanHienThiTien();
+        khoiTaoFormHanhKhach();
+
+        btnConfirmBooking.setOnClickListener(v -> submitBooking());
+    }
+
+    private void nhanDuLieuTuIntent() {
         Intent intent = getIntent();
         if (intent != null) {
-            // Nhận số lượng khách
             adultCount = intent.getIntExtra("adultCount", 1);
             childCount = intent.getIntExtra("childCount", 0);
             infantCount = intent.getIntExtra("infantCount", 0);
-
-            // Nhận vé CHIỀU ĐI (Bắt buộc phải có)
             currentFlightId = intent.getStringExtra("flightId");
             currentFlightClassId = intent.getStringExtra("flightClassId");
             ticketPrice = intent.getDoubleExtra("ticketPrice", 0.0);
-
-            // ⚡ Nhận vé CHIỀU VỀ (Có thể có hoặc không) ⚡
-            // Đọc cờ isRoundTrip để biết khách chọn loại hành trình nào
             isRoundTrip = intent.getBooleanExtra("isRoundTrip", false);
+
+            // Nhận ngày khởi hành (Format dd/MM/yyyy) để tính tuổi
+            departureDateStr = intent.getStringExtra("departureDate");
 
             if (isRoundTrip) {
                 returnFlightId = intent.getStringExtra("returnFlightId");
@@ -89,30 +79,134 @@ public class BookingFormActivity extends AppCompatActivity {
                 returnTicketPrice = intent.getDoubleExtra("returnTicketPrice", 0.0);
             }
         }
+    }
 
-        // ==========================================================
-        // BƯỚC 2: ÁNH XẠ VIEW & TÍNH TOÁN TỔNG TIỀN
-        // ==========================================================
-        initViews();
-
+    private void tinhToanHienThiTien() {
         int totalTickets = adultCount + childCount + infantCount;
+        totalPrice = isRoundTrip ? (ticketPrice + returnTicketPrice) * totalTickets : ticketPrice * totalTickets;
 
-        // ⚡ LOGIC TÍNH TIỀN KHỨ HỒI ⚡
-        // Nếu 1 chiều: Tiền = Giá vé chiều đi * Số người
-        // Nếu Khứ hồi: Tiền = (Giá vé chiều đi + Giá vé chiều về) * Số người
-        if (isRoundTrip) {
-            totalPrice = (ticketPrice + returnTicketPrice) * totalTickets;
-        } else {
-            totalPrice = ticketPrice * totalTickets;
-        }
-
-        // In ra màn hình
         java.text.NumberFormat formatter = java.text.NumberFormat.getInstance(new java.util.Locale("vi", "VN"));
         tvTotalPrice.setText(formatter.format(totalPrice) + " đ");
+    }
 
-        // ==========================================================
-        // BƯỚC 3: TẠO FORM ĐIỀN TÊN HÀNH KHÁCH
-        // ==========================================================
+    private void submitBooking() {
+        // 1. Validate Thông tin liên hệ
+        if (!validateContactInfo()) return;
+
+        // 2. Validate Thông tin từng hành khách
+        if (!validatePassengers()) return;
+
+        // 3. Nếu mọi thứ OK -> Đóng gói dữ liệu
+        chuyenSangManHinhDichVu();
+    }
+
+    private boolean validateContactInfo() {
+        String name = edtContactName.getText().toString().trim();
+        String email = edtContactEmail.getText().toString().trim();
+        String phone = edtContactPhone.getText().toString().trim();
+
+        if (name.isEmpty()) {
+            edtContactName.setError("Vui lòng nhập tên liên hệ");
+            return false;
+        }
+        if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            edtContactEmail.setError("Email không đúng định dạng");
+            return false;
+        }
+        if (phone.isEmpty() || phone.length() < 10) {
+            edtContactPhone.setError("Số điện thoại không hợp lệ");
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validatePassengers() {
+        for (int i = 0; i < listPassengers.size(); i++) {
+            PassengerRequest p = listPassengers.get(i);
+            String label = "Hành khách thứ " + (i + 1);
+
+            // Kiểm tra tên
+            if (p.getFirstName().trim().isEmpty() || p.getLastName().trim().isEmpty()) {
+                Toast.makeText(this, label + ": Vui lòng nhập đầy đủ Họ và Tên", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+
+            // Kiểm tra ngày sinh rỗng
+            String dobInput = p.getDateOfBirth();
+            if (dobInput == null || dobInput.isEmpty()) {
+                Toast.makeText(this, label + ": Vui lòng nhập ngày sinh", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+
+            // ⚡ KIỂM TRA ĐỘ TUỔI VÀ LOẠI VÉ (Logic cốt lõi) ⚡
+            try {
+                // Parse ngày sinh và ngày khởi hành
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                LocalDate birthDate = LocalDate.parse(dobInput, formatter);
+
+                // Nếu không có ngày khởi hành từ intent, lấy tạm ngày hiện tại
+                LocalDate depDate = (departureDateStr != null) ? LocalDate.parse(departureDateStr, formatter) : LocalDate.now();
+
+                int age = Period.between(birthDate, depDate).getYears();
+                String type = p.getType(); // ADULT, CHILD, INFANT
+
+                if ("INFANT".equals(type) && age >= 2) {
+                    Toast.makeText(this, label + " phải dưới 2 tuổi (Hiện tại " + age + " tuổi)", Toast.LENGTH_LONG).show();
+                    return false;
+                }
+                if ("CHILD".equals(type) && (age < 2 || age >= 12)) {
+                    Toast.makeText(this, label + " phải từ 2 đến dưới 12 tuổi", Toast.LENGTH_LONG).show();
+                    return false;
+                }
+                if ("ADULT".equals(type) && age < 12) {
+                    Toast.makeText(this, label + " phải từ 12 tuổi trở lên", Toast.LENGTH_LONG).show();
+                    return false;
+                }
+
+                // Chuyển đổi sang định dạng API (yyyy-MM-dd) sau khi đã validate xong
+                p.setDateOfBirth(DateUtils.convertToApiFormat(dobInput));
+
+            } catch (Exception e) {
+                Toast.makeText(this, label + ": Ngày sinh không đúng định dạng dd/MM/yyyy", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void chuyenSangManHinhDichVu() {
+        BookingRequest request = new BookingRequest();
+        request.setContactName(edtContactName.getText().toString().trim());
+        request.setContactEmail(edtContactEmail.getText().toString().trim());
+        request.setContactPhone(edtContactPhone.getText().toString().trim());
+        request.setCurrency("VND");
+
+        List<FlightRequest> flights = new ArrayList<>();
+        flights.add(new FlightRequest(currentFlightId, currentFlightClassId));
+        if (isRoundTrip && returnFlightId != null) {
+            flights.add(new FlightRequest(returnFlightId, returnFlightClassId));
+        }
+
+        request.setFlights(flights);
+        request.setPassengers(listPassengers);
+        request.setBookingAncillaries(new ArrayList<>());
+
+        // Chuyển màn hình
+        String[] dsTen = new String[listPassengers.size()];
+        for (int i = 0; i < listPassengers.size(); i++) {
+            dsTen[i] = listPassengers.get(i).getLastName() + " " + listPassengers.get(i).getFirstName();
+        }
+
+        Intent nextIntent = new Intent(this, AncillaryActivity.class);
+        nextIntent.putExtra("passengerNames", dsTen);
+        nextIntent.putExtra("bookingRequest", request);
+        nextIntent.putExtra("basePrice", totalPrice);
+        nextIntent.putExtra("ticketPrice", isRoundTrip ? (ticketPrice + returnTicketPrice) : ticketPrice);
+        nextIntent.putExtra("isRoundTrip", isRoundTrip);
+        startActivity(nextIntent);
+    }
+
+    private void khoiTaoFormHanhKhach() {
         listPassengers = new ArrayList<>();
         for (int i = 0; i < adultCount; i++) listPassengers.add(new PassengerRequest("", "", "", "MALE", "ADULT"));
         for (int i = 0; i < childCount; i++) listPassengers.add(new PassengerRequest("", "", "", "MALE", "CHILD"));
@@ -121,9 +215,6 @@ public class BookingFormActivity extends AppCompatActivity {
         rvPassengers.setLayoutManager(new LinearLayoutManager(this));
         passengerAdapter = new PassengerAdapter(this, listPassengers);
         rvPassengers.setAdapter(passengerAdapter);
-
-        // Nút Xác nhận
-        btnConfirmBooking.setOnClickListener(v -> submitBooking());
     }
 
     private void initViews() {
@@ -134,90 +225,4 @@ public class BookingFormActivity extends AppCompatActivity {
         btnConfirmBooking = findViewById(R.id.btnConfirmBooking);
         rvPassengers = findViewById(R.id.rvPassengers);
     }
-
-    private void submitBooking() {
-        // ===== A. Validate contact =====
-        String contactName = edtContactName.getText().toString().trim();
-        String contactEmail = edtContactEmail.getText().toString().trim();
-        String contactPhone = edtContactPhone.getText().toString().trim();
-
-        if (contactName.isEmpty() || contactEmail.isEmpty() || contactPhone.isEmpty()) {
-            Toast.makeText(this, "Vui lòng nhập đủ thông tin liên hệ!", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // ===== B. Convert & validate passenger =====
-        for (PassengerRequest passenger : listPassengers) {
-
-            String dobInput = passenger.getDateOfBirth();
-
-            if (dobInput == null || dobInput.isEmpty()) {
-                Toast.makeText(this, "Vui lòng nhập ngày sinh hành khách!", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            String dobApi = DateUtils.convertToApiFormat(dobInput);
-
-            if (dobApi == null) {
-                Toast.makeText(this, "Ngày sinh không hợp lệ! (dd/MM/yyyy)", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            // Ghi đè lại thành format chuẩn API
-            passenger.setDateOfBirth(dobApi);
-        }
-
-        // ==========================================================
-        // ⚡ BƯỚC QUAN TRỌNG: ĐÓNG GÓI CHUYẾN BAY (1 HOẶC NHIỀU CHUYẾN) ⚡
-        // ==========================================================
-        BookingRequest request = new BookingRequest();
-        request.setContactName(contactName);
-        request.setContactEmail(edtContactEmail.getText().toString().trim());
-        request.setContactPhone(edtContactPhone.getText().toString().trim());
-        request.setCurrency("VND");
-        request.setPromotionCode("");
-
-        // Tạo giỏ chứa các chuyến bay
-        List<FlightRequest> flights = new ArrayList<>();
-
-        // 1. Chắc chắn phải add Chiều Đi (Segment 1)
-        flights.add(new FlightRequest(currentFlightId, currentFlightClassId));
-
-        // 2. Nếu là khứ hồi, add thêm Chiều Về (Segment 2)
-        if (isRoundTrip && returnFlightId != null) {
-            flights.add(new FlightRequest(returnFlightId, returnFlightClassId));
-        }
-
-        // Gắn giỏ chuyến bay vào Request tổng
-        request.setFlights(flights);
-        request.setPassengers(listPassengers);
-        request.setBookingAncillaries(new ArrayList<>()); // Dịch vụ để trang sau tính
-
-        // ==========================================================
-        // CHUYỂN SANG MÀN HÌNH CHỌN DỊCH VỤ (ANCILLARY)
-        // ==========================================================
-        String[] dsTenHanhKhach = new String[listPassengers.size()];
-        for (int i = 0; i < listPassengers.size(); i++) {
-            PassengerRequest p = listPassengers.get(i);
-            dsTenHanhKhach[i] = "Khách " + (i + 1) + ": " + p.getLastName() + " " + p.getFirstName();
-        }
-
-        Intent nextIntent = new Intent(BookingFormActivity.this, AncillaryActivity.class);
-        nextIntent.putExtra("passengerNames", dsTenHanhKhach);
-        nextIntent.putExtra("bookingRequest", request);
-
-        // 1. Gửi TỔNG TIỀN (Chỉ để màn Hành lý hiển thị cho đẹp)
-        nextIntent.putExtra("basePrice", (double) totalPrice);
-
-        // 2. ⚡ SỬA CHỖ NÀY: Gửi GIÁ VÉ CỦA 1 NGƯỜI (Để màn Hóa đơn tính toán)
-        // Nếu là khứ hồi thì giá 1 người = Giá vé đi + Giá vé về
-        double unitTicketPrice = isRoundTrip ? (ticketPrice + returnTicketPrice) : ticketPrice;
-        nextIntent.putExtra("ticketPrice", (double) unitTicketPrice); // Ép kiểu Double cẩn thận
-
-        // 3. Truyền thêm cờ này sang trang Dịch vụ
-        nextIntent.putExtra("isRoundTrip", isRoundTrip);
-
-        startActivity(nextIntent);
-    }
 }
-
