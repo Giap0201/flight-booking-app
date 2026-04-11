@@ -80,12 +80,13 @@ public class UpcomingFlightAdapter extends RecyclerView.Adapter<UpcomingFlightAd
             holder.tvClass.setText("Economy");
         }
 
-        if (flight.getPassengerCount() != null) {
-            holder.tvPassengerCount
-                    .setText(flight.getPassengerCount() + " Person" + (flight.getPassengerCount() > 1 ? "s" : ""));
-        } else {
-            holder.tvPassengerCount.setText("1 Person");
+        int passengerCount = 1;
+        if (flight.getPassengers() != null && !flight.getPassengers().isEmpty()) {
+            passengerCount = flight.getPassengers().size();
+        } else if (flight.getPassengerCount() != null) {
+            passengerCount = flight.getPassengerCount();
         }
+        holder.tvPassengerCount.setText(String.valueOf(passengerCount));
 
         if (flight.getArrivalTime() != null) {
             try {

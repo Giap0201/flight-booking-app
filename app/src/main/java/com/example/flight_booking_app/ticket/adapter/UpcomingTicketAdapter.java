@@ -90,11 +90,13 @@ public class UpcomingTicketAdapter extends RecyclerView.Adapter<UpcomingTicketAd
         }
 
         // 5. Số lượng hành khách
-        if (ticket.getPassengerCount() != null) {
-            holder.tvPassengerCount.setText(ticket.getPassengerCount() + " Person" + (ticket.getPassengerCount() > 1 ? "s" : ""));
-        } else {
-            holder.tvPassengerCount.setText("1 Person");
+        int passengerCount = 1;
+        if (ticket.getPassengers() != null && !ticket.getPassengers().isEmpty()) {
+            passengerCount = ticket.getPassengers().size();
+        } else if (ticket.getPassengerCount() != null) {
+            passengerCount = ticket.getPassengerCount();
         }
+        holder.tvPassengerCount.setText(String.valueOf(passengerCount));
 
         // 6. Hạng vé
         if (ticket.getClassType() != null) {

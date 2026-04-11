@@ -45,7 +45,7 @@ public class LoginActivity extends AppCompatActivity {
                     btnSignIn.setText("Đang xử lý...");
                     btnSignIn.setEnabled(false);
                 } else {
-                    btnSignIn.setText("Sign In");
+                    btnSignIn.setText("Đăng nhập");
                     btnSignIn.setEnabled(true);
                 }
             }
