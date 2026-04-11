@@ -46,29 +46,29 @@ public class TicketClassAdapter extends RecyclerView.Adapter<TicketClassAdapter.
         // 1. Gán Tên hạng vé và Giá tiền
         holder.tvClassName.setText(ticket.getClassType());
 
-        // (Nếu BE trả về VNĐ thì bạn sửa lại format cho đúng nhé)
-        holder.tvPrice.setText(String.format("$%.2f", ticket.getBasePrice()));
+        // Đổi sang định dạng tiền Việt: không có số thập phân, có dấu phân cách hàng nghìn
+        holder.tvPrice.setText(String.format("%,.0f đ", (double) ticket.getBasePrice()));
 
-        holder.tvOldPrice.setText(String.format("$%.2f", ticket.getBasePrice() + 20));
+        // Giá cũ (giả định giảm giá)
+        holder.tvOldPrice.setText(String.format("%,.0f đ", (double) ticket.getBasePrice() + 50000));
         holder.tvOldPrice.setPaintFlags(holder.tvOldPrice.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
 
-        // 2. HIỂN THỊ SỐ GHẾ THỰC TẾ (Load từ API)
-        // Chú ý: Đảm bảo model FlightClass của bạn có hàm getAvailableSeats()
+        // 2. HIỂN THỊ SỐ GHẾ THỰC TẾ
         int availableSeats = ticket.getAvailableSeats();
-        holder.tvAvailableSeats.setText("Available: " + availableSeats + " seats");
+        holder.tvAvailableSeats.setText("Còn trống: " + availableSeats + " ghế");
 
         // Logic chặn người dùng chọn nếu hết ghế
         if (availableSeats > 0) {
             holder.btnSelectTicket.setEnabled(true);
             holder.btnSelectTicket.setText("Chọn");
-            holder.btnSelectTicket.setAlpha(1.0f); // Hiện rõ nút
+            holder.btnSelectTicket.setAlpha(1.0f);
         } else {
             holder.btnSelectTicket.setEnabled(false);
             holder.btnSelectTicket.setText("Hết vé");
-            holder.btnSelectTicket.setAlpha(0.5f); // Làm mờ nút đi
+            holder.btnSelectTicket.setAlpha(0.5f);
         }
 
-        // 3. Bắt sự kiện Click: "Alo" qua bộ đàm
+        // 3. Bắt sự kiện Click
         holder.btnSelectTicket.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onSelect(ticket);
