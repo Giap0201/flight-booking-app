@@ -295,22 +295,25 @@ public class BookingDetailAdapter extends RecyclerView.Adapter<RecyclerView.View
 
         if (data.getPassengers() != null) {
             for (PassengerTicketResponse p : data.getPassengers()) {
-                BigDecimal price = BigDecimal.ZERO;
-                if (p.getTickets() != null && !p.getTickets().isEmpty()) {
-                    price = BigDecimal.valueOf(p.getTickets().get(0).getTotalAmount());
+                BigDecimal passengerTotalCost = BigDecimal.ZERO;
+                if (p.getTickets() != null) {
+                    for (TicketDetailResponse ticket : p.getTickets()) {
+                        passengerTotalCost = passengerTotalCost.add(
+                                BigDecimal.valueOf(ticket.getTotalAmount()));
+                    }
                 }
 
                 String type = p.getType() != null ? p.getType().toUpperCase() : "ADULT";
 
                 if (type.contains("ADULT")) {
                     adultQty++;
-                    adultSum = adultSum.add(price);
+                    adultSum = adultSum.add(passengerTotalCost);
                 } else if (type.contains("CHILD")) {
                     childQty++;
-                    childSum = childSum.add(price);
+                    childSum = childSum.add(passengerTotalCost);
                 } else {
                     infantQty++;
-                    infantSum = infantSum.add(price);
+                    infantSum = infantSum.add(passengerTotalCost);
                 }
             }
         }
@@ -324,7 +327,8 @@ public class BookingDetailAdapter extends RecyclerView.Adapter<RecyclerView.View
                 infantQty, "Em bé", infantSum);
 
         // Tổng cộng
-        h.tvTotalPrice.setText(formatVND.format(BigDecimal.valueOf(data.getTotalAmount())));
+        BigDecimal grandTotal = adultSum.add(childSum).add(infantSum);
+        h.tvTotalPrice.setText(formatVND.format(grandTotal));
     }
 
     /**
