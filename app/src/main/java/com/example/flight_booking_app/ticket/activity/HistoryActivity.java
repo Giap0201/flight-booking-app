@@ -107,16 +107,7 @@ public class HistoryActivity extends AppCompatActivity {
 
                     if (allData != null) {
                         for (BookingSummary ticket : allData) {
-                            String status = ticket.getStatus();
-
-                            // 1. Logic lọc vé Đã hủy
-                            boolean isCancelled = "CANCELLED".equals(status) || "REFUNDED".equals(status);
-
-                            // 2. Logic lọc vé Đã bay (Hoàn thành)
-                            boolean isCompleted = ("PAID".equals(status) || "CONFIRMED".equals(status)) && isPastFlight(ticket.getDepartureTime());
-
-                            // Chỉ nạp vào danh sách nếu là History
-                            if (isCancelled || isCompleted) {
+                            if (isHistoryBooking(ticket)) {
                                 historyList.add(ticket);
                             }
                         }
@@ -128,7 +119,7 @@ public class HistoryActivity extends AppCompatActivity {
                     adapter.setTickets(historyList);
 
                     if (historyList.isEmpty() && page == 1) {
-                        Toast.makeText(HistoryActivity.this, "Chưa có lịch sử chuyến bay", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(HistoryActivity.this, "Chưa có vé đã bay", Toast.LENGTH_SHORT).show();
                     }
                 }
             }
@@ -142,16 +133,56 @@ public class HistoryActivity extends AppCompatActivity {
         });
     }
 
-    // Hàm kiểm tra xem chuyến bay đã cất cánh chưa
-    private boolean isPastFlight(String departureTimeStr) {
-        if (departureTimeStr == null || departureTimeStr.isEmpty()) return false;
-        try {
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
-            Date departureDate = format.parse(departureTimeStr);
-            return departureDate != null && departureDate.before(new Date()); // Nhỏ hơn giờ hiện tại
-        } catch (ParseException e) {
-            return false;
+    private boolean isHistoryBooking(BookingSummary ticket) {
+        String rawStatus = ticket.getStatus() != null ? ticket.getStatus().trim() : "";
+        String status = rawStatus.toUpperCase(Locale.ROOT);
+
+        boolean isTerminalState = "CANCELLED".equals(status)
+                || "FAILED".equals(status)
+                || "REJECTED".equals(status);
+
+        boolean isCompletedState = "COMPLETED".equals(status);
+
+        boolean isPaidOrConfirmedAndPast = ("PAID".equals(status) || "CONFIRMED".equals(status))
+                && hasFlightPassed(ticket);
+
+        return isTerminalState || isCompletedState || isPaidOrConfirmedAndPast;
+    }
+
+    // Ưu tiên thời điểm kết thúc chuyến (arrivalTime), fallback qua departureTime
+    private boolean hasFlightPassed(BookingSummary ticket) {
+        Date endTime = parseFlexibleDateTime(ticket.getArrivalTime());
+        if (endTime == null) {
+            endTime = parseFlexibleDateTime(ticket.getDepartureTime());
         }
+        return endTime != null && new Date().after(endTime);
+    }
+
+    private Date parseFlexibleDateTime(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+
+        String[] patterns = new String[] {
+                "yyyy-MM-dd'T'HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ss.SSS",
+                "yyyy-MM-dd'T'HH:mm:ssX",
+                "yyyy-MM-dd'T'HH:mm:ssXXX",
+                "yyyy-MM-dd HH:mm:ss"
+        };
+
+        for (String pattern : patterns) {
+            try {
+                SimpleDateFormat format = new SimpleDateFormat(pattern, Locale.getDefault());
+                format.setLenient(false);
+                Date parsed = format.parse(value);
+                if (parsed != null) {
+                    return parsed;
+                }
+            } catch (ParseException ignored) {
+            }
+        }
+        return null;
     }
 
     // Hàm sắp xếp danh sách theo giờ bay giảm dần
