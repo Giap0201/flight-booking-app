@@ -23,8 +23,10 @@ import com.example.flight_booking_app.network.ApiClient;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import retrofit2.Call;
@@ -84,7 +86,11 @@ public class UpcomingFlightsActivity extends AppCompatActivity {
                     allFlightsList.clear();
 
                     if (data != null && !data.isEmpty()) {
-                        allFlightsList.addAll(data);
+                        for (BookingSummary booking : data) {
+                            if (!isHistoryBooking(booking)) {
+                                allFlightsList.add(booking);
+                            }
+                        }
                         setupFilterSpinners(); // Nạp tên Sân bay vào 2 cái Spinner
                         applyFilter();         // Chạy lọc lần đầu để in ra danh sách (Mặc định là "Tất cả")
                     } else {
@@ -181,5 +187,56 @@ public class UpcomingFlightsActivity extends AppCompatActivity {
                 return 0;
             }
         });
+    }
+
+    private boolean isHistoryBooking(BookingSummary ticket) {
+        String rawStatus = ticket.getStatus() != null ? ticket.getStatus().trim() : "";
+        String status = rawStatus.toUpperCase(Locale.ROOT);
+
+        boolean isTerminalState = "CANCELLED".equals(status)
+                || "FAILED".equals(status)
+                || "REJECTED".equals(status);
+
+        boolean isCompletedState = "COMPLETED".equals(status);
+
+        boolean isPaidOrConfirmedAndPast = ("PAID".equals(status) || "CONFIRMED".equals(status))
+                && hasFlightPassed(ticket);
+
+        return isTerminalState || isCompletedState || isPaidOrConfirmedAndPast;
+    }
+
+    private boolean hasFlightPassed(BookingSummary ticket) {
+        Date endTime = parseFlexibleDateTime(ticket.getArrivalTime());
+        if (endTime == null) {
+            endTime = parseFlexibleDateTime(ticket.getDepartureTime());
+        }
+        return endTime != null && new Date().after(endTime);
+    }
+
+    private Date parseFlexibleDateTime(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+
+        String[] patterns = new String[] {
+                "yyyy-MM-dd'T'HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ss.SSS",
+                "yyyy-MM-dd'T'HH:mm:ssX",
+                "yyyy-MM-dd'T'HH:mm:ssXXX",
+                "yyyy-MM-dd HH:mm:ss"
+        };
+
+        for (String pattern : patterns) {
+            try {
+                java.text.SimpleDateFormat format = new java.text.SimpleDateFormat(pattern, java.util.Locale.getDefault());
+                format.setLenient(false);
+                Date parsed = format.parse(value);
+                if (parsed != null) {
+                    return parsed;
+                }
+            } catch (java.text.ParseException ignored) {
+            }
+        }
+        return null;
     }
 }

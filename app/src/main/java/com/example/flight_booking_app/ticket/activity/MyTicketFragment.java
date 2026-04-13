@@ -24,7 +24,9 @@ import com.example.flight_booking_app.common.ApiResponse;
 import com.example.flight_booking_app.network.ApiClient;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -143,8 +145,13 @@ public class MyTicketFragment extends Fragment {
                     upcomingList.clear();
 
                     if (data != null) {
-                        for (int i = 0; i < Math.min(data.size(), 2); i++) {
-                            upcomingList.add(data.get(i));
+                        for (BookingSummary booking : data) {
+                            if (!isHistoryBooking(booking)) {
+                                upcomingList.add(booking);
+                            }
+                            if (upcomingList.size() == 2) {
+                                break;
+                            }
                         }
                     }
                     upcomingAdapter.setTicketList(upcomingList);
@@ -156,5 +163,56 @@ public class MyTicketFragment extends Fragment {
                 Log.e("MyTicket", "Error Fetching Upcoming: " + t.getMessage());
             }
         });
+    }
+
+    private boolean isHistoryBooking(BookingSummary ticket) {
+        String rawStatus = ticket.getStatus() != null ? ticket.getStatus().trim() : "";
+        String status = rawStatus.toUpperCase(Locale.ROOT);
+
+        boolean isTerminalState = "CANCELLED".equals(status)
+                || "FAILED".equals(status)
+                || "REJECTED".equals(status);
+
+        boolean isCompletedState = "COMPLETED".equals(status);
+
+        boolean isPaidOrConfirmedAndPast = ("PAID".equals(status) || "CONFIRMED".equals(status))
+                && hasFlightPassed(ticket);
+
+        return isTerminalState || isCompletedState || isPaidOrConfirmedAndPast;
+    }
+
+    private boolean hasFlightPassed(BookingSummary ticket) {
+        Date endTime = parseFlexibleDateTime(ticket.getArrivalTime());
+        if (endTime == null) {
+            endTime = parseFlexibleDateTime(ticket.getDepartureTime());
+        }
+        return endTime != null && new Date().after(endTime);
+    }
+
+    private Date parseFlexibleDateTime(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+
+        String[] patterns = new String[] {
+                "yyyy-MM-dd'T'HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ss.SSS",
+                "yyyy-MM-dd'T'HH:mm:ssX",
+                "yyyy-MM-dd'T'HH:mm:ssXXX",
+                "yyyy-MM-dd HH:mm:ss"
+        };
+
+        for (String pattern : patterns) {
+            try {
+                java.text.SimpleDateFormat format = new java.text.SimpleDateFormat(pattern, java.util.Locale.getDefault());
+                format.setLenient(false);
+                Date parsed = format.parse(value);
+                if (parsed != null) {
+                    return parsed;
+                }
+            } catch (java.text.ParseException ignored) {
+            }
+        }
+        return null;
     }
 }

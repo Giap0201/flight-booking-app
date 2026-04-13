@@ -9,8 +9,9 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Xin chào blank fragment</string>
 
-    <string name="past_ticket_title">Lịch sử đặt vé</string>
+    <string name="past_ticket_title">Vé đã bay</string>
     <string name="flight_detail_title">Chi tiết chuyến bay</string>
+    <string name="booking_detail_title">Chi tiết đơn đặt</string>
     <string name="passenger">Hành khách</string>
     <string name="passengers">Hành khách</string>
     <string name="seat">Ghế ngồi</string>

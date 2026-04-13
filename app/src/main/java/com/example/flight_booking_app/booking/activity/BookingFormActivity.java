@@ -82,9 +82,18 @@ public class BookingFormActivity extends AppCompatActivity {
     }
 
     private void tinhToanHienThiTien() {
-        int totalTickets = adultCount + childCount + infantCount;
-        totalPrice = isRoundTrip ? (ticketPrice + returnTicketPrice) * totalTickets : ticketPrice * totalTickets;
+        // 1. Tính giá vé cơ bản của 1 người lớn (Bao gồm cả vé đi và vé về nếu là khứ hồi)
+        double baseTicketPricePerPerson = isRoundTrip ? (ticketPrice + returnTicketPrice) : ticketPrice;
 
+        // 2. Tính tổng tiền vé theo tỷ lệ của từng độ tuổi (Giống logic bên PaymentSummaryActivity)
+        double adultTotalBase = adultCount * baseTicketPricePerPerson;                  // Người lớn: 100% giá vé
+        double childTotalBase = childCount * (baseTicketPricePerPerson * 0.75);         // Trẻ em: 75% giá vé
+        double infantTotalBase = infantCount * (baseTicketPricePerPerson * 0.10);       // Em bé: 10% giá vé
+
+        // 3. Cộng tổng tiền lại
+        totalPrice = adultTotalBase + childTotalBase + infantTotalBase;
+
+        // 4. Format và hiển thị lên UI
         java.text.NumberFormat formatter = java.text.NumberFormat.getInstance(new java.util.Locale("vi", "VN"));
         tvTotalPrice.setText(formatter.format(totalPrice) + " đ");
     }
