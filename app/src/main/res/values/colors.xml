@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="colorPrimary">#7A1FA0</color> <color name="colorPrimaryVariant">#5E1480</color>
+    <color name="colorAccent">#9D4EDD</color> <color name="colorLightPurpleBackground">#F4E8FA</color> <color name="colorBackground">#F8F9FA</color> <color name="colorCardSurface">#FFFFFF</color> <color name="textColorPrimary">#1D1D1D</color>
+    <color name="textColorSecondary">#6C757D</color>
+
+    <color name="statusErrorRed">#D32F2F</color>
+    <color name="statusErrorBackground">#FDECEA</color>
+    <color name="statusSuccessGreen">#2E7D32</color>
+    <color name="statusSuccessBackground">#E8F5E9</color>
+    <color name="statusWarningOrange">#E65100</color>
+    <color name="statusWarningBackground">#FFF3E0</color>
+
+    <color name="colorDivider">#E0E0E0</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="purple_primary">#8B00FF</color>
+    <color name="color_booking_purple">#7F00FF</color>
 </resources>

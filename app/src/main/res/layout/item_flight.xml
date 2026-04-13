@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:strokeColor="#E0E0E0"
+    app:strokeWidth="1dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tvAirlineName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Vietnam Airlines"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tvFlightNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="VN-123"
+            android:textColor="#757575"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="@+id/tvAirlineName"
+            app:layout_constraintStart_toEndOf="@+id/tvAirlineName"
+            app:layout_constraintTop_toTopOf="@+id/tvAirlineName" />
+
+        <TextView
+            android:id="@+id/tvDepTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="16:55"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvAirlineName" />
+
+        <View
+            android:id="@+id/lineConnector"
+            android:layout_width="40dp"
+            android:layout_height="2dp"
+            android:layout_marginHorizontal="12dp"
+            android:background="#BDBDBD"
+            app:layout_constraintBottom_toBottomOf="@+id/tvDepTime"
+            app:layout_constraintStart_toEndOf="@+id/tvDepTime"
+            app:layout_constraintTop_toTopOf="@+id/tvDepTime" />
+
+        <TextView
+            android:id="@+id/tvArrTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="18:45"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@+id/lineConnector"
+            app:layout_constraintTop_toTopOf="@+id/tvDepTime" />
+
+        <TextView
+            android:id="@+id/tvDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1h 50m"
+            android:textColor="#757575"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="@+id/lineConnector"
+            app:layout_constraintStart_toStartOf="@+id/lineConnector"
+            app:layout_constraintTop_toBottomOf="@+id/lineConnector" />
+
+        <TextView
+            android:id="@+id/tvPriceLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chỉ từ"
+            android:textColor="#757575"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toTopOf="@+id/tvLowestPrice"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <TextView
+            android:id="@+id/tvLowestPrice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1,500,000 VND"
+            android:textColor="#FF5722"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

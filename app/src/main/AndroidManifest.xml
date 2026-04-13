@@ -2,7 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
+        android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -12,7 +15,76 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Flightbookingapp">
         <activity
+            android:name=".user.activity.RegisterActivity"
+            android:exported="false" />
+        <activity
+            android:name=".user.activity.ChangePasswordActivity"
+            android:exported="false" />
+        <activity
+            android:name=".user.activity.EditProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".authen.activity.LoginActivity"
+            android:exported="false" />
+        <activity
+            android:name=".search.activity.SearchResultActivity"
+            android:exported="false" />
+        <activity
+            android:name=".home.activity.SearchLocationActivity"
+            android:exported="false" />
+        <activity
+            android:name=".authen.activity.ForgotPasswordActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".booking.activity.BookingFormActivity"
+            android:exported="false"/>
+        <activity
+            android:name=".booking.activity.PaymentSummaryActivity"
+            android:exported="false"/>
+        <activity
+            android:name=".booking.activity.PaymentResultActivity"
+            android:exported="true"> <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+
+            <data
+                android:scheme="flightbooking"
+                android:host="payment-result" />
+        </intent-filter>
+
+        </activity>
+        <activity
+            android:name=".booking.activity.AncillaryActivity"
+            android:exported="false"/>
+        <activity
+            android:name=".ticket.activity.FlightDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".booking.activity.FlightDetailActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ticket.activity.BookingDetailActivity"
+            android:exported="false" />
+
+
+        <activity
+            android:name=".ticket.activity.UpcomingFlightsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ticket.activity.HistoryActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ticket.activity.WaitingForPaymentActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".authen.activity.SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -20,6 +92,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+
     </application>
 
 </manifest>

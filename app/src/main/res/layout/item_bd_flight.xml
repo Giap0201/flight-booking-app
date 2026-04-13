@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Item: Thẻ chuyến bay (giờ bay, sân bay) — tái sử dụng style từ activity_detail_flight -->
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginTop="12dp"
+    app:cardBackgroundColor="@android:color/white"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="20dp">
+
+        <TextView
+            android:id="@+id/tvDepTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="16:55" />
+
+        <TextView
+            android:id="@+id/tvDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="16dp"
+            android:textColor="#757575"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toTopOf="@id/tvArrTime"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvDepTime"
+            tools:text="1h 50m" />
+
+        <TextView
+            android:id="@+id/tvArrTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:text="20:30" />
+
+        <!-- Đường kẻ dọc nối giờ đi - giờ đến -->
+        <View
+            android:id="@+id/vLine"
+            android:layout_width="2dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="20dp"
+            android:background="#E0E0E0"
+            app:layout_constraintBottom_toBottomOf="@id/tvArrTime"
+            app:layout_constraintStart_toEndOf="@id/tvDepTime"
+            app:layout_constraintTop_toTopOf="@id/tvDepTime" />
+
+        <TextView
+            android:id="@+id/tvOrigin"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:textColor="#424242"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/vLine"
+            app:layout_constraintTop_toTopOf="@id/tvDepTime"
+            tools:text="HAN Noi Bai Airport" />
+
+        <TextView
+            android:id="@+id/tvAirline"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textColor="#757575"
+            android:textSize="13sp"
+            app:layout_constraintBottom_toTopOf="@id/tvDest"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/tvOrigin"
+            app:layout_constraintTop_toBottomOf="@id/tvOrigin"
+            tools:text="✈ VN123 • Economy" />
+
+        <TextView
+            android:id="@+id/tvDest"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textColor="#424242"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@id/tvArrTime"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/tvOrigin"
+            tools:text="SGN Tan Son Nhat Airport" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>

@@ -1,3 +1,23 @@
 <resources>
     <string name="app_name">flight-booking-app</string>
+    <string name="my_ticket_title">Vé của tôi</string>
+    <string name="my_ticket_subtitle">Tất cả các vé máy bay đang hoạt động và chờ thanh toán</string>
+    <string name="waiting_for_payment">Chờ thanh toán</string>
+    <string name="upcoming_flight">Chuyến bay sắp tới</string>
+    <string name="desc_icon">Biểu tượng</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Xin chào blank fragment</string>
+
+    <string name="past_ticket_title">Vé đã bay</string>
+    <string name="flight_detail_title">Chi tiết chuyến bay</string>
+    <string name="booking_detail_title">Chi tiết đơn đặt</string>
+    <string name="passenger">Hành khách</string>
+    <string name="passengers">Hành khách</string>
+    <string name="seat">Ghế ngồi</string>
+    <string name="ticket_class">Hạng ghế</string>
+    <string name="date">Ngày</string>
+    <string name="total">Tổng cộng</string>
+    <string name="price">Giá</string>
+    <string name="e_boarding_pass">Thẻ lên máy bay</string>
+    <string name="order_id_prefix">Mã đặt chỗ </string>
 </resources>
