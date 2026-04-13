@@ -132,6 +132,11 @@ public class HomeFragment extends Fragment {
                 return;
             }
 
+            if (departure.equals(arrival)) {
+                Toast.makeText(requireContext(), "Điểm đi và Điểm đến không được trùng nhau!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             if (isRoundTrip && (returnDate.isEmpty() || returnDate.equals("Ngày về"))) {
                 Toast.makeText(requireContext(), "Vui lòng chọn ngày bay về", Toast.LENGTH_SHORT).show();
                 return;
