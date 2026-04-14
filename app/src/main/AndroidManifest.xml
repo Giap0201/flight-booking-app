@@ -64,7 +64,7 @@
             android:name=".ticket.activity.FlightDetailActivity"
             android:exported="false" />
         <activity
-            android:name=".booking.activity.FlightDetailActivity"
+            android:name=".booking.activity.FlightClassActivity"
             android:exported="false" />
 
         <activity

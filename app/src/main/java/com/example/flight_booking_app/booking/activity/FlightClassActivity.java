@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.flight_booking_app.R;
-import com.example.flight_booking_app.booking.adapter.TicketClassAdapter;
+import com.example.flight_booking_app.booking.adapter.FlightClassAdapter;
 import com.example.flight_booking_app.booking.model.FlightClass;
 import com.example.flight_booking_app.booking.model.FlightDetail;
 import com.example.flight_booking_app.booking.viewmodel.BookingViewModel;
@@ -33,7 +33,7 @@ import java.util.Locale;
  * Nhiệm vụ chính: Hiện thông tin giờ bay và danh sách HẠNG VÉ để khách bấm "Chọn".
  * Đặc biệt: Có xử lý logic rẽ nhánh thông minh cho vé Khứ Hồi và 1 Chiều.
  */
-public class FlightDetailActivity extends AppCompatActivity {
+public class FlightClassActivity extends AppCompatActivity {
 
     // =========================================================================
     // 1. KHAI BÁO CÁC THÀNH PHẦN GIAO DIỆN (VIEWS) VÀ VIEWMODEL
@@ -44,7 +44,7 @@ public class FlightDetailActivity extends AppCompatActivity {
     private ImageView btnBack;
 
     private RecyclerView rvTickets;
-    private TicketClassAdapter adapter;
+    private FlightClassAdapter adapter;
     private List<FlightClass> listFlightClasses;
 
     private BookingViewModel viewModel; // Cầu nối lấy dữ liệu từ Backend (Spring Boot)
@@ -75,7 +75,7 @@ public class FlightDetailActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_flight_detail);
+        setContentView(R.layout.activity_flight_class);
 
         // Chỉnh padding để giao diện không bị tai thỏ (notch) đè lên
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -151,7 +151,7 @@ public class FlightDetailActivity extends AppCompatActivity {
         listFlightClasses = new ArrayList<>();
 
         // Sử dụng Interface (Bộ đàm) để lắng nghe xem Adapter báo khách chọn vé nào
-        adapter = new TicketClassAdapter(this, listFlightClasses, ticket -> {
+        adapter = new FlightClassAdapter(this, listFlightClasses, ticket -> {
 
             // ==========================================================
             // TRƯỜNG HỢP 1: LÀ KHỨ HỒI VÀ ĐANG CHỌN CHIỀU ĐI
@@ -162,7 +162,7 @@ public class FlightDetailActivity extends AppCompatActivity {
                 Toast.makeText(this, "Đã chọn xong Chiều đi. Vui lòng chọn chuyến Về!", Toast.LENGTH_SHORT).show();
 
                 // Quay lại trang SearchResultActivity
-                Intent intent = new Intent(FlightDetailActivity.this, SearchResultActivity.class);
+                Intent intent = new Intent(FlightClassActivity.this, SearchResultActivity.class);
 
                 // Báo hiệu cờ: "Ông Search ơi, mở lên tìm chuyến về nhé"
                 intent.putExtra("IS_ROUND_TRIP", true);
@@ -187,7 +187,7 @@ public class FlightDetailActivity extends AppCompatActivity {
             // Đã đủ điều kiện, phóng xe sang trang Điền Thông Tin (BookingForm)
             // ==========================================================
             else {
-                Intent intent = new Intent(FlightDetailActivity.this, BookingFormActivity.class);
+                Intent intent = new Intent(FlightClassActivity.this, BookingFormActivity.class);
 
                 intent.putExtra("adultCount", adultCount);
                 intent.putExtra("childCount", childCount);

@@ -166,4 +166,4 @@
         android:paddingBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvLabelChoose"
-        tools:listitem="@layout/item_ticket_class" /> </androidx.constraintlayout.widget.ConstraintLayout>
+        tools:listitem="@layout/item_flight_class" /> </androidx.constraintlayout.widget.ConstraintLayout>

@@ -2,9 +2,7 @@ package com.example.flight_booking_app.search.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
@@ -12,7 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.flight_booking_app.R;
-import com.example.flight_booking_app.booking.activity.FlightDetailActivity;
+import com.example.flight_booking_app.booking.activity.FlightClassActivity;
 import com.example.flight_booking_app.search.adapter.DateStripAdapter;
 import com.example.flight_booking_app.search.adapter.SearchResultAdapter;
 import com.example.flight_booking_app.search.bottomsheet.FilterBottomSheet;
@@ -155,7 +153,7 @@ public class SearchResultActivity extends AppCompatActivity {
     }
 
     private void navigateToDetail(Flight selectedFlight) {
-        Intent intent = new Intent(this, FlightDetailActivity.class);
+        Intent intent = new Intent(this, FlightClassActivity.class);
 
         // Truyền ID và thông tin cơ bản cho dev sau
         intent.putExtra("FLIGHT_ID", selectedFlight.getId());

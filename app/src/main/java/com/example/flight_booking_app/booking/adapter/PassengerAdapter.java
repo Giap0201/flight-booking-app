@@ -142,7 +142,6 @@ public class PassengerAdapter extends RecyclerView.Adapter<PassengerAdapter.Pass
 
         TextWatcher firstNameWatcher;
         TextWatcher lastNameWatcher;
-        // Đã xóa dobWatcher vì không cần thiết nữa
 
         public PassengerViewHolder(@NonNull View itemView) {
             super(itemView);
