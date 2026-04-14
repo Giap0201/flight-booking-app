@@ -56,6 +56,6 @@ public interface BookingApiService {
             @Query("bookingId") String bookingId,
             @Query("platform") String platform
     );
-    @GET("api/v1/payments/verify-status/{pnrCode}") // Sửa lại đúng đường dẫn API của BE bạn
+    @GET("payments/verify-status/{pnrCode}")
     Call<ApiResponse<Map<String, Object>>> verifyPaymentStatus(@Path("pnrCode") String pnrCode);
 }

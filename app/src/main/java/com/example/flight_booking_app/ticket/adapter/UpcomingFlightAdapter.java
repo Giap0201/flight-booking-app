@@ -17,6 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import android.util.Log;
 
 public class UpcomingFlightAdapter extends RecyclerView.Adapter<UpcomingFlightAdapter.ViewHolder> {
     private List<BookingSummary> flights;
@@ -80,12 +81,7 @@ public class UpcomingFlightAdapter extends RecyclerView.Adapter<UpcomingFlightAd
             holder.tvClass.setText("Economy");
         }
 
-        int passengerCount = 1;
-        if (flight.getPassengers() != null && !flight.getPassengers().isEmpty()) {
-            passengerCount = flight.getPassengers().size();
-        } else if (flight.getPassengerCount() != null) {
-            passengerCount = flight.getPassengerCount();
-        }
+        int passengerCount = resolvePassengerCount(flight);
         holder.tvPassengerCount.setText(String.valueOf(passengerCount));
 
         if (flight.getArrivalTime() != null) {
@@ -185,6 +181,25 @@ public class UpcomingFlightAdapter extends RecyclerView.Adapter<UpcomingFlightAd
         } catch (Exception e) {
             return rawClass;
         }
+    }
+
+    private int resolvePassengerCount(BookingSummary booking) {
+        if (booking == null) {
+            return 0;
+        }
+
+        int passengersSize = booking.getPassengers() != null ? booking.getPassengers().size() : 0;
+        int backendCount = booking.getTotalPassengers() != null ? booking.getTotalPassengers() : 0;
+
+        int finalCount = Math.max(passengersSize, backendCount);
+        
+        Log.d("DEBUG_TICKET", "Booking ID: " + booking.getId() + 
+              " | List size: " + passengersSize + 
+              " | API Total Passengers: " + backendCount + 
+              " => Display: " + finalCount);
+
+        // Fallback safety if the API somehow totally omits the fields and we still want valid display
+        return finalCount > 0 ? finalCount : 1; 
     }
 
     @Override

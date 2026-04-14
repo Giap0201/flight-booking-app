@@ -44,7 +44,7 @@ public class TicketClassAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         if (convertView == null) {
-            convertView = LayoutInflater.from(context).inflate(R.layout.item_ticket_class, parent, false);
+            convertView = LayoutInflater.from(context).inflate(R.layout.item_flight_class, parent, false);
         }
 
         TextView tvClassName = convertView.findViewById(R.id.tvClassName);

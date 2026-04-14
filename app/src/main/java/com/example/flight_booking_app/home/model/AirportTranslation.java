@@ -8,7 +8,6 @@ public class AirportTranslation {
     // Thêm một biến để lưu Mã sân bay (Dùng cho lúc ghép dữ liệu)
     private transient String code;
 
-    // Constructor, Getters và Setters
     public String getCity() { return city; }
     public String getCountry() { return country; }
     public String getName() { return name; }

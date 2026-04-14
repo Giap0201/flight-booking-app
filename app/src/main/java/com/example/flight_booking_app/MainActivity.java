@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new HomeFragment())
                     .commit();
-            bottomNav.setSelectedItemId(R.id.nav_home); // ID này phải khớp với trong bottom_nav_menu.xml
+            bottomNav.setSelectedItemId(R.id.nav_home);
         }
 
         // Lắng nghe sự kiện chuyển tab

@@ -22,8 +22,8 @@ public class BookingSummary {
     @SerializedName("classType")
     private String classType;
 
-    @SerializedName("passengerCount")
-    private Integer passengerCount;
+    @SerializedName(value = "totalPassengers", alternate = {"passengerCount", "totalPassenger", "paxCount"})
+    private Integer totalPassengers;
 
     @SerializedName("passengers")
     private List<PassengerTicketResponse> passengers;
@@ -40,6 +40,6 @@ public class BookingSummary {
     public String getDepartureTime() { return departureTime; }
     public String getArrivalTime() { return arrivalTime; }
     public String getClassType() { return classType; }
-    public Integer getPassengerCount() { return passengerCount; }
+    public Integer getTotalPassengers() { return totalPassengers; }
     public List<PassengerTicketResponse> getPassengers() { return passengers; }
 }

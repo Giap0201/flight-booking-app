@@ -18,6 +18,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import android.util.Log;
 
 public class UpcomingTicketAdapter extends RecyclerView.Adapter<UpcomingTicketAdapter.TicketViewHolder> {
 
@@ -90,12 +91,7 @@ public class UpcomingTicketAdapter extends RecyclerView.Adapter<UpcomingTicketAd
         }
 
         // 5. Số lượng hành khách
-        int passengerCount = 1;
-        if (ticket.getPassengers() != null && !ticket.getPassengers().isEmpty()) {
-            passengerCount = ticket.getPassengers().size();
-        } else if (ticket.getPassengerCount() != null) {
-            passengerCount = ticket.getPassengerCount();
-        }
+        int passengerCount = resolvePassengerCount(ticket);
         holder.tvPassengerCount.setText(String.valueOf(passengerCount));
 
         // 6. Hạng vé
@@ -159,6 +155,25 @@ public class UpcomingTicketAdapter extends RecyclerView.Adapter<UpcomingTicketAd
         } catch (Exception e) {
             return rawClass;
         }
+    }
+
+    private int resolvePassengerCount(BookingSummary booking) {
+        if (booking == null) {
+            return 0;
+        }
+
+        int passengersSize = booking.getPassengers() != null ? booking.getPassengers().size() : 0;
+        int backendCount = booking.getTotalPassengers() != null ? booking.getTotalPassengers() : 0;
+
+        int finalCount = Math.max(passengersSize, backendCount);
+        
+        Log.d("DEBUG_TICKET", "Booking ID: " + booking.getId() + 
+              " | List size: " + passengersSize + 
+              " | API Total Passengers: " + backendCount + 
+              " => Display: " + finalCount);
+
+        // Fallback safety if the API somehow totally omits the fields and we still want valid display
+        return finalCount > 0 ? finalCount : 1; 
     }
 
     @Override

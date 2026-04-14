@@ -9,7 +9,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -217,9 +216,12 @@ public class BookingFormActivity extends AppCompatActivity {
 
     private void khoiTaoFormHanhKhach() {
         listPassengers = new ArrayList<>();
-        for (int i = 0; i < adultCount; i++) listPassengers.add(new PassengerRequest("", "", "", "MALE", "ADULT"));
-        for (int i = 0; i < childCount; i++) listPassengers.add(new PassengerRequest("", "", "", "MALE", "CHILD"));
-        for (int i = 0; i < infantCount; i++) listPassengers.add(new PassengerRequest("", "", "", "MALE", "INFANT"));
+        for (int i = 0; i < adultCount; i++)
+            listPassengers.add(new PassengerRequest("", "", "", "MALE", "ADULT"));
+        for (int i = 0; i < childCount; i++)
+            listPassengers.add(new PassengerRequest("", "", "", "MALE", "CHILD"));
+        for (int i = 0; i < infantCount; i++)
+            listPassengers.add(new PassengerRequest("", "", "", "MALE", "INFANT"));
 
         rvPassengers.setLayoutManager(new LinearLayoutManager(this));
         passengerAdapter = new PassengerAdapter(this, listPassengers);
