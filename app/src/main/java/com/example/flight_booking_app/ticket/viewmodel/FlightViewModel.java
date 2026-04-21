@@ -108,4 +108,18 @@ public class FlightViewModel extends AndroidViewModel {
 
         return items;
     }
+
+    // ======================== PAYMENT URL ========================
+
+    /**
+     * Gọi API tạo đường dẫn thanh toán VNPay.
+     * Dùng khi người dùng nhấn nút "Thanh toán" trên BookingDetailActivity.
+     *
+     * @param bookingId Mã booking (UUID)
+     * @param platform  Nền tảng ("android")
+     * @return LiveData chứa URL thanh toán VNPay
+     */
+    public LiveData<String> createPaymentUrl(String bookingId, String platform) {
+        return repository.createPaymentUrl(bookingId, platform);
+    }
 }

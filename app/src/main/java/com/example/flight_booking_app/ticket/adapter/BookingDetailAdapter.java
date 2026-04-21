@@ -6,6 +6,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -66,13 +67,33 @@ import java.util.Locale;
  */
 public class BookingDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
+    // ======================== CALLBACK INTERFACE ========================
+    /**
+     * Interface callback để Activity xử lý khi người dùng nhấn nút "Thanh toán".
+     * Activity sẽ implement interface này và gọi ViewModel để lấy payment URL.
+     */
+    public interface OnPayNowClickListener {
+        /**
+         * @param bookingId Mã booking (UUID) cần thanh toán
+         */
+        void onPayNowClick(String bookingId);
+    }
+
     private List<BookingDetailItem> items;
+    private OnPayNowClickListener payNowClickListener;
 
     // Format tiền VND dùng chung
     private final NumberFormat formatVND = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
 
     public BookingDetailAdapter(List<BookingDetailItem> items) {
         this.items = items;
+    }
+
+    /**
+     * Đăng ký listener cho nút "Thanh toán". Gọi từ Activity.
+     */
+    public void setOnPayNowClickListener(OnPayNowClickListener listener) {
+        this.payNowClickListener = listener;
     }
 
     /**
@@ -199,6 +220,22 @@ public class BookingDetailAdapter extends RecyclerView.Adapter<RecyclerView.View
             h.tvContactName.setText("👤 Không có thông tin");
             h.tvContactEmail.setVisibility(View.GONE);
             h.tvContactPhone.setVisibility(View.GONE);
+        }
+
+        // ======================== NÚT THANH TOÁN ========================
+        // Chỉ hiển thị khi status là PENDING hoặc AWAITING_PAYMENT
+        String status = data.getStatus() != null ? data.getStatus().toUpperCase() : "";
+        boolean showPayButton = status.equals("PENDING") || status.equals("AWAITING_PAYMENT");
+
+        h.btnPayNow.setVisibility(showPayButton ? View.VISIBLE : View.GONE);
+        h.dividerPayment.setVisibility(showPayButton ? View.VISIBLE : View.GONE);
+
+        if (showPayButton) {
+            h.btnPayNow.setOnClickListener(v -> {
+                if (payNowClickListener != null && data.getId() != null) {
+                    payNowClickListener.onPayNowClick(data.getId());
+                }
+            });
         }
     }
 
@@ -613,9 +650,11 @@ public class BookingDetailAdapter extends RecyclerView.Adapter<RecyclerView.View
 
     // ======================== VIEWHOLDER CLASSES ========================
 
-    // --- 1. Header (PNR, status, contact) ---
+    // --- 1. Header (PNR, status, contact, nút thanh toán) ---
     static class HeaderViewHolder extends RecyclerView.ViewHolder {
         TextView tvPnrCode, tvStatus, tvContactName, tvContactEmail, tvContactPhone;
+        Button btnPayNow;
+        View dividerPayment;
 
         HeaderViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -624,6 +663,8 @@ public class BookingDetailAdapter extends RecyclerView.Adapter<RecyclerView.View
             tvContactName = itemView.findViewById(R.id.tvContactName);
             tvContactEmail = itemView.findViewById(R.id.tvContactEmail);
             tvContactPhone = itemView.findViewById(R.id.tvContactPhone);
+            btnPayNow = itemView.findViewById(R.id.btnPayNow);
+            dividerPayment = itemView.findViewById(R.id.dividerPayment);
         }
     }
 

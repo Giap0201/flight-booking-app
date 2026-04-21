@@ -1,0 +1,124 @@
+Index: app/src/main/java/com/example/flight_booking_app/ticket/activity/HistoryActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.flight_booking_app.ticket.activity;\r\n\r\nimport android.os.Bundle;\r\nimport android.util.Log;\r\nimport android.view.View;\r\nimport android.widget.ProgressBar;\r\nimport android.widget.Toast;\r\n\r\nimport androidx.annotation.NonNull;\r\nimport androidx.appcompat.app.AppCompatActivity;\r\nimport androidx.recyclerview.widget.LinearLayoutManager;\r\nimport androidx.recyclerview.widget.RecyclerView;\r\n\r\nimport com.example.flight_booking_app.R;\r\nimport com.example.flight_booking_app.ticket.adapter.HistoryAdapter;\r\nimport com.example.flight_booking_app.ticket.api.TicketApiService;\r\nimport com.example.flight_booking_app.ticket.model.BookingSummary;\r\nimport com.example.flight_booking_app.ticket.model.PageResult;\r\nimport com.example.flight_booking_app.common.ApiResponse;\r\nimport com.example.flight_booking_app.network.ApiClient;\r\n\r\nimport java.text.ParseException;\r\nimport java.text.SimpleDateFormat;\r\nimport java.util.ArrayList;\r\nimport java.util.Collections;\r\nimport java.util.Comparator;\r\nimport java.util.Date;\r\nimport java.util.List;\r\nimport java.util.Locale;\r\n\r\nimport retrofit2.Call;\r\nimport retrofit2.Callback;\r\nimport retrofit2.Response;\r\n\r\npublic class HistoryActivity extends AppCompatActivity {\r\n\r\n    private RecyclerView rvHistory;\r\n    private ProgressBar progressBar;\r\n    private HistoryAdapter adapter;\r\n    private List<BookingSummary> historyList = new ArrayList<>();\r\n\r\n    // Phân trang\r\n    private int currentPage = 1;\r\n    private int totalPages = 1;\r\n    private boolean isLoading = false;\r\n\r\n\r\n    @Override\r\n    protected void onCreate(Bundle savedInstanceState) {\r\n        super.onCreate(savedInstanceState);\r\n        setContentView(R.layout.activity_history);\r\n\r\n        findViewById(R.id.btnBack).setOnClickListener(v -> finish());\r\n        progressBar = findViewById(R.id.progressBar);\r\n        rvHistory = findViewById(R.id.rvHistory);\r\n\r\n        setupRecyclerView();\r\n        fetchHistoryBookings(currentPage);\r\n    }\r\n\r\n    private void setupRecyclerView() {\r\n        LinearLayoutManager layoutManager = new LinearLayoutManager(this);\r\n        rvHistory.setLayoutManager(layoutManager);\r\n        adapter = new HistoryAdapter(historyList);\r\n        rvHistory.setAdapter(adapter);\r\n\r\n        // Bắt sự kiện cuộn xuống đáy để Load More\r\n        rvHistory.addOnScrollListener(new RecyclerView.OnScrollListener() {\r\n            @Override\r\n            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {\r\n                super.onScrolled(recyclerView, dx, dy);\r\n                if (dy > 0) { // Đang cuộn xuống\r\n                    int visibleItemCount = layoutManager.getChildCount();\r\n                    int totalItemCount = layoutManager.getItemCount();\r\n                    int pastVisibleItems = layoutManager.findFirstVisibleItemPosition();\r\n\r\n                    if (!isLoading && currentPage < totalPages) {\r\n                        if ((visibleItemCount + pastVisibleItems) >= totalItemCount) {\r\n                            currentPage++;\r\n                            fetchHistoryBookings(currentPage);\r\n                        }\r\n                    }\r\n                }\r\n            }\r\n        });\r\n    }\r\n\r\n    private void fetchHistoryBookings(int page) {\r\n        isLoading = true;\r\n        if (page == 1) progressBar.setVisibility(View.VISIBLE);\r\n\r\n        TicketApiService apiService = ApiClient.getClient(this).create(TicketApiService.class);\r\n\r\n        // DÙNG FILTER=\"ALL\", TỰ LỌC VÀ SORT BẰNG JAVA\r\n        apiService.getMyBookingsWithFilter(\"ALL\", page).enqueue(new Callback<ApiResponse<PageResult<BookingSummary>>>() {\r\n            @Override\r\n            public void onResponse(Call<ApiResponse<PageResult<BookingSummary>>> call, Response<ApiResponse<PageResult<BookingSummary>>> response) {\r\n                isLoading = false;\r\n                progressBar.setVisibility(View.GONE);\r\n\r\n                if (response.isSuccessful() && response.body() != null) {\r\n                    PageResult<BookingSummary> pageResult = response.body().getResult();\r\n                    List<BookingSummary> allData = pageResult.getData();\r\n                    totalPages = pageResult.getTotalPages();\r\n\r\n                    if (page == 1) historyList.clear();\r\n\r\n                    if (allData != null) {\r\n                        for (BookingSummary ticket : allData) {\r\n                            if (isHistoryBooking(ticket)) {\r\n                                historyList.add(ticket);\r\n                            }\r\n                        }\r\n                    }\r\n\r\n                    // 3. Logic Sort lại toàn bộ danh sách theo Ngày bay giảm dần (Mới nhất lên đầu)\r\n                    sortListByDepartureTimeDesc(historyList);\r\n\r\n                    adapter.setTickets(historyList);\r\n\r\n                    if (historyList.isEmpty() && page == 1) {\r\n                        Toast.makeText(HistoryActivity.this, \"Chưa có vé đã bay\", Toast.LENGTH_SHORT).show();\r\n                    }\r\n                }\r\n            }\r\n\r\n            @Override\r\n            public void onFailure(Call<ApiResponse<PageResult<BookingSummary>>> call, Throwable t) {\r\n                isLoading = false;\r\n                progressBar.setVisibility(View.GONE);\r\n                Log.e(\"HISTORY_PAGE\", \"Lỗi mạng: \" + t.getMessage());\r\n            }\r\n        });\r\n    }\r\n\r\n    private boolean isHistoryBooking(BookingSummary ticket) {\r\n        String rawStatus = ticket.getStatus() != null ? ticket.getStatus().trim() : \"\";\r\n        String status = rawStatus.toUpperCase(Locale.ROOT);\r\n\r\n        boolean isTerminalState = \"CANCELLED\".equals(status)\r\n                || \"FAILED\".equals(status)\r\n                || \"REJECTED\".equals(status);\r\n\r\n        boolean isCompletedState = \"COMPLETED\".equals(status);\r\n\r\n        boolean isPaidOrConfirmedAndPast = (\"PAID\".equals(status) || \"CONFIRMED\".equals(status))\r\n                && hasFlightPassed(ticket);\r\n\r\n        return isTerminalState || isCompletedState || isPaidOrConfirmedAndPast;\r\n    }\r\n\r\n    // Ưu tiên thời điểm kết thúc chuyến (arrivalTime), fallback qua departureTime\r\n    private boolean hasFlightPassed(BookingSummary ticket) {\r\n        Date endTime = parseFlexibleDateTime(ticket.getArrivalTime());\r\n        if (endTime == null) {\r\n            endTime = parseFlexibleDateTime(ticket.getDepartureTime());\r\n        }\r\n        return endTime != null && new Date().after(endTime);\r\n    }\r\n\r\n    private Date parseFlexibleDateTime(String value) {\r\n        if (value == null || value.trim().isEmpty()) {\r\n            return null;\r\n        }\r\n\r\n        String[] patterns = new String[] {\r\n                \"yyyy-MM-dd'T'HH:mm:ss\",\r\n                \"yyyy-MM-dd'T'HH:mm:ss.SSS\",\r\n                \"yyyy-MM-dd'T'HH:mm:ssX\",\r\n                \"yyyy-MM-dd'T'HH:mm:ssXXX\",\r\n                \"yyyy-MM-dd HH:mm:ss\"\r\n        };\r\n\r\n        for (String pattern : patterns) {\r\n            try {\r\n                SimpleDateFormat format = new SimpleDateFormat(pattern, Locale.getDefault());\r\n                format.setLenient(false);\r\n                Date parsed = format.parse(value);\r\n                if (parsed != null) {\r\n                    return parsed;\r\n                }\r\n            } catch (ParseException ignored) {\r\n            }\r\n        }\r\n        return null;\r\n    }\r\n\r\n    // Hàm sắp xếp danh sách theo giờ bay giảm dần\r\n    private void sortListByDepartureTimeDesc(List<BookingSummary> list) {\r\n        SimpleDateFormat format = new SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\", Locale.getDefault());\r\n        Collections.sort(list, new Comparator<BookingSummary>() {\r\n            @Override\r\n            public int compare(BookingSummary t1, BookingSummary t2) {\r\n                try {\r\n                    Date d1 = format.parse(t1.getDepartureTime() != null ? t1.getDepartureTime() : \"\");\r\n                    Date d2 = format.parse(t2.getDepartureTime() != null ? t2.getDepartureTime() : \"\");\r\n                    // Đảo ngược d2 so với d1 để sort DESC\r\n                    if (d1 != null && d2 != null) return d2.compareTo(d1);\r\n                    return 0;\r\n                } catch (ParseException e) {\r\n                    return 0;\r\n                }\r\n            }\r\n        });\r\n    }\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/example/flight_booking_app/ticket/activity/HistoryActivity.java b/app/src/main/java/com/example/flight_booking_app/ticket/activity/HistoryActivity.java
+--- a/app/src/main/java/com/example/flight_booking_app/ticket/activity/HistoryActivity.java	(revision 122d0d5dab5e12ba39cfc1dfdbba4bc15c1a805b)
++++ b/app/src/main/java/com/example/flight_booking_app/ticket/activity/HistoryActivity.java	(date 1775995954435)
+@@ -34,6 +34,9 @@
+ 
+ public class HistoryActivity extends AppCompatActivity {
+ 
++    private static final String DEBUG_FILTER_TAG = "DEBUG_FILTER";
++    private static final String PRIMARY_DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
++
+     private RecyclerView rvHistory;
+     private ProgressBar progressBar;
+     private HistoryAdapter adapter;
+@@ -103,10 +106,18 @@
+                     List<BookingSummary> allData = pageResult.getData();
+                     totalPages = pageResult.getTotalPages();
+ 
++                    int totalReceived = allData != null ? allData.size() : 0;
++                    Log.d(DEBUG_FILTER_TAG, "API page=" + page + " total tickets received=" + totalReceived);
++
+                     if (page == 1) historyList.clear();
+ 
+                     if (allData != null) {
+                         for (BookingSummary ticket : allData) {
++                            String pnr = ticket.getPnrCode() != null ? ticket.getPnrCode() : "null";
++                            String status = ticket.getStatus() != null ? ticket.getStatus() : "null";
++                            String departureTime = ticket.getDepartureTime() != null ? ticket.getDepartureTime() : "null";
++                            Log.d(DEBUG_FILTER_TAG, "Ticket PNR=" + pnr + ", Status=" + status + ", DepartureTime=" + departureTime);
++
+                             if (isHistoryBooking(ticket)) {
+                                 historyList.add(ticket);
+                             }
+@@ -134,6 +145,7 @@
+     }
+ 
+     private boolean isHistoryBooking(BookingSummary ticket) {
++        String pnr = ticket.getPnrCode() != null ? ticket.getPnrCode() : "null";
+         String rawStatus = ticket.getStatus() != null ? ticket.getStatus().trim() : "";
+         String status = rawStatus.toUpperCase(Locale.ROOT);
+ 
+@@ -143,8 +155,11 @@
+ 
+         boolean isCompletedState = "COMPLETED".equals(status);
+ 
++        boolean isPastDate = hasFlightPassed(ticket);
+         boolean isPaidOrConfirmedAndPast = ("PAID".equals(status) || "CONFIRMED".equals(status))
+-                && hasFlightPassed(ticket);
++            && isPastDate;
++
++        Log.d(DEBUG_FILTER_TAG, "Ticket " + pnr + " is past: " + isPastDate);
+ 
+         return isTerminalState || isCompletedState || isPaidOrConfirmedAndPast;
+     }
+@@ -160,15 +175,17 @@
+ 
+     private Date parseFlexibleDateTime(String value) {
+         if (value == null || value.trim().isEmpty()) {
++            Log.d(DEBUG_FILTER_TAG, "parseFlexibleDateTime: empty value");
+             return null;
+         }
+ 
+         String[] patterns = new String[] {
++                PRIMARY_DATE_TIME_PATTERN,
+                 "yyyy-MM-dd'T'HH:mm:ss",
+                 "yyyy-MM-dd'T'HH:mm:ss.SSS",
+                 "yyyy-MM-dd'T'HH:mm:ssX",
+                 "yyyy-MM-dd'T'HH:mm:ssXXX",
+-                "yyyy-MM-dd HH:mm:ss"
++                "yyyy-MM-dd"
+         };
+ 
+         for (String pattern : patterns) {
+@@ -177,11 +194,13 @@
+                 format.setLenient(false);
+                 Date parsed = format.parse(value);
+                 if (parsed != null) {
++                    Log.d(DEBUG_FILTER_TAG, "Parsed datetime successfully. value=" + value + ", pattern=" + pattern + ", parsed=" + parsed);
+                     return parsed;
+                 }
+             } catch (ParseException ignored) {
+             }
+         }
++        Log.d(DEBUG_FILTER_TAG, "Failed to parse datetime. value=" + value + ", tried primary pattern=" + PRIMARY_DATE_TIME_PATTERN);
+         return null;
+     }
+ 
+Index: app/src/main/java/com/example/flight_booking_app/ticket/adapter/HistoryAdapter.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.flight_booking_app.ticket.adapter;\r\n\r\nimport android.content.Intent;\r\nimport android.graphics.Color;\r\nimport android.graphics.drawable.GradientDrawable;\r\nimport android.view.LayoutInflater;\r\nimport android.view.View;\r\nimport android.view.ViewGroup;\r\nimport android.widget.TextView;\r\nimport androidx.annotation.NonNull;\r\nimport androidx.recyclerview.widget.RecyclerView;\r\n\r\nimport com.example.flight_booking_app.R;\r\nimport com.example.flight_booking_app.ticket.activity.BookingDetailActivity;\r\nimport com.example.flight_booking_app.ticket.model.BookingSummary;\r\n\r\nimport java.text.ParseException;\r\nimport java.text.SimpleDateFormat;\r\nimport java.util.Date;\r\nimport java.util.List;\r\nimport java.util.Locale;\r\n\r\npublic class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHolder> {\r\n    private List<BookingSummary> tickets;\r\n\r\n    public HistoryAdapter(List<BookingSummary> tickets) {\r\n        this.tickets = tickets;\r\n    }\r\n\r\n    public void setTickets(List<BookingSummary> tickets) {\r\n        this.tickets = tickets;\r\n        notifyDataSetChanged(); // Reset lại view sau khi sort\r\n    }\r\n\r\n    @NonNull\r\n    @Override\r\n    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {\r\n        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_past_ticket, parent, false);\r\n        return new ViewHolder(view);\r\n    }\r\n\r\n    @Override\r\n    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {\r\n        BookingSummary ticket = tickets.get(position);\r\n\r\n        // 1. HEADER NGÀY THÁNG (Nhờ Activity đã sort chuẩn nên cái này chạy rất mượt)\r\n        String currentDateStr = getFormattedDateHeader(ticket.getDepartureTime());\r\n        String previousDateStr = position > 0 ? getFormattedDateHeader(tickets.get(position - 1).getDepartureTime()) : \"\";\r\n\r\n        if (position == 0 || !currentDateStr.equals(previousDateStr)) {\r\n            holder.tvDateHeader.setVisibility(View.VISIBLE);\r\n            holder.tvDateHeader.setText(currentDateStr);\r\n        } else {\r\n            holder.tvDateHeader.setVisibility(View.GONE);\r\n        }\r\n\r\n        // 2. THÔNG TIN CƠ BẢN TỪ BE\r\n        holder.tvOrderId.setText(ticket.getPnrCode());\r\n        holder.tvOrigin.setText(ticket.getOrigin() != null ? ticket.getOrigin() : \"N/A\");\r\n        holder.tvDest.setText(ticket.getDestination() != null ? ticket.getDestination() : \"N/A\");\r\n        holder.tvDepTime.setText(extractTime(ticket.getDepartureTime()));\r\n\r\n        String flightNum = ticket.getFlightNumber() != null ? ticket.getFlightNumber() : \"Flight\";\r\n        holder.tvFlightInfo.setText(\"✈ \" + flightNum + \" • \" + formatClass(ticket.getClassType()));\r\n\r\n        // 3. THÔNG TIN ĐÃ ĐƯỢC CẬP NHẬT\r\n        holder.tvArrTime.setText(extractTime(ticket.getArrivalTime()));\r\n\r\n        if (ticket.getDepartureTime() != null && ticket.getArrivalTime() != null) {\r\n            holder.tvDuration.setText(calculateDuration(ticket.getDepartureTime(), ticket.getArrivalTime()));\r\n        } else {\r\n            holder.tvDuration.setText(\"Chi tiết\");\r\n        }\r\n\r\n        // 4. TRẠNG THÁI (Badge Việt Hóa)\r\n        setupStatusBadge(holder.tvStatusBadge, ticket.getStatus());\r\n\r\n        // 5. CLICK SANG MÀN DETAIL\r\n        holder.itemView.setOnClickListener(v -> {\r\n            if (ticket.getId() != null) {\r\n                Intent intent = new Intent(v.getContext(), BookingDetailActivity.class);\r\n                intent.putExtra(\"BOOKING_ID\", ticket.getId());\r\n                v.getContext().startActivity(intent);\r\n            }\r\n        });\r\n    }\r\n\r\n    private void setupStatusBadge(TextView tvBadge, String status) {\r\n        GradientDrawable shape = new GradientDrawable();\r\n        shape.setCornerRadius(16f);\r\n        if (status == null) status = \"\";\r\n\r\n        // Tự gán các status thành \"Đã bay\" nếu là History và ko bị huỷ\r\n        if (status.equals(\"PAID\") || status.equals(\"CONFIRMED\")) {\r\n            status = \"COMPLETED\";\r\n        }\r\n\r\n        switch (status) {\r\n            case \"COMPLETED\":\r\n                shape.setColor(Color.parseColor(\"#E8F5E9\"));\r\n                tvBadge.setTextColor(Color.parseColor(\"#2E7D32\"));\r\n                tvBadge.setText(\"Hoàn thành\");\r\n                break;\r\n            case \"CANCELLED\":\r\n            case \"REFUNDED\":\r\n                shape.setColor(Color.parseColor(\"#FFEBEE\"));\r\n                tvBadge.setTextColor(Color.parseColor(\"#C62828\"));\r\n                tvBadge.setText(\"Đã huỷ\");\r\n                break;\r\n            default:\r\n                shape.setColor(Color.parseColor(\"#F5F5F5\"));\r\n                tvBadge.setTextColor(Color.parseColor(\"#9E9E9E\"));\r\n                tvBadge.setText(status);\r\n                break;\r\n        }\r\n        tvBadge.setBackground(shape);\r\n    }\r\n\r\n    private String getFormattedDateHeader(String rawDate) {\r\n        if (rawDate == null || rawDate.isEmpty()) return \"Ngày không xác định\";\r\n        try {\r\n            SimpleDateFormat inputFormat = new SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\", Locale.getDefault());\r\n            Date date = inputFormat.parse(rawDate);\r\n            return new SimpleDateFormat(\"dd-MM-yyyy\", Locale.getDefault()).format(date);\r\n        } catch (ParseException e) {\r\n            return rawDate.split(\"T\")[0]; // Fallback\r\n        }\r\n    }\r\n\r\n    private String extractTime(String rawDate) {\r\n        if (rawDate == null || rawDate.isEmpty()) return \"--:--\";\r\n        try {\r\n            SimpleDateFormat inputFormat = new SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\", Locale.getDefault());\r\n            Date date = inputFormat.parse(rawDate);\r\n            return new SimpleDateFormat(\"HH:mm\", Locale.getDefault()).format(date);\r\n        } catch (ParseException e) {\r\n            return \"--:--\";\r\n        }\r\n    }\r\n\r\n    private String calculateDuration(String departure, String arrival) {\r\n        if (departure == null || departure.trim().isEmpty() || arrival == null || arrival.trim().isEmpty()) return \"Chi tiết\";\r\n        try {\r\n            SimpleDateFormat format = new SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\", Locale.getDefault());\r\n            String safeDep = departure.length() > 19 ? departure.substring(0, 19) : departure;\r\n            String safeArr = arrival.length() > 19 ? arrival.substring(0, 19) : arrival;\r\n            \r\n            Date depDate = format.parse(safeDep);\r\n            Date arrDate = format.parse(safeArr);\r\n\r\n            if (depDate != null && arrDate != null) {\r\n                long diffInMillis = arrDate.getTime() - depDate.getTime();\r\n                if (diffInMillis < 0) return \"Chi tiết\";\r\n                long hours = diffInMillis / (60 * 60 * 1000);\r\n                long minutes = (diffInMillis / (60 * 1000)) % 60;\r\n                if (minutes == 0) return hours + \"h\";\r\n                return hours + \"h \" + minutes + \"m\";\r\n            }\r\n        } catch (Exception e) {\r\n            return \"Chi tiết\";\r\n        }\r\n        return \"Chi tiết\";\r\n    }\r\n\r\n    public String formatClass(String rawClass) {\r\n        if (rawClass == null || rawClass.trim().isEmpty()) return \"Economy\";\r\n        try {\r\n            String[] words = rawClass.replace(\"_\", \" \").toLowerCase().split(\"\\\\s+\");\r\n            StringBuilder sb = new StringBuilder();\r\n            for (String word : words) {\r\n                if (word != null && word.length() > 0) {\r\n                    sb.append(Character.toUpperCase(word.charAt(0)));\r\n                    if (word.length() > 1) {\r\n                        sb.append(word.substring(1));\r\n                    }\r\n                    sb.append(\" \");\r\n                }\r\n            }\r\n            return sb.toString().trim();\r\n        } catch (Exception e) {\r\n            return rawClass;\r\n        }\r\n    }\r\n\r\n    @Override\r\n    public int getItemCount() {\r\n        return tickets != null ? tickets.size() : 0;\r\n    }\r\n\r\n    public static class ViewHolder extends RecyclerView.ViewHolder {\r\n        TextView tvDateHeader, tvOrderId, tvStatusBadge;\r\n        TextView tvDepTime, tvArrTime, tvDuration, tvOrigin, tvDest, tvFlightInfo;\r\n\r\n        public ViewHolder(@NonNull View itemView) {\r\n            super(itemView);\r\n            tvDateHeader = itemView.findViewById(R.id.tvDateHeader);\r\n            tvOrderId = itemView.findViewById(R.id.tvOrderId);\r\n            tvStatusBadge = itemView.findViewById(R.id.tvStatusBadge);\r\n            tvDepTime = itemView.findViewById(R.id.tvDepTime);\r\n            tvArrTime = itemView.findViewById(R.id.tvArrTime);\r\n            tvDuration = itemView.findViewById(R.id.tvDuration);\r\n            tvOrigin = itemView.findViewById(R.id.tvOrigin);\r\n            tvDest = itemView.findViewById(R.id.tvDest);\r\n            tvFlightInfo = itemView.findViewById(R.id.tvFlightInfo);\r\n        }\r\n    }\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/example/flight_booking_app/ticket/adapter/HistoryAdapter.java b/app/src/main/java/com/example/flight_booking_app/ticket/adapter/HistoryAdapter.java
+--- a/app/src/main/java/com/example/flight_booking_app/ticket/adapter/HistoryAdapter.java	(revision 122d0d5dab5e12ba39cfc1dfdbba4bc15c1a805b)
++++ b/app/src/main/java/com/example/flight_booking_app/ticket/adapter/HistoryAdapter.java	(date 1775992362272)
+@@ -3,6 +3,7 @@
+ import android.content.Intent;
+ import android.graphics.Color;
+ import android.graphics.drawable.GradientDrawable;
++import android.util.Log;
+ import android.view.LayoutInflater;
+ import android.view.View;
+ import android.view.ViewGroup;
+@@ -21,6 +22,7 @@
+ import java.util.Locale;
+ 
+ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHolder> {
++    private static final String DEBUG_FILTER_TAG = "DEBUG_FILTER";
+     private List<BookingSummary> tickets;
+ 
+     public HistoryAdapter(List<BookingSummary> tickets) {
+@@ -29,6 +31,8 @@
+ 
+     public void setTickets(List<BookingSummary> tickets) {
+         this.tickets = tickets;
++        int total = this.tickets != null ? this.tickets.size() : 0;
++        Log.d(DEBUG_FILTER_TAG, "HistoryAdapter.setTickets total=" + total);
+         notifyDataSetChanged(); // Reset lại view sau khi sort
+     }
+ 

@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -44,17 +45,29 @@ import java.util.Locale;
  * - bookingDetailItems → cập nhật RecyclerView
  * - isLoading → hiện/ẩn ProgressBar
  * - errorMessage → hiện Toast lỗi
+ *
+ * ⚡ MỚI: Nút "Thanh toán" trên Header card
+ * - Chỉ hiển thị khi status = PENDING / AWAITING_PAYMENT
+ * - Click → gọi API tạo payment URL → mở trình duyệt VNPay
+ * - Khi quay lại (onResume) → tự động refresh lại booking detail
  * =====================================================================================
  */
-public class BookingDetailActivity extends AppCompatActivity {
+public class BookingDetailActivity extends AppCompatActivity
+        implements BookingDetailAdapter.OnPayNowClickListener {
 
     private RecyclerView rvBookingDetail;
     private ProgressBar progressBar;
     private BookingDetailAdapter adapter;
     private FlightViewModel viewModel;
-    
+
     // Lưu lại raw object để compose Share text
     private BookingDetailResponse rawBookingData;
+
+    // Lưu bookingId để dùng cho payment và auto-refresh
+    private String bookingId;
+
+    // Cờ đánh dấu đã điều hướng sang trình duyệt thanh toán
+    private boolean navigatedToPayment = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +84,7 @@ public class BookingDetailActivity extends AppCompatActivity {
         // Setup RecyclerView
         rvBookingDetail.setLayoutManager(new LinearLayoutManager(this));
         adapter = new BookingDetailAdapter(new ArrayList<>());
+        adapter.setOnPayNowClickListener(this); // Đăng ký callback thanh toán
         rvBookingDetail.setAdapter(adapter);
 
         // Init ViewModel
@@ -80,12 +94,27 @@ public class BookingDetailActivity extends AppCompatActivity {
         observeViewModel();
 
         // Lấy BOOKING_ID từ Intent và gọi API
-        String bookingId = getIntent().getStringExtra("BOOKING_ID");
+        bookingId = getIntent().getStringExtra("BOOKING_ID");
         if (bookingId != null && !bookingId.isEmpty()) {
             viewModel.fetchBookingDetail(bookingId);
         } else {
             Toast.makeText(this, "Lỗi: Không tìm thấy mã booking!", Toast.LENGTH_SHORT).show();
             finish();
+        }
+    }
+
+    /**
+     * Khi người dùng quay lại từ trình duyệt thanh toán,
+     * tự động refresh lại booking detail để cập nhật trạng thái.
+     * Nếu thanh toán thành công → status sẽ đổi thành CONFIRMED → nút "Thanh toán" tự ẩn.
+     */
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (navigatedToPayment && bookingId != null) {
+            navigatedToPayment = false;
+            // Refresh lại dữ liệu booking sau khi quay về từ VNPay
+            viewModel.fetchBookingDetail(bookingId);
         }
     }
 
@@ -100,7 +129,7 @@ public class BookingDetailActivity extends AppCompatActivity {
                 if (items.get(0).getType() == BookingDetailItem.TYPE_HEADER_INFO) {
                     rawBookingData = items.get(0).getBookingData();
                 }
-                
+
                 adapter.setItems(items);
                 rvBookingDetail.setVisibility(View.VISIBLE);
             }
@@ -120,6 +149,37 @@ public class BookingDetailActivity extends AppCompatActivity {
         viewModel.getErrorMessage().observe(this, error -> {
             if (error != null && !error.isEmpty()) {
                 Toast.makeText(BookingDetailActivity.this, error, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    // ======================== PAYMENT CALLBACK ========================
+
+    /**
+     * Xử lý khi người dùng nhấn nút "Thanh toán" trên Header card.
+     * Flow:
+     * 1. Gọi API tạo payment URL (VNPay) qua ViewModel
+     * 2. Nếu thành công → mở URL bằng trình duyệt hệ thống (ACTION_VIEW)
+     * 3. Nếu thất bại → hiện Toast lỗi
+     *
+     * @param bookingId Mã booking (UUID) cần thanh toán
+     */
+    @Override
+    public void onPayNowClick(String bookingId) {
+        Toast.makeText(this, "Đang tạo liên kết thanh toán...", Toast.LENGTH_SHORT).show();
+
+        viewModel.createPaymentUrl(bookingId, "android").observe(this, paymentUrl -> {
+            if (paymentUrl != null && !paymentUrl.isEmpty()) {
+                // Đánh dấu đã chuyển sang trình duyệt để onResume auto-refresh
+                navigatedToPayment = true;
+
+                // Mở URL thanh toán VNPay bằng trình duyệt hệ thống
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(paymentUrl));
+                startActivity(browserIntent);
+            } else {
+                Toast.makeText(BookingDetailActivity.this,
+                        "Không thể tạo liên kết thanh toán. Vui lòng thử lại sau.",
+                        Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -153,14 +213,14 @@ public class BookingDetailActivity extends AppCompatActivity {
         StringBuilder sb = new StringBuilder();
         sb.append("✈ Thông tin đặt vé máy bay\n\n");
         sb.append("Mã PNR: ").append(rawBookingData.getPnrCode() != null ? rawBookingData.getPnrCode() : "N/A").append("\n");
-        
+
         String status = rawBookingData.getStatus() != null ? rawBookingData.getStatus() : "N/A";
         sb.append("Trạng thái: ").append(status).append("\n\n");
 
         if (rawBookingData.getPassengers() != null && !rawBookingData.getPassengers().isEmpty()) {
             for (PassengerTicketResponse pax : rawBookingData.getPassengers()) {
                 sb.append("👤 Hành khách: ").append(pax.getFullName()).append("\n");
-                
+
                 if (pax.getTickets() != null && !pax.getTickets().isEmpty()) {
                     TicketDetailResponse tkt = pax.getTickets().get(0);
                     sb.append("   Chuyến bay: ✈ ").append(tkt.getFlightNumber()).append("\n");

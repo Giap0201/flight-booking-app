@@ -101,5 +101,32 @@
             android:textSize="13sp"
             tools:text="📞 0987654321" />
 
+        <!-- Divider trước nút thanh toán -->
+        <View
+            android:id="@+id/dividerPayment"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="16dp"
+            android:background="#EEEEEE"
+            android:visibility="gone" />
+
+        <!-- Nút Thanh toán — chỉ hiển thị khi status = PENDING / AWAITING_PAYMENT -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnPayNow"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="💳  Thanh toán ngay"
+            android:textColor="@android:color/white"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textAllCaps="false"
+            android:backgroundTint="@color/colorPrimary"
+            android:visibility="gone"
+            app:cornerRadius="12dp"
+            app:elevation="4dp"
+            app:icon="@android:drawable/ic_menu_send"
+            app:iconGravity="textEnd"
+            app:iconTint="@android:color/white" />
+
     </LinearLayout>
 </androidx.cardview.widget.CardView>

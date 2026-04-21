@@ -40,4 +40,17 @@ public interface TicketApiService {
     Call<ApiResponse<BookingDetailResponse>> getBookingById(
             @Path("id") String id
     );
+
+    /**
+     * Tạo đường dẫn thanh toán VNPay cho booking chưa thanh toán.
+     * Dùng trong BookingDetailActivity khi người dùng nhấn "Thanh toán".
+     * @param bookingId Mã booking (UUID)
+     * @param platform  "android" để Backend cấu hình callback URL
+     * @return URL thanh toán VNPay
+     */
+    @GET("payments/create-url")
+    Call<ApiResponse<String>> generatePaymentUrl(
+            @Query("bookingId") String bookingId,
+            @Query("platform") String platform
+    );
 }

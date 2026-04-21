@@ -79,4 +79,37 @@ public class FlightRepository {
 
         return bookingData;
     }
+
+    /**
+     * HÀM 3: TẠO ĐƯỜNG DẪN THANH TOÁN VNPAY
+     * Gọi API lấy URL thanh toán cho booking chưa thanh toán.
+     *
+     * @param bookingId Mã booking (UUID)
+     * @param platform  "android"
+     * @return LiveData chứa URL thanh toán, hoặc null nếu lỗi
+     */
+    public MutableLiveData<String> createPaymentUrl(String bookingId, String platform) {
+        MutableLiveData<String> paymentUrlData = new MutableLiveData<>();
+
+        apiService.generatePaymentUrl(bookingId, platform).enqueue(new Callback<ApiResponse<String>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getCode() == 1000) {
+                    paymentUrlData.setValue(response.body().getResult());
+                } else {
+                    Log.w(TAG, "Payment URL Error - Code: " +
+                            (response.body() != null ? response.body().getCode() : "null"));
+                    paymentUrlData.setValue(null);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
+                Log.e(TAG, "Payment URL Network Error: " + t.getMessage());
+                paymentUrlData.setValue(null);
+            }
+        });
+
+        return paymentUrlData;
+    }
 }
